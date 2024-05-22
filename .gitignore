@@ -1,0 +1,6 @@
+go.sum
+*idea*
+tests*
+tests
+tests/**/*
+test*
