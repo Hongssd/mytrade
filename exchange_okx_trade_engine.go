@@ -8,17 +8,12 @@ type OkxTradeEngine struct {
 	passphrase string
 }
 
-func (o OkxTradeEngine) IsConnectedWs() bool {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (o OkxTradeEngine) NewOrderReq() *OrderParam {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (o OkxTradeEngine) NewQueryOrderReq() *QueryHistoryParam {
+func (o OkxTradeEngine) NewQueryOrderReq() *QueryOrderParam {
 	//TODO implement me
 	panic("implement me")
 }
@@ -28,12 +23,12 @@ func (o OkxTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 	panic("implement me")
 }
 
-func (o OkxTradeEngine) QueryOpenOrders(req *QueryHistoryParam) ([]*Order, error) {
+func (o OkxTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (o OkxTradeEngine) QueryOrder(req *QueryHistoryParam) (*Order, error) {
+func (o OkxTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -53,7 +48,7 @@ func (o OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 	panic("implement me")
 }
 
-func (o OkxTradeEngine) CancelOrder(req *OrderParam) error {
+func (o OkxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -68,17 +63,7 @@ func (o OkxTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 	panic("implement me")
 }
 
-func (o OkxTradeEngine) CancelOrders(reqs []*OrderParam) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (o OkxTradeEngine) OpenOrderWs() error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (o OkxTradeEngine) CloseOrderWs() error {
+func (o OkxTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }

@@ -7,17 +7,12 @@ type BybitTradeEngine struct {
 	secretKey string
 }
 
-func (b BybitTradeEngine) IsConnectedWs() bool {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (b BybitTradeEngine) NewOrderReq() *OrderParam {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) NewQueryOrderReq() *QueryHistoryParam {
+func (b BybitTradeEngine) NewQueryOrderReq() *QueryOrderParam {
 	//TODO implement me
 	panic("implement me")
 }
@@ -27,12 +22,12 @@ func (b BybitTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) QueryOpenOrders(req *QueryHistoryParam) ([]*Order, error) {
+func (b BybitTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) QueryOrder(req *QueryHistoryParam) (*Order, error) {
+func (b BybitTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -52,7 +47,7 @@ func (b BybitTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) CancelOrder(req *OrderParam) error {
+func (b BybitTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -67,17 +62,7 @@ func (b BybitTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) CancelOrders(reqs []*OrderParam) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (b BybitTradeEngine) OpenOrderWs() error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (b BybitTradeEngine) CloseOrderWs() error {
+func (b BybitTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }

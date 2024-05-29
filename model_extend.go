@@ -1,6 +1,7 @@
 package mytrade
 
 type subscription[T any] struct {
+	id         string        //订阅ID
 	resultChan chan T        //接收订阅结果的通道
 	errChan    chan error    //接收订阅错误的通道
 	closeChan  chan struct{} //接收订阅关闭的通道

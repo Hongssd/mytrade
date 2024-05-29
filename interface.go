@@ -83,9 +83,9 @@ type TradeMarketData interface {
 	//新建深度请求参数
 	NewBookReq() *BookParam
 	//查询K线
-	GetKline(req *KlineParam) (*[]Kline, error)
+	GetKline(*KlineParam) (*[]Kline, error)
 	//查询深度
-	GetBook(req *BookParam) (*OrderBook, error)
+	GetBook(*BookParam) (*OrderBook, error)
 }
 
 // 交易引擎接口
@@ -95,58 +95,50 @@ type TradeEngine interface {
 	//新建订单请求参数
 	NewOrderReq() *OrderParam
 	//新建订单查询请求参数
-	NewQueryOrderReq() *QueryHistoryParam
+	NewQueryOrderReq() *QueryOrderParam
 	//新建成交查询请求参数
 	NewQueryTradeReq() *QueryTradeParam
 
 	//查挂单
-	QueryOpenOrders(req *QueryHistoryParam) ([]*Order, error)
+	QueryOpenOrders(*QueryOrderParam) ([]*Order, error)
 	//查指定单
-	QueryOrder(req *QueryHistoryParam) (*Order, error)
+	QueryOrder(*QueryOrderParam) (*Order, error)
 	//查成交
-	QueryTrades(req *QueryTradeParam) ([]*Trade, error)
+	QueryTrades(*QueryTradeParam) ([]*Trade, error)
 
 	//下单
-	CreateOrder(req *OrderParam) (*Order, error)
+	CreateOrder(*OrderParam) (*Order, error)
 	//修改订单
-	AmendOrder(req *OrderParam) (*Order, error)
+	AmendOrder(*OrderParam) (*Order, error)
 	//撤单
-	CancelOrder(req *OrderParam) error
+	CancelOrder(*OrderParam) (*Order, error)
 
 	//批量下单
-	CreateOrders(reqs []*OrderParam) ([]*Order, error)
+	CreateOrders([]*OrderParam) ([]*Order, error)
 	//批量修改订单
-	AmendOrders(reqs []*OrderParam) ([]*Order, error)
+	AmendOrders([]*OrderParam) ([]*Order, error)
 	//批量撤单
-	CancelOrders(reqs []*OrderParam) error
-
-	//websocket相关
-	//开启交易websocket
-	OpenOrderWs() error
-	//是否已连接交易websocket
-	IsConnectedWs() bool
-	//关闭交易websocket
-	CloseOrderWs() error
+	CancelOrders([]*OrderParam) ([]*Order, error)
 
 	//新建交易订单订阅请求参数
 	NewSubscribeOrderReq() *SubscribeOrderParam
 
 	//开启订单交易订阅
-	SubscribeOrder(req *SubscribeOrderParam) (TradeSubscribe[Order], error)
+	SubscribeOrder(*SubscribeOrderParam) (TradeSubscribe[Order], error)
 
 	//websocket下单
-	WsCreateOrder(req *OrderParam) (*Order, error)
+	WsCreateOrder(*OrderParam) (*Order, error)
 	//websocket修改订单
-	WsAmendOrder(req *OrderParam) (*Order, error)
+	WsAmendOrder(*OrderParam) (*Order, error)
 	//websocket撤单
-	WsCancelOrder(req *OrderParam) error
+	WsCancelOrder(*OrderParam) error
 
 	//websocket批量下单
-	WsCreateOrders(reqs []*OrderParam) ([]*Order, error)
+	WsCreateOrders([]*OrderParam) ([]*Order, error)
 	//websocket批量修改订单
-	WsAmendOrders(reqs []*OrderParam) ([]*Order, error)
+	WsAmendOrders([]*OrderParam) ([]*Order, error)
 	//websocket批量撤单
-	WsCancelOrders(reqs []*OrderParam) error
+	WsCancelOrders([]*OrderParam) error
 }
 
 type TradeSubscribe[T any] interface {
