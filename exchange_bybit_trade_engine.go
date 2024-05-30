@@ -22,47 +22,47 @@ func (b BybitTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
+func (b BybitTradeEngine) QueryOpenOrders(param *QueryOrderParam) ([]*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
+func (b BybitTradeEngine) QueryOrder(param *QueryOrderParam) (*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
+func (b BybitTradeEngine) QueryTrades(param *QueryTradeParam) ([]*Trade, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
+func (b BybitTradeEngine) CreateOrder(param *OrderParam) (*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
+func (b BybitTradeEngine) AmendOrder(param *OrderParam) (*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
+func (b BybitTradeEngine) CancelOrder(param *OrderParam) (*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
+func (b BybitTradeEngine) CreateOrders(params []*OrderParam) ([]*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
+func (b BybitTradeEngine) AmendOrders(params []*OrderParam) ([]*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
+func (b BybitTradeEngine) CancelOrders(params []*OrderParam) ([]*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -72,37 +72,37 @@ func (b BybitTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) SubscribeOrder(req *SubscribeOrderParam) (TradeSubscribe[Order], error) {
+func (b BybitTradeEngine) SubscribeOrder(param *SubscribeOrderParam) (TradeSubscribe[Order], error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
+func (b BybitTradeEngine) WsCreateOrder(param *OrderParam) (*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
+func (b BybitTradeEngine) WsAmendOrder(param *OrderParam) (*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) WsCancelOrder(req *OrderParam) error {
+func (b BybitTradeEngine) WsCancelOrder(param *OrderParam) (*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
+func (b BybitTradeEngine) WsCreateOrders(params []*OrderParam) ([]*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
+func (b BybitTradeEngine) WsAmendOrders(params []*OrderParam) ([]*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (b BybitTradeEngine) WsCancelOrders(reqs []*OrderParam) error {
+func (b BybitTradeEngine) WsCancelOrders(params []*OrderParam) ([]*Order, error) {
 	//TODO implement me
 	panic("implement me")
 }

@@ -2,12 +2,13 @@ package mytrade
 
 import (
 	"github.com/Hongssd/mybinanceapi"
+	"github.com/shopspring/decimal"
 	"strconv"
 	"time"
 )
 
 // 现货订单API接口
-func (b BinanceTradeEngine) apiSpotOrderCreate(req *OrderParam) *mybinanceapi.SpotOrderPostApi {
+func (b *BinanceTradeEngine) apiSpotOrderCreate(req *OrderParam) *mybinanceapi.SpotOrderPostApi {
 	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotOrderPost().
 		Symbol(req.Symbol).
 		Type(b.bnConverter.ToBNOrderType(req.OrderType)).
@@ -22,7 +23,7 @@ func (b BinanceTradeEngine) apiSpotOrderCreate(req *OrderParam) *mybinanceapi.Sp
 	}
 	return api
 }
-func (b BinanceTradeEngine) apiSpotOrderAmend(req *OrderParam) *mybinanceapi.SpotOrderCancelReplaceApi {
+func (b *BinanceTradeEngine) apiSpotOrderAmend(req *OrderParam) *mybinanceapi.SpotOrderCancelReplaceApi {
 	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotOrderCancelReplace().
 		Symbol(req.Symbol).CancelReplaceMode("STOP_ON_FAILURE").
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
@@ -44,7 +45,7 @@ func (b BinanceTradeEngine) apiSpotOrderAmend(req *OrderParam) *mybinanceapi.Spo
 	}
 	return api
 }
-func (b BinanceTradeEngine) apiSpotOrderCancel(req *OrderParam) *mybinanceapi.SpotOrderDeleteApi {
+func (b *BinanceTradeEngine) apiSpotOrderCancel(req *OrderParam) *mybinanceapi.SpotOrderDeleteApi {
 	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotOrderDelete().
 		Symbol(req.Symbol)
 	if req.OrderId != "" {
@@ -58,7 +59,7 @@ func (b BinanceTradeEngine) apiSpotOrderCancel(req *OrderParam) *mybinanceapi.Sp
 }
 
 // U本位合约订单API接口
-func (b BinanceTradeEngine) apiFutureOrderCreate(req *OrderParam) *mybinanceapi.FutureOrderPostApi {
+func (b *BinanceTradeEngine) apiFutureOrderCreate(req *OrderParam) *mybinanceapi.FutureOrderPostApi {
 	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureOrderPost().
 		Symbol(req.Symbol).
 		Type(b.bnConverter.ToBNOrderType(req.OrderType)).
@@ -74,7 +75,7 @@ func (b BinanceTradeEngine) apiFutureOrderCreate(req *OrderParam) *mybinanceapi.
 	}
 	return api
 }
-func (b BinanceTradeEngine) apiFutureOrderAmend(req *OrderParam) *mybinanceapi.FutureOrderPutApi {
+func (b *BinanceTradeEngine) apiFutureOrderAmend(req *OrderParam) *mybinanceapi.FutureOrderPutApi {
 	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureOrderPut().
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
@@ -89,7 +90,7 @@ func (b BinanceTradeEngine) apiFutureOrderAmend(req *OrderParam) *mybinanceapi.F
 	}
 	return api
 }
-func (b BinanceTradeEngine) apiFutureOrderCancel(req *OrderParam) *mybinanceapi.FutureOrderDeleteApi {
+func (b *BinanceTradeEngine) apiFutureOrderCancel(req *OrderParam) *mybinanceapi.FutureOrderDeleteApi {
 	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureOrderDelete().
 		Symbol(req.Symbol)
 	if req.OrderId != "" {
@@ -101,7 +102,7 @@ func (b BinanceTradeEngine) apiFutureOrderCancel(req *OrderParam) *mybinanceapi.
 	return api
 }
 
-func (b BinanceTradeEngine) apiFutureBatchOrderCreate(reqs []*OrderParam) *mybinanceapi.FutureBatchOrdersPostApi {
+func (b *BinanceTradeEngine) apiFutureBatchOrderCreate(reqs []*OrderParam) *mybinanceapi.FutureBatchOrdersPostApi {
 	client := binance.NewFutureRestClient(b.apiKey, b.secretKey)
 	api := client.NewFutureBatchOrdersPost()
 	for _, req := range reqs {
@@ -121,7 +122,7 @@ func (b BinanceTradeEngine) apiFutureBatchOrderCreate(reqs []*OrderParam) *mybin
 	}
 	return api
 }
-func (b BinanceTradeEngine) apiFutureBatchOrderAmend(reqs []*OrderParam) *mybinanceapi.FutureBatchOrdersPutApi {
+func (b *BinanceTradeEngine) apiFutureBatchOrderAmend(reqs []*OrderParam) *mybinanceapi.FutureBatchOrdersPutApi {
 	client := binance.NewFutureRestClient(b.apiKey, b.secretKey)
 	api := client.NewFutureBatchOrdersPut()
 	for _, req := range reqs {
@@ -140,7 +141,7 @@ func (b BinanceTradeEngine) apiFutureBatchOrderAmend(reqs []*OrderParam) *mybina
 	}
 	return api
 }
-func (b BinanceTradeEngine) apiFutureBatchOrderCancel(reqs []*OrderParam) (*mybinanceapi.FutureBatchOrdersDeleteApi, error) {
+func (b *BinanceTradeEngine) apiFutureBatchOrderCancel(reqs []*OrderParam) (*mybinanceapi.FutureBatchOrdersDeleteApi, error) {
 	client := binance.NewFutureRestClient(b.apiKey, b.secretKey)
 	orderIds := []int64{}
 	clientOrderIds := []string{}
@@ -170,7 +171,7 @@ func (b BinanceTradeEngine) apiFutureBatchOrderCancel(reqs []*OrderParam) (*mybi
 }
 
 // 币本位合约订单API接口
-func (b BinanceTradeEngine) apiSwapOrderCreate(req *OrderParam) *mybinanceapi.SwapOrderPostApi {
+func (b *BinanceTradeEngine) apiSwapOrderCreate(req *OrderParam) *mybinanceapi.SwapOrderPostApi {
 	api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewSwapOrderPost().
 		Symbol(req.Symbol).
 		Type(b.bnConverter.ToBNOrderType(req.OrderType)).
@@ -186,7 +187,7 @@ func (b BinanceTradeEngine) apiSwapOrderCreate(req *OrderParam) *mybinanceapi.Sw
 	}
 	return api
 }
-func (b BinanceTradeEngine) apiSwapOrderAmend(req *OrderParam) *mybinanceapi.SwapOrderPutApi {
+func (b *BinanceTradeEngine) apiSwapOrderAmend(req *OrderParam) *mybinanceapi.SwapOrderPutApi {
 	api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewSwapOrderPut().
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
@@ -200,7 +201,7 @@ func (b BinanceTradeEngine) apiSwapOrderAmend(req *OrderParam) *mybinanceapi.Swa
 	}
 	return api
 }
-func (b BinanceTradeEngine) apiSwapOrderCancel(req *OrderParam) *mybinanceapi.SwapOrderDeleteApi {
+func (b *BinanceTradeEngine) apiSwapOrderCancel(req *OrderParam) *mybinanceapi.SwapOrderDeleteApi {
 	api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewSwapOrderDelete().
 		Symbol(req.Symbol)
 	if req.OrderId != "" {
@@ -212,7 +213,7 @@ func (b BinanceTradeEngine) apiSwapOrderCancel(req *OrderParam) *mybinanceapi.Sw
 	return api
 }
 
-func (b BinanceTradeEngine) apiSwapBatchOrderCreate(reqs []*OrderParam) *mybinanceapi.SwapBatchOrdersPostApi {
+func (b *BinanceTradeEngine) apiSwapBatchOrderCreate(reqs []*OrderParam) *mybinanceapi.SwapBatchOrdersPostApi {
 	client := binance.NewSwapRestClient(b.apiKey, b.secretKey)
 	api := client.NewSwapBatchOrdersPost()
 	for _, req := range reqs {
@@ -232,7 +233,7 @@ func (b BinanceTradeEngine) apiSwapBatchOrderCreate(reqs []*OrderParam) *mybinan
 	}
 	return api
 }
-func (b BinanceTradeEngine) apiSwapBatchOrderAmend(reqs []*OrderParam) *mybinanceapi.SwapBatchOrdersPutApi {
+func (b *BinanceTradeEngine) apiSwapBatchOrderAmend(reqs []*OrderParam) *mybinanceapi.SwapBatchOrdersPutApi {
 	client := binance.NewSwapRestClient(b.apiKey, b.secretKey)
 	api := client.NewSwapBatchOrdersPut()
 	for _, req := range reqs {
@@ -250,7 +251,7 @@ func (b BinanceTradeEngine) apiSwapBatchOrderAmend(reqs []*OrderParam) *mybinanc
 	}
 	return api
 }
-func (b BinanceTradeEngine) apiSwapBatchOrderCancel(reqs []*OrderParam) (*mybinanceapi.SwapBatchOrdersDeleteApi, error) {
+func (b *BinanceTradeEngine) apiSwapBatchOrderCancel(reqs []*OrderParam) (*mybinanceapi.SwapBatchOrdersDeleteApi, error) {
 	client := binance.NewSwapRestClient(b.apiKey, b.secretKey)
 	orderIds := []int64{}
 	clientOrderIds := []string{}
@@ -280,7 +281,7 @@ func (b BinanceTradeEngine) apiSwapBatchOrderCancel(reqs []*OrderParam) (*mybina
 }
 
 // 现货订单处理
-func (b BinanceTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *mybinanceapi.SpotOrderPostRes) *Order {
+func (b *BinanceTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *mybinanceapi.SpotOrderPostRes) *Order {
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
@@ -300,7 +301,7 @@ func (b BinanceTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res 
 	}
 	return order
 }
-func (b BinanceTradeEngine) handleOrderFromSpotOrderAmend(req *OrderParam, res *mybinanceapi.SpotOrderCancelReplaceRes) *Order {
+func (b *BinanceTradeEngine) handleOrderFromSpotOrderAmend(req *OrderParam, res *mybinanceapi.SpotOrderCancelReplaceRes) *Order {
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
@@ -320,7 +321,7 @@ func (b BinanceTradeEngine) handleOrderFromSpotOrderAmend(req *OrderParam, res *
 	}
 	return order
 }
-func (b BinanceTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res *mybinanceapi.SpotOrderDeleteRes) *Order {
+func (b *BinanceTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res *mybinanceapi.SpotOrderDeleteRes) *Order {
 	nowTimestamp := time.Now().UnixMilli()
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
@@ -342,7 +343,7 @@ func (b BinanceTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res 
 	return order
 }
 
-func (b BinanceTradeEngine) handleOrderFromSpotBatchErr(req *OrderParam, err error) *Order {
+func (b *BinanceTradeEngine) handleOrderFromSpotBatchErr(req *OrderParam, err error) *Order {
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
@@ -361,7 +362,7 @@ func (b BinanceTradeEngine) handleOrderFromSpotBatchErr(req *OrderParam, err err
 }
 
 // U合约订单处理
-func (b BinanceTradeEngine) handleOrderFromFutureOrderCreate(req *OrderParam, res *mybinanceapi.FutureOrderPostRes) *Order {
+func (b *BinanceTradeEngine) handleOrderFromFutureOrderCreate(req *OrderParam, res *mybinanceapi.FutureOrderPostRes) *Order {
 	nowTimestamp := time.Now().UnixMilli()
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
@@ -384,7 +385,7 @@ func (b BinanceTradeEngine) handleOrderFromFutureOrderCreate(req *OrderParam, re
 	}
 	return order
 }
-func (b BinanceTradeEngine) handleOrderFromFutureOrderAmend(req *OrderParam, res *mybinanceapi.FutureOrderPutRes) *Order {
+func (b *BinanceTradeEngine) handleOrderFromFutureOrderAmend(req *OrderParam, res *mybinanceapi.FutureOrderPutRes) *Order {
 	nowTimestamp := time.Now().UnixMilli()
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
@@ -407,7 +408,7 @@ func (b BinanceTradeEngine) handleOrderFromFutureOrderAmend(req *OrderParam, res
 	}
 	return order
 }
-func (b BinanceTradeEngine) handleOrderFromFutureOrderCancel(req *OrderParam, res *mybinanceapi.FutureOrderDeleteRes) *Order {
+func (b *BinanceTradeEngine) handleOrderFromFutureOrderCancel(req *OrderParam, res *mybinanceapi.FutureOrderDeleteRes) *Order {
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
@@ -430,7 +431,7 @@ func (b BinanceTradeEngine) handleOrderFromFutureOrderCancel(req *OrderParam, re
 	return order
 }
 
-func (b BinanceTradeEngine) handleOrdersFromFutureBatchOrderCreate(reqs []*OrderParam, res *mybinanceapi.FutureBatchOrdersPostRes) []*Order {
+func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderCreate(reqs []*OrderParam, res *mybinanceapi.FutureBatchOrdersPostRes) []*Order {
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
@@ -458,7 +459,7 @@ func (b BinanceTradeEngine) handleOrdersFromFutureBatchOrderCreate(reqs []*Order
 	}
 	return orders
 }
-func (b BinanceTradeEngine) handleOrdersFromFutureBatchOrderAmend(reqs []*OrderParam, res *mybinanceapi.FutureBatchOrdersPutRes) []*Order {
+func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderAmend(reqs []*OrderParam, res *mybinanceapi.FutureBatchOrdersPutRes) []*Order {
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
@@ -486,7 +487,7 @@ func (b BinanceTradeEngine) handleOrdersFromFutureBatchOrderAmend(reqs []*OrderP
 	}
 	return orders
 }
-func (b BinanceTradeEngine) handleOrdersFromFutureBatchOrderCancel(reqs []*OrderParam, res *mybinanceapi.FutureBatchOrdersDeleteRes) []*Order {
+func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderCancel(reqs []*OrderParam, res *mybinanceapi.FutureBatchOrdersDeleteRes) []*Order {
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
@@ -516,7 +517,7 @@ func (b BinanceTradeEngine) handleOrdersFromFutureBatchOrderCancel(reqs []*Order
 }
 
 // 币本位合约订单处理
-func (b BinanceTradeEngine) handleOrderFromSwapOrderCreate(req *OrderParam, res *mybinanceapi.SwapOrderPostRes) *Order {
+func (b *BinanceTradeEngine) handleOrderFromSwapOrderCreate(req *OrderParam, res *mybinanceapi.SwapOrderPostRes) *Order {
 	nowTimestamp := time.Now().UnixMilli()
 	order := Order{
 		Exchange:      BINANCE_NAME.String(),
@@ -539,7 +540,7 @@ func (b BinanceTradeEngine) handleOrderFromSwapOrderCreate(req *OrderParam, res 
 	}
 	return &order
 }
-func (b BinanceTradeEngine) handleOrderFromSwapOrderAmend(req *OrderParam, res *mybinanceapi.SwapOrderPutRes) *Order {
+func (b *BinanceTradeEngine) handleOrderFromSwapOrderAmend(req *OrderParam, res *mybinanceapi.SwapOrderPutRes) *Order {
 	nowTimestamp := time.Now().UnixMilli()
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
@@ -562,7 +563,7 @@ func (b BinanceTradeEngine) handleOrderFromSwapOrderAmend(req *OrderParam, res *
 	}
 	return order
 }
-func (b BinanceTradeEngine) handleOrderFromSwapOrderCancel(req *OrderParam, res *mybinanceapi.SwapOrderDeleteRes) *Order {
+func (b *BinanceTradeEngine) handleOrderFromSwapOrderCancel(req *OrderParam, res *mybinanceapi.SwapOrderDeleteRes) *Order {
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
@@ -585,7 +586,7 @@ func (b BinanceTradeEngine) handleOrderFromSwapOrderCancel(req *OrderParam, res 
 	return order
 }
 
-func (b BinanceTradeEngine) handleOrdersFromSwapBatchOrderCreate(reqs []*OrderParam, res *mybinanceapi.SwapBatchOrdersPostRes) []*Order {
+func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderCreate(reqs []*OrderParam, res *mybinanceapi.SwapBatchOrdersPostRes) []*Order {
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
@@ -613,7 +614,7 @@ func (b BinanceTradeEngine) handleOrdersFromSwapBatchOrderCreate(reqs []*OrderPa
 	}
 	return orders
 }
-func (b BinanceTradeEngine) handleOrdersFromSwapBatchOrderAmend(reqs []*OrderParam, res *mybinanceapi.SwapBatchOrdersPutRes) []*Order {
+func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderAmend(reqs []*OrderParam, res *mybinanceapi.SwapBatchOrdersPutRes) []*Order {
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
@@ -641,7 +642,7 @@ func (b BinanceTradeEngine) handleOrdersFromSwapBatchOrderAmend(reqs []*OrderPar
 	}
 	return orders
 }
-func (b BinanceTradeEngine) handleOrdersFromSwapBatchOrderCancel(reqs []*OrderParam, res *mybinanceapi.SwapBatchOrdersDeleteRes) []*Order {
+func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderCancel(reqs []*OrderParam, res *mybinanceapi.SwapBatchOrdersDeleteRes) []*Order {
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
@@ -668,4 +669,183 @@ func (b BinanceTradeEngine) handleOrdersFromSwapBatchOrderCancel(reqs []*OrderPa
 		})
 	}
 	return orders
+}
+
+// handle ws
+func (b *BinanceTradeEngine) handleSubscribeOrderFromSpotPayload(req SubscribeOrderParam, newPayload *mybinanceapi.WsSpotPayload, newSub *subscription[Order]) {
+	//处理不需要的订阅数据
+	go func() {
+		for {
+			select {
+			case <-newPayload.BalanceUpdatePayload.ErrChan():
+				continue
+			case <-newSub.closeChan:
+				return
+			case r := <-newPayload.BalanceUpdatePayload.ResultChan():
+				_ = r
+			}
+		}
+	}()
+	go func() {
+		for {
+			select {
+			case <-newPayload.OutboundAccountPositionPayload.ErrChan():
+				continue
+			case <-newSub.closeChan:
+				return
+			case r := <-newPayload.OutboundAccountPositionPayload.ResultChan():
+				_ = r
+			}
+		}
+	}()
+
+	//处理订单推送订阅
+	go func() {
+		for {
+			select {
+			case err := <-newPayload.ExecutionReportPayload.ErrChan():
+				newSub.errChan <- err
+			case <-newSub.closeChan:
+				newSub.CloseChan() <- struct{}{}
+				return
+			case r := <-newPayload.ExecutionReportPayload.ResultChan():
+				order := Order{
+					Exchange:      BINANCE_NAME.String(),
+					AccountType:   req.AccountType,
+					Symbol:        r.Symbol,
+					OrderId:       strconv.FormatInt(r.OrderId, 10),
+					ClientOrderId: r.ClientOrderId,
+					Price:         r.Price,
+					Quantity:      r.OrigQty,
+					ExecutedQty:   r.ExecutedQty,
+					CumQuoteQty:   r.CummulativeQuoteQty,
+					Status:        b.bnConverter.FromBNOrderStatus(r.Status),
+					Type:          b.bnConverter.FromBNOrderType(r.Type),
+					Side:          b.bnConverter.FromBNOrderSide(r.Side),
+					TimeInForce:   b.bnConverter.FromBNTimeInForce(r.TimeInForce),
+					FeeAmount:     r.FeeQty,
+					FeeCcy:        r.FeeAsset,
+					CreateTime:    r.OrderCreateTime,
+					UpdateTime:    r.Timestamp,
+				}
+				newSub.resultChan <- order
+			}
+		}
+	}()
+}
+func (b *BinanceTradeEngine) handleSubscribeOrderFromFuturePayload(req SubscribeOrderParam, newPayload *mybinanceapi.WsFuturePayload, newSub *subscription[Order]) {
+	//处理不需要的订阅数据
+	go func() {
+		for {
+			select {
+			case <-newPayload.AccountUpdatePayload.ErrChan():
+				continue
+			case <-newSub.closeChan:
+				return
+			case r := <-newPayload.AccountUpdatePayload.ResultChan():
+				_ = r
+			}
+		}
+	}()
+
+	//处理订单推送订阅
+	go func() {
+		for {
+			select {
+			case err := <-newPayload.OrderTradeUpdatePayload.ErrChan():
+				newSub.errChan <- err
+			case <-newSub.closeChan:
+				newSub.CloseChan() <- struct{}{}
+				return
+			case result := <-newPayload.OrderTradeUpdatePayload.ResultChan():
+				r := result.Order
+				CumQuoteQty := decimal.Zero
+				avgPrice, err := decimal.NewFromString(r.AvgPrice)
+				if err != nil {
+					newSub.ErrChan() <- err
+				}
+				CumQuoteQty = avgPrice.Mul(decimal.RequireFromString(r.ExecutedQty))
+				order := Order{
+					Exchange:      BINANCE_NAME.String(),
+					AccountType:   req.AccountType,
+					Symbol:        r.Symbol,
+					OrderId:       strconv.FormatInt(r.OrderId, 10),
+					ClientOrderId: r.ClientOrderId,
+					Price:         r.Price,
+					Quantity:      r.OrigQty,
+					ExecutedQty:   r.ExecutedQty,
+					CumQuoteQty:   CumQuoteQty.String(),
+					Status:        b.bnConverter.FromBNOrderStatus(r.Status),
+					Type:          b.bnConverter.FromBNOrderType(r.Type),
+					Side:          b.bnConverter.FromBNOrderSide(r.Side),
+					PositionSide:  b.bnConverter.FromBNPositionSide(r.PositionSide),
+					TimeInForce:   b.bnConverter.FromBNTimeInForce(r.TimeInForce),
+					FeeAmount:     r.FeeQty,
+					FeeCcy:        r.FeeAsset,
+					ReduceOnly:    r.IsReduceOnly,
+					CreateTime:    result.Timestamp,
+					UpdateTime:    result.Timestamp,
+				}
+				newSub.resultChan <- order
+			}
+		}
+	}()
+}
+func (b *BinanceTradeEngine) handleSubscribeOrderFromSwapPayload(req SubscribeOrderParam, newPayload *mybinanceapi.WsSwapPayload, newSub *subscription[Order]) {
+	//处理不需要的订阅数据
+	go func() {
+		for {
+			select {
+			case <-newPayload.AccountUpdatePayload.ErrChan():
+				continue
+			case <-newSub.closeChan:
+				return
+			case r := <-newPayload.AccountUpdatePayload.ResultChan():
+				_ = r
+			}
+		}
+	}()
+
+	//处理订单推送订阅
+	go func() {
+		for {
+			select {
+			case err := <-newPayload.OrderTradeUpdatePayload.ErrChan():
+				newSub.errChan <- err
+			case <-newSub.closeChan:
+				newSub.CloseChan() <- struct{}{}
+				return
+			case result := <-newPayload.OrderTradeUpdatePayload.ResultChan():
+				r := result.Order
+				CumQuoteQty := decimal.Zero
+				avgPrice, err := decimal.NewFromString(r.AvgPrice)
+				if err != nil {
+					newSub.ErrChan() <- err
+				}
+				CumQuoteQty = avgPrice.Mul(decimal.RequireFromString(r.ExecutedQty))
+				order := Order{
+					Exchange:      BINANCE_NAME.String(),
+					AccountType:   req.AccountType,
+					Symbol:        r.Symbol,
+					OrderId:       strconv.FormatInt(r.OrderId, 10),
+					ClientOrderId: r.ClientOrderId,
+					Price:         r.Price,
+					Quantity:      r.OrigQty,
+					ExecutedQty:   r.ExecutedQty,
+					CumQuoteQty:   CumQuoteQty.String(),
+					Status:        b.bnConverter.FromBNOrderStatus(r.Status),
+					Type:          b.bnConverter.FromBNOrderType(r.Type),
+					Side:          b.bnConverter.FromBNOrderSide(r.Side),
+					PositionSide:  b.bnConverter.FromBNPositionSide(r.PositionSide),
+					TimeInForce:   b.bnConverter.FromBNTimeInForce(r.TimeInForce),
+					FeeAmount:     r.FeeQty,
+					FeeCcy:        r.FeeAsset,
+					ReduceOnly:    r.IsReduceOnly,
+					CreateTime:    result.Timestamp,
+					UpdateTime:    result.Timestamp,
+				}
+				newSub.resultChan <- order
+			}
+		}
+	}()
 }

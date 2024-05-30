@@ -131,14 +131,14 @@ type TradeEngine interface {
 	//websocket修改订单
 	WsAmendOrder(*OrderParam) (*Order, error)
 	//websocket撤单
-	WsCancelOrder(*OrderParam) error
+	WsCancelOrder(*OrderParam) (*Order, error)
 
 	//websocket批量下单
 	WsCreateOrders([]*OrderParam) ([]*Order, error)
 	//websocket批量修改订单
 	WsAmendOrders([]*OrderParam) ([]*Order, error)
 	//websocket批量撤单
-	WsCancelOrders([]*OrderParam) error
+	WsCancelOrders([]*OrderParam) ([]*Order, error)
 }
 
 type TradeSubscribe[T any] interface {

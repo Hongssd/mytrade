@@ -19,6 +19,7 @@ type OrderParam struct {
 	TimeInForce      TimeInForce  //有效方式
 	ReduceOnly       bool         //是否只减仓
 	NewClientOrderId string       //新的用户自己生成的订单ID 改单时可用
+	IsIsolated       bool         //是否是逐仓模式
 }
 
 func (o *OrderParam) SetAccountType(accountType string) *OrderParam {
@@ -67,6 +68,10 @@ func (o *OrderParam) SetReduceOnly(reduceOnly bool) *OrderParam {
 }
 func (o *OrderParam) SetNewClientOrderId(newClientOrderId string) *OrderParam {
 	o.NewClientOrderId = newClientOrderId
+	return o
+}
+func (o *OrderParam) SetIsIsolated(isIsolated bool) *OrderParam {
+	o.IsIsolated = isIsolated
 	return o
 }
 
@@ -136,14 +141,9 @@ func (q *QueryTradeParam) SetLimit(limit int) *QueryTradeParam {
 
 type SubscribeOrderParam struct {
 	AccountType string //账户类型
-	Symbol      string //交易对
 }
 
 func (s *SubscribeOrderParam) SetAccountType(accountType string) *SubscribeOrderParam {
 	s.AccountType = accountType
-	return s
-}
-func (s *SubscribeOrderParam) SetSymbol(symbol string) *SubscribeOrderParam {
-	s.Symbol = symbol
 	return s
 }

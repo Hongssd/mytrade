@@ -25,6 +25,7 @@ const (
 const (
 	BN_POSITION_SIDE_LONG  = "LONG"
 	BN_POSITION_SIDE_SHORT = "SHORT"
+	BN_POSITION_SIDE_BOTH  = "BOTH"
 )
 
 const (

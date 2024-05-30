@@ -2,8 +2,8 @@ package mytrade
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Hongssd/mybinanceapi"
-	"github.com/shopspring/decimal"
 	"strconv"
 	"sync"
 )
@@ -21,22 +21,21 @@ type BinanceTradeEngine struct {
 
 	wsSpotWsApi   *mybinanceapi.SpotWsStreamClient
 	wsFutureWsApi *mybinanceapi.FutureWsStreamClient
-	wsSwapWsApi   *mybinanceapi.SwapWsStreamClient
 }
 
-func (b BinanceTradeEngine) NewOrderReq() *OrderParam {
+func (b *BinanceTradeEngine) NewOrderReq() *OrderParam {
 	return &OrderParam{}
 }
 
-func (b BinanceTradeEngine) NewQueryOrderReq() *QueryOrderParam {
+func (b *BinanceTradeEngine) NewQueryOrderReq() *QueryOrderParam {
 	return &QueryOrderParam{}
 }
 
-func (b BinanceTradeEngine) NewQueryTradeReq() *QueryTradeParam {
+func (b *BinanceTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 	return &QueryTradeParam{}
 }
 
-func (b BinanceTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
+func (b *BinanceTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
 	var orders []*Order
 	binance := mybinanceapi.MyBinance{}
 	switch BinanceAccountType(req.AccountType) {
@@ -126,7 +125,7 @@ func (b BinanceTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, err
 
 	return orders, nil
 }
-func (b BinanceTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
+func (b *BinanceTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 	var order *Order
 	var err error
 	binance := mybinanceapi.MyBinance{}
@@ -242,7 +241,7 @@ func (b BinanceTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 
 	return order, nil
 }
-func (b BinanceTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
+func (b *BinanceTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
 	var trades []*Trade
 	binance := mybinanceapi.MyBinance{}
 	var orderId int64
@@ -382,7 +381,7 @@ func (b BinanceTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) 
 	return trades, nil
 }
 
-func (b BinanceTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
+func (b *BinanceTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 	var order *Order
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
@@ -411,7 +410,7 @@ func (b BinanceTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 	}
 	return order, nil
 }
-func (b BinanceTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
+func (b *BinanceTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 	var order *Order
 
 	switch BinanceAccountType(req.AccountType) {
@@ -448,7 +447,7 @@ func (b BinanceTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 
 	return order, nil
 }
-func (b BinanceTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
+func (b *BinanceTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	var order *Order
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
@@ -479,7 +478,7 @@ func (b BinanceTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	return order, nil
 }
 
-func (b BinanceTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
+func (b *BinanceTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 	var orders []*Order
 	//检测长度，最多批量下5个订单
 	if len(reqs) > 5 {
@@ -536,7 +535,7 @@ func (b BinanceTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 
 	return orders, nil
 }
-func (b BinanceTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
+func (b *BinanceTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 	var orders []*Order
 	//检测长度，最多批量改5个订单
 	if len(reqs) > 5 {
@@ -593,7 +592,7 @@ func (b BinanceTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 
 	return orders, nil
 }
-func (b BinanceTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
+func (b *BinanceTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 	var orders []*Order
 	//检测长度，最多批量撤单10个订单
 	if len(reqs) > 10 {
@@ -654,11 +653,11 @@ func (b BinanceTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 	return orders, nil
 }
 
-func (b BinanceTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
+func (b *BinanceTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
 	return &SubscribeOrderParam{}
 }
 
-func (b BinanceTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscribe[Order], error) {
+func (b *BinanceTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscribe[Order], error) {
 	req := *r
 	binance := &mybinanceapi.MyBinance{}
 	var err error
@@ -685,67 +684,7 @@ func (b BinanceTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscri
 			errChan:    make(chan error, 10),
 			closeChan:  make(chan struct{}, 10),
 		}
-
-		//处理不需要的订阅数据
-		go func() {
-			for {
-				select {
-				case <-newPayload.BalanceUpdatePayload.ErrChan():
-					continue
-				case <-newSub.closeChan:
-					return
-				case r := <-newPayload.BalanceUpdatePayload.ResultChan():
-					_ = r
-				}
-			}
-		}()
-		go func() {
-			for {
-				select {
-				case <-newPayload.OutboundAccountPositionPayload.ErrChan():
-					continue
-				case <-newSub.closeChan:
-					return
-				case r := <-newPayload.OutboundAccountPositionPayload.ResultChan():
-					_ = r
-				}
-			}
-		}()
-
-		//处理订单推送订阅
-		go func() {
-			for {
-				select {
-				case err := <-newPayload.ExecutionReportPayload.ErrChan():
-					newSub.errChan <- err
-				case <-newSub.closeChan:
-					newSub.CloseChan() <- struct{}{}
-					return
-				case r := <-newPayload.ExecutionReportPayload.ResultChan():
-					order := Order{
-						Exchange:      BINANCE_NAME.String(),
-						AccountType:   req.AccountType,
-						Symbol:        r.Symbol,
-						OrderId:       strconv.FormatInt(r.OrderId, 10),
-						ClientOrderId: r.ClientOrderId,
-						Price:         r.Price,
-						Quantity:      r.OrigQty,
-						ExecutedQty:   r.ExecutedQty,
-						CumQuoteQty:   r.CummulativeQuoteQty,
-						Status:        b.bnConverter.FromBNOrderStatus(r.Status),
-						Type:          b.bnConverter.FromBNOrderType(r.Type),
-						Side:          b.bnConverter.FromBNOrderSide(r.Side),
-						TimeInForce:   b.bnConverter.FromBNTimeInForce(r.TimeInForce),
-						FeeAmount:     r.FeeQty,
-						FeeCcy:        r.FeeAsset,
-						CreateTime:    r.OrderCreateTime,
-						UpdateTime:    r.Timestamp,
-					}
-					newSub.resultChan <- order
-				}
-			}
-		}()
-
+		b.handleSubscribeOrderFromSpotPayload(req, newPayload, newSub)
 		return newSub, nil
 	case BN_AC_FUTURE:
 		if b.wsFutureAccount == nil {
@@ -771,62 +710,7 @@ func (b BinanceTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscri
 			closeChan:  make(chan struct{}, 10),
 		}
 
-		//处理不需要的订阅数据
-		go func() {
-			for {
-				select {
-				case <-newPayload.AccountUpdatePayload.ErrChan():
-					continue
-				case <-newSub.closeChan:
-					return
-				case r := <-newPayload.AccountUpdatePayload.ResultChan():
-					_ = r
-				}
-			}
-		}()
-
-		//处理订单推送订阅
-		go func() {
-			for {
-				select {
-				case err := <-newPayload.OrderTradeUpdatePayload.ErrChan():
-					newSub.errChan <- err
-				case <-newSub.closeChan:
-					newSub.CloseChan() <- struct{}{}
-					return
-				case result := <-newPayload.OrderTradeUpdatePayload.ResultChan():
-					r := result.Order
-					CumQuoteQty := decimal.Zero
-					avgPrice, err := decimal.NewFromString(r.AvgPrice)
-					if err != nil {
-						newSub.ErrChan() <- err
-					}
-					CumQuoteQty = avgPrice.Mul(decimal.RequireFromString(r.ExecutedQty))
-					order := Order{
-						Exchange:      BINANCE_NAME.String(),
-						AccountType:   req.AccountType,
-						Symbol:        r.Symbol,
-						OrderId:       strconv.FormatInt(r.OrderId, 10),
-						ClientOrderId: r.ClientOrderId,
-						Price:         r.Price,
-						Quantity:      r.OrigQty,
-						ExecutedQty:   r.ExecutedQty,
-						CumQuoteQty:   CumQuoteQty.String(),
-						Status:        b.bnConverter.FromBNOrderStatus(r.Status),
-						Type:          b.bnConverter.FromBNOrderType(r.Type),
-						Side:          b.bnConverter.FromBNOrderSide(r.Side),
-						PositionSide:  b.bnConverter.FromBNPositionSide(r.PositionSide),
-						TimeInForce:   b.bnConverter.FromBNTimeInForce(r.TimeInForce),
-						FeeAmount:     r.FeeQty,
-						FeeCcy:        r.FeeAsset,
-						ReduceOnly:    r.IsReduceOnly,
-						CreateTime:    result.Timestamp,
-						UpdateTime:    result.Timestamp,
-					}
-					newSub.resultChan <- order
-				}
-			}
-		}()
+		b.handleSubscribeOrderFromFuturePayload(req, newPayload, newSub)
 
 		return newSub, nil
 	case BN_AC_SWAP:
@@ -853,117 +737,276 @@ func (b BinanceTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscri
 			closeChan:  make(chan struct{}, 10),
 		}
 
-		//处理不需要的订阅数据
-		go func() {
-			for {
-				select {
-				case <-newPayload.AccountUpdatePayload.ErrChan():
-					continue
-				case <-newSub.closeChan:
-					return
-				case r := <-newPayload.AccountUpdatePayload.ResultChan():
-					_ = r
-				}
-			}
-		}()
-
-		//处理订单推送订阅
-		go func() {
-			for {
-				select {
-				case err := <-newPayload.OrderTradeUpdatePayload.ErrChan():
-					newSub.errChan <- err
-				case <-newSub.closeChan:
-					newSub.CloseChan() <- struct{}{}
-					return
-				case result := <-newPayload.OrderTradeUpdatePayload.ResultChan():
-					r := result.Order
-					CumQuoteQty := decimal.Zero
-					avgPrice, err := decimal.NewFromString(r.AvgPrice)
-					if err != nil {
-						newSub.ErrChan() <- err
-					}
-					CumQuoteQty = avgPrice.Mul(decimal.RequireFromString(r.ExecutedQty))
-					order := Order{
-						Exchange:      BINANCE_NAME.String(),
-						AccountType:   req.AccountType,
-						Symbol:        r.Symbol,
-						OrderId:       strconv.FormatInt(r.OrderId, 10),
-						ClientOrderId: r.ClientOrderId,
-						Price:         r.Price,
-						Quantity:      r.OrigQty,
-						ExecutedQty:   r.ExecutedQty,
-						CumQuoteQty:   CumQuoteQty.String(),
-						Status:        b.bnConverter.FromBNOrderStatus(r.Status),
-						Type:          b.bnConverter.FromBNOrderType(r.Type),
-						Side:          b.bnConverter.FromBNOrderSide(r.Side),
-						PositionSide:  b.bnConverter.FromBNPositionSide(r.PositionSide),
-						TimeInForce:   b.bnConverter.FromBNTimeInForce(r.TimeInForce),
-						FeeAmount:     r.FeeQty,
-						FeeCcy:        r.FeeAsset,
-						ReduceOnly:    r.IsReduceOnly,
-						CreateTime:    result.Timestamp,
-						UpdateTime:    result.Timestamp,
-					}
-					newSub.resultChan <- order
-				}
-			}
-		}()
-
+		b.handleSubscribeOrderFromSwapPayload(req, newPayload, newSub)
 		return newSub, nil
 	default:
 		return nil, ErrorAccountType
 	}
 }
 
-func (b BinanceTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
+func (b *BinanceTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
 	var order *Order
-	binance := &mybinanceapi.MyBinance{}
 	var err error
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		if b.wsSpotAccount == nil {
-			b.wsSpotAccount, err = binance.NewSpotWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
+		if b.wsSpotWsApi == nil {
+			wsSpotWsApi, err := binance.NewSpotWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
 			if err != nil {
 				return nil, err
 			}
-			err := b.wsSpotAccount.OpenConn()
+			b.wsSpotWsApi = wsSpotWsApi
+			err = b.wsSpotWsApi.OpenConn()
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		res, err := b.wsSpotAccount.CreateOrder(b.apiSpotOrderCreate(req))
+		res, err := b.wsSpotWsApi.CreateOrder(b.apiSpotOrderCreate(req))
 		if err != nil {
 			return nil, err
 		}
+		if res.Error.Msg != "" {
+			return nil, fmt.Errorf("[%d]%s", res.Error.Code, res.Error.Msg)
+		}
 		order = b.handleOrderFromSpotOrderCreate(req, &res.Result)
+	case BN_AC_FUTURE:
+		if b.wsFutureWsApi == nil {
+			b.wsFutureWsApi, err = binance.NewFutureWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
+			if err != nil {
+				return nil, err
+			}
+			err := b.wsFutureWsApi.OpenConn()
+			if err != nil {
+				return nil, err
+			}
+		}
 
+		res, err := b.wsFutureWsApi.CreateOrder(b.apiFutureOrderCreate(req))
+		if err != nil {
+			return nil, err
+		}
+		if res.Error.Msg != "" {
+			return nil, fmt.Errorf("[%d]%s", res.Error.Code, res.Error.Msg)
+		}
+		order = b.handleOrderFromFutureOrderCreate(req, &res.Result)
+	case BN_AC_SWAP:
+		//币合约无WS API接口，直接调用REST
+		return b.CreateOrder(req)
+	default:
+		return nil, ErrorAccountType
+	}
+
+	return order, nil
+}
+func (b *BinanceTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
+	var order *Order
+
+	var err error
+	switch BinanceAccountType(req.AccountType) {
+	case BN_AC_SPOT:
+		if b.wsSpotWsApi == nil {
+			b.wsSpotWsApi, err = binance.NewSpotWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
+			if err != nil {
+				return nil, err
+			}
+			err := b.wsSpotWsApi.OpenConn()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		res, err := b.wsSpotWsApi.CancelReplaceOrder(b.apiSpotOrderAmend(req))
+		if err != nil {
+			return nil, err
+		}
+		if res.Error.Msg != "" {
+			return nil, fmt.Errorf("[%d]%s", res.Error.Code, res.Error.Msg)
+		}
+		order = b.handleOrderFromSpotOrderAmend(req, &res.Result)
+	case BN_AC_FUTURE:
+		if b.wsFutureWsApi == nil {
+			b.wsFutureWsApi, err = binance.NewFutureWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
+			if err != nil {
+				return nil, err
+			}
+			err := b.wsFutureWsApi.OpenConn()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		res, err := b.wsFutureWsApi.AmendOrder(b.apiFutureOrderAmend(req))
+		if err != nil {
+			return nil, err
+		}
+
+		if res.Error.Msg != "" {
+			return nil, fmt.Errorf("[%d]%s", res.Error.Code, res.Error.Msg)
+		}
+		order = b.handleOrderFromFutureOrderAmend(req, &res.Result)
+	case BN_AC_SWAP:
+		//币合约无WS API接口，直接调用REST
+		return b.AmendOrder(req)
+	default:
+		return nil, ErrorAccountType
+	}
+	return order, nil
+}
+func (b *BinanceTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
+	var order *Order
+	var err error
+	switch BinanceAccountType(req.AccountType) {
+	case BN_AC_SPOT:
+		if b.wsSpotWsApi == nil {
+			b.wsSpotWsApi, err = binance.NewSpotWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
+			if err != nil {
+				return nil, err
+			}
+			err := b.wsSpotWsApi.OpenConn()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		res, err := b.wsSpotWsApi.CancelOrder(b.apiSpotOrderCancel(req))
+		if err != nil {
+			return nil, err
+		}
+		if res.Error.Msg != "" {
+			return nil, fmt.Errorf("[%d]%s", res.Error.Code, res.Error.Msg)
+		}
+		order = b.handleOrderFromSpotOrderCancel(req, &res.Result)
+	case BN_AC_FUTURE:
+		if b.wsFutureWsApi == nil {
+			b.wsFutureWsApi, err = binance.NewFutureWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
+			if err != nil {
+				return nil, err
+			}
+			err := b.wsFutureWsApi.OpenConn()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		res, err := b.wsFutureWsApi.CancelOrder(b.apiFutureOrderCancel(req))
+		if err != nil {
+			return nil, err
+		}
+		if res.Error.Msg != "" {
+			return nil, fmt.Errorf("[%d]%s", res.Error.Code, res.Error.Msg)
+		}
+		order = b.handleOrderFromFutureOrderCancel(req, &res.Result)
+	case BN_AC_SWAP:
+		//币合约无WS API接口，直接调用REST
+		return b.CancelOrder(req)
+	default:
+		return nil, ErrorAccountType
 	}
 	return order, nil
 }
 
-func (b BinanceTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
-	//TODO implement me
-	panic("implement me")
-}
+func (b *BinanceTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
 
-func (b BinanceTradeEngine) WsCancelOrder(req *OrderParam) error {
-	//TODO implement me
-	panic("implement me")
-}
+	var orders []*Order
+	switch BinanceAccountType(reqs[0].AccountType) {
+	case BN_AC_SPOT:
+		//现货无批量接口，直接并发下单
+		var wg sync.WaitGroup
+		var mu sync.Mutex
+		for _, req := range reqs {
+			req := req
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				order, err := b.WsCreateOrder(req)
+				if err != nil {
+					mu.Lock()
+					orders = append(orders, b.handleOrderFromSpotBatchErr(req, err))
+					mu.Unlock()
+				}
+				mu.Lock()
+				orders = append(orders, order)
+				mu.Unlock()
+			}()
+		}
 
-func (b BinanceTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
-	//TODO implement me
-	panic("implement me")
-}
+		wg.Wait()
 
-func (b BinanceTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
-	//TODO implement me
-	panic("implement me")
-}
+	case BN_AC_FUTURE, BN_AC_SWAP:
+		//合约WS无批量接口库，直接调用REST批量接口
+		return b.CreateOrders(reqs)
+	default:
+		return nil, ErrorAccountType
+	}
 
-func (b BinanceTradeEngine) WsCancelOrders(reqs []*OrderParam) error {
-	//TODO implement me
-	panic("implement me")
+	return orders, nil
+}
+func (b *BinanceTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
+	var orders []*Order
+	switch BinanceAccountType(reqs[0].AccountType) {
+	case BN_AC_SPOT:
+		//现货无批量接口，直接并发改单
+		var wg sync.WaitGroup
+		var mu sync.Mutex
+		for _, req := range reqs {
+			req := req
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				order, err := b.WsAmendOrder(req)
+				if err != nil {
+					mu.Lock()
+					orders = append(orders, b.handleOrderFromSpotBatchErr(req, err))
+					mu.Unlock()
+				}
+				mu.Lock()
+				orders = append(orders, order)
+				mu.Unlock()
+			}()
+		}
+
+		wg.Wait()
+
+	case BN_AC_FUTURE, BN_AC_SWAP:
+		//合约WS无批量接口库，直接调用REST批量接口
+	default:
+		return nil, ErrorAccountType
+	}
+
+	return orders, nil
+}
+func (b *BinanceTradeEngine) WsCancelOrders(reqs []*OrderParam) ([]*Order, error) {
+	var orders []*Order
+	switch BinanceAccountType(reqs[0].AccountType) {
+	case BN_AC_SPOT:
+		//现货无批量接口，直接并发撤单
+		var wg sync.WaitGroup
+		var mu sync.Mutex
+		for _, req := range reqs {
+			req := req
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				order, err := b.WsCancelOrder(req)
+				if err != nil {
+					mu.Lock()
+					orders = append(orders, b.handleOrderFromSpotBatchErr(req, err))
+					mu.Unlock()
+				}
+				mu.Lock()
+				orders = append(orders, order)
+				mu.Unlock()
+			}()
+		}
+
+		wg.Wait()
+
+	case BN_AC_FUTURE, BN_AC_SWAP:
+		//合约WS无批量接口库，直接调用REST批量接口
+		return b.CancelOrders(reqs)
+	default:
+		return nil, ErrorAccountType
+	}
+
+	return orders, nil
 }

@@ -54,6 +54,8 @@ func (c *BinanceEnumConverter) FromBNPositionSide(t string) PositionSide {
 		return POSITION_SIDE_LONG
 	case BN_POSITION_SIDE_SHORT:
 		return POSITION_SIDE_SHORT
+	case BN_POSITION_SIDE_BOTH:
+		return POSITION_SIDE_BOTH
 	default:
 		return POSITION_SIDE_UNKNOWN
 	}
@@ -64,6 +66,8 @@ func (c *BinanceEnumConverter) ToBNPositionSide(t PositionSide) string {
 		return BN_POSITION_SIDE_LONG
 	case POSITION_SIDE_SHORT:
 		return BN_POSITION_SIDE_SHORT
+	case POSITION_SIDE_BOTH:
+		return BN_POSITION_SIDE_BOTH
 	default:
 		return ""
 	}

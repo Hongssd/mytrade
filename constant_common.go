@@ -61,6 +61,7 @@ const (
 	POSITION_SIDE_UNKNOWN PositionSide = ""
 	POSITION_SIDE_LONG    PositionSide = "LONG"  //多头
 	POSITION_SIDE_SHORT   PositionSide = "SHORT" //空头
+	POSITION_SIDE_BOTH    PositionSide = "BOTH"  //双向
 )
 
 type TimeInForce string

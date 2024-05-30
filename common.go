@@ -88,3 +88,8 @@ func stringToDecimal(str string) decimal.Decimal {
 	d, _ := decimal.NewFromString(str)
 	return d
 }
+
+func stringToBool(str string) bool {
+	b, _ := strconv.ParseBool(str)
+	return b
+}

@@ -14,6 +14,47 @@ const (
 	OKX_AC_OPTION  OkxAccountType = "OPTION"  //期权
 )
 
+// 订单类型
+// market：市价单
+// limit：限价单
+// post_only：只做maker单
+// fok：全部成交或立即取消
+// ioc：立即成交并取消剩余
+// optimal_limit_ioc：市价委托立即成交并取消剩余（仅适用交割、永续）
+// mmp：做市商保护(仅适用于组合保证金账户模式下的期权订单)
+// mmp_and_post_only：做市商保护且只做maker单(仅适用于组合保证金账户模式下的期权订单)
+const (
+	OKX_ORDER_TYPE_MARKET    = "market"
+	OKX_ORDER_TYPE_LIMIT     = "limit"
+	OKX_ORDER_TYPE_POST_ONLY = "post_only"
+	OKX_ORDER_TYPE_FOK       = "fok"
+	OKX_ORDER_TYPE_IOC       = "ioc"
+)
+
+const (
+	OKX_ORDER_SIDE_BUY  = "buy"
+	OKX_ORDER_SIDE_SELL = "sell"
+)
+
+const (
+	OKX_POSITION_SIDE_LONG  = "long"
+	OKX_POSITION_SIDE_SHORT = "short"
+)
+
+// 订单状态
+// canceled：撤单成功
+// live：等待成交
+// partially_filled：部分成交
+// filled：完全成交
+// mmp_canceled：做市商保护机制导致的自动撤单
+const (
+	OKX_ORDER_STATUS_NEW              = "live"
+	OKX_ORDER_STATUS_PARTIALLY_FILLED = "partially_filled"
+	OKX_ORDER_STATUS_FILLED           = "filled"
+	OKX_ORDER_STATUS_CANCELED         = "canceled"
+	OKX_ORDER_STATUS_REJECTED         = "mmp_canceled"
+)
+
 // 时间粒度，默认值1m
 // 如 [1m/3m/5m/15m/30m/1H/2H/4H]
 // 香港时间开盘价k线：[6H/12H/1D/2D/3D/1W/1M/3M]
