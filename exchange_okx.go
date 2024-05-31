@@ -31,6 +31,7 @@ func (o *OkxExchange) TradeEngine(apiKey, secretKey string, options ...TradeEngi
 		o.OkxTradeEngine = &OkxTradeEngine{
 			apiKey:    apiKey,
 			secretKey: secretKey,
+			parent:    o,
 		}
 		if len(options) > 0 {
 			for _, option := range options {

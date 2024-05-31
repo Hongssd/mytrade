@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Hongssd/mybinanceapi"
-	"strconv"
 	"sync"
 )
 
@@ -37,204 +36,58 @@ func (b *BinanceTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 
 func (b *BinanceTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
 	var orders []*Order
-	binance := mybinanceapi.MyBinance{}
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		res, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewOpenOrders().Symbol(req.Symbol).Do()
+		api := b.apiSpotOpenOrders(req)
+		res, err := api.Do()
 		if err != nil {
 			return nil, err
 		}
-
-		for _, order := range *res {
-			orders = append(orders, &Order{
-				Exchange:      BINANCE_NAME.String(),
-				AccountType:   req.AccountType,
-				Symbol:        req.Symbol,
-				OrderId:       strconv.FormatInt(order.OrderId, 10),
-				ClientOrderId: order.ClientOrderId,
-				Price:         order.Price,
-				Quantity:      order.OrigQty,
-				ExecutedQty:   order.ExecutedQty,
-				CumQuoteQty:   order.CummulativeQuoteQty,
-				Status:        b.bnConverter.FromBNOrderStatus(order.Status),
-				Type:          b.bnConverter.FromBNOrderType(order.Type),
-				Side:          b.bnConverter.FromBNOrderSide(order.Side),
-				TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
-				CreateTime:    order.Time,
-				UpdateTime:    order.UpdateTime,
-			})
-		}
-
+		orders = b.handleOrdersFromSpotOpenOrders(req, res)
 	case BN_AC_FUTURE:
-		res, err := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewOpenOrders().Symbol(req.Symbol).Do()
+		api := b.apiFutureOpenOrders(req)
+		res, err := api.Do()
 		if err != nil {
 			return nil, err
 		}
-
-		for _, order := range *res {
-			orders = append(orders, &Order{
-				Exchange:      BINANCE_NAME.String(),
-				AccountType:   req.AccountType,
-				Symbol:        req.Symbol,
-				OrderId:       strconv.FormatInt(order.OrderId, 10),
-				ClientOrderId: order.ClientOrderId,
-				Price:         order.Price,
-				Quantity:      order.OrigQty,
-				ExecutedQty:   order.ExecutedQty,
-				CumQuoteQty:   order.CumQuote,
-				Status:        b.bnConverter.FromBNOrderStatus(order.Status),
-				Type:          b.bnConverter.FromBNOrderType(order.Type),
-				Side:          b.bnConverter.FromBNOrderSide(order.Side),
-				PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
-				TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
-				ReduceOnly:    order.ReduceOnly,
-				CreateTime:    order.Time,
-				UpdateTime:    order.UpdateTime,
-			})
-		}
+		orders = b.handleOrdersFromFutureOpenOrders(req, res)
 	case BN_AC_SWAP:
-		res, err := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewOpenOrders().Symbol(req.Symbol).Do()
+		api := b.apiSwapOpenOrders(req)
+		res, err := api.Do()
 		if err != nil {
 			return nil, err
 		}
-
-		for _, order := range *res {
-			orders = append(orders, &Order{
-				Exchange:      BINANCE_NAME.String(),
-				AccountType:   req.AccountType,
-				Symbol:        req.Symbol,
-				OrderId:       strconv.FormatInt(order.OrderId, 10),
-				ClientOrderId: order.ClientOrderId,
-				Price:         order.Price,
-				Quantity:      order.OrigQty,
-				ExecutedQty:   order.ExecutedQty,
-				CumQuoteQty:   order.CumQuote,
-				Status:        b.bnConverter.FromBNOrderStatus(order.Status),
-				Type:          b.bnConverter.FromBNOrderType(order.Type),
-				Side:          b.bnConverter.FromBNOrderSide(order.Side),
-				PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
-				TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
-				ReduceOnly:    order.ReduceOnly,
-				CreateTime:    order.Time,
-				UpdateTime:    order.UpdateTime,
-			})
-		}
+		orders = b.handleOrdersFromSwapOpenOrders(req, res)
 	default:
 		return nil, ErrorAccountType
 	}
-
 	return orders, nil
 }
 func (b *BinanceTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 	var order *Order
-	var err error
-	binance := mybinanceapi.MyBinance{}
-	var isOrderIdParam bool
-	var orderId int64
-	var clientOrderId string
-	if req.OrderId != "" {
-		isOrderIdParam = true
-		orderId, err = strconv.ParseInt(req.OrderId, 10, 64)
-		if err != nil {
-			return nil, ErrorInvalid("order id")
-		}
-	} else {
-		isOrderIdParam = false
-		clientOrderId = req.ClientOrderId
-	}
 
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotOrderGet().Symbol(req.Symbol)
-		if isOrderIdParam {
-			api = api.OrderId(orderId)
-		} else {
-			api = api.OrigClientOrderId(clientOrderId)
-		}
+		api := b.apiSpotOrderQuery(req)
 		res, err := api.Do()
 		if err != nil {
 			return nil, err
 		}
-
-		order = &Order{
-			Exchange:      BINANCE_NAME.String(),
-			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
-			OrderId:       strconv.FormatInt(res.OrderId, 10),
-			ClientOrderId: res.ClientOrderId,
-			Price:         res.Price,
-			Quantity:      res.OrigQty,
-			ExecutedQty:   res.ExecutedQty,
-			CumQuoteQty:   res.CummulativeQuoteQty,
-			Status:        b.bnConverter.FromBNOrderStatus(res.Status),
-			Type:          b.bnConverter.FromBNOrderType(res.Type),
-			Side:          b.bnConverter.FromBNOrderSide(res.Side),
-			TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-			CreateTime:    res.Time,
-			UpdateTime:    res.UpdateTime,
-		}
+		order = b.handleOrderFromSpotOrderQuery(req, res)
 	case BN_AC_FUTURE:
-		api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureOrderGet().Symbol(req.Symbol)
-		if isOrderIdParam {
-			api = api.OrderId(orderId)
-		} else {
-			api = api.OrigClientOrderId(clientOrderId)
-		}
+		api := b.apiFutureOrderQuery(req)
 		res, err := api.Do()
 		if err != nil {
 			return nil, err
 		}
-
-		order = &Order{
-			Exchange:      BINANCE_NAME.String(),
-			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
-			OrderId:       strconv.FormatInt(res.OrderId, 10),
-			ClientOrderId: res.ClientOrderId,
-			Price:         res.Price,
-			Quantity:      res.OrigQty,
-			ExecutedQty:   res.ExecutedQty,
-			CumQuoteQty:   res.CumQuote,
-			Status:        b.bnConverter.FromBNOrderStatus(res.Status),
-			Type:          b.bnConverter.FromBNOrderType(res.Type),
-			Side:          b.bnConverter.FromBNOrderSide(res.Side),
-			PositionSide:  b.bnConverter.FromBNPositionSide(res.PositionSide),
-			TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-			ReduceOnly:    res.ReduceOnly,
-			CreateTime:    res.Time,
-			UpdateTime:    res.UpdateTime,
-		}
+		order = b.handleOrderFromFutureOrderQuery(req, res)
 	case BN_AC_SWAP:
-		api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewSwapOrderGet().Symbol(req.Symbol)
-		if isOrderIdParam {
-			api = api.OrderId(orderId)
-		} else {
-			api = api.OrigClientOrderId(clientOrderId)
-		}
+		api := b.apiSwapOrderQuery(req)
 		res, err := api.Do()
 		if err != nil {
 			return nil, err
 		}
-
-		order = &Order{
-			Exchange:      BINANCE_NAME.String(),
-			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
-			OrderId:       strconv.FormatInt(res.OrderId, 10),
-			ClientOrderId: res.ClientOrderId,
-			Price:         res.Price,
-			Quantity:      res.OrigQty,
-			ExecutedQty:   res.ExecutedQty,
-			CumQuoteQty:   res.CumQuote,
-			Status:        b.bnConverter.FromBNOrderStatus(res.Status),
-			Type:          b.bnConverter.FromBNOrderType(res.Type),
-			Side:          b.bnConverter.FromBNOrderSide(res.Side),
-			PositionSide:  b.bnConverter.FromBNPositionSide(res.PositionSide),
-			TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-			ReduceOnly:    res.ReduceOnly,
-			CreateTime:    res.Time,
-			UpdateTime:    res.UpdateTime,
-		}
+		order = b.handleOrderFromSwapOrderQuery(req, res)
 	default:
 		return nil, ErrorAccountType
 	}
@@ -243,137 +96,29 @@ func (b *BinanceTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 }
 func (b *BinanceTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
 	var trades []*Trade
-	binance := mybinanceapi.MyBinance{}
-	var orderId int64
-	var err error
-	if req.OrderId != "" {
-		orderId, err = strconv.ParseInt(req.OrderId, 10, 64)
-		if err != nil {
-			return nil, ErrorInvalid("order id")
-		}
-	}
+
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMyTrades().
-			Symbol(req.Symbol)
-		if req.OrderId != "" {
-			api = api.OrderId(orderId)
-		}
-		if req.StartTime != 0 {
-			api = api.StartTime(req.StartTime)
-		}
-		if req.EndTime != 0 {
-			api = api.EndTime(req.EndTime)
-		}
-		if req.Limit != 0 {
-			api = api.Limit(req.Limit)
-		}
+		api := b.apiSpotTradeQuery(req)
 		res, err := api.Do()
 		if err != nil {
 			return nil, err
 		}
-
-		for _, trade := range *res {
-			var orderSide OrderSide
-			if trade.IsBuyer {
-				orderSide = ORDER_SIDE_BUY
-			} else {
-				orderSide = ORDER_SIDE_SELL
-			}
-			trades = append(trades, &Trade{
-				Exchange:    BINANCE_NAME.String(),
-				AccountType: req.AccountType,
-				Symbol:      req.Symbol,
-				TradeId:     strconv.FormatInt(trade.Id, 10),
-				OrderId:     strconv.FormatInt(trade.OrderId, 10),
-				Price:       trade.Price,
-				Quantity:    trade.Qty,
-				QuoteQty:    trade.QuoteQty,
-				Side:        orderSide,
-				FeeAmount:   trade.Commission,
-				FeeCcy:      trade.CommissionAsset,
-				IsMaker:     trade.IsMaker,
-				Timestamp:   trade.Time,
-			})
-		}
+		trades = b.handleTradesFromSpotTradeQuery(req, res)
 	case BN_AC_FUTURE:
-		api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureUserTrades().
-			Symbol(req.Symbol)
-		if req.OrderId != "" {
-			api = api.OrderId(orderId)
-		}
-		if req.StartTime != 0 {
-			api = api.StartTime(req.StartTime)
-		}
-		if req.EndTime != 0 {
-			api = api.EndTime(req.EndTime)
-		}
-		if req.Limit != 0 {
-			api = api.Limit(int64(req.Limit))
-		}
+		api := b.apiFutureTradeQuery(req)
 		res, err := api.Do()
 		if err != nil {
 			return nil, err
 		}
-
-		for _, trade := range *res {
-			trades = append(trades, &Trade{
-				Exchange:     BINANCE_NAME.String(),
-				AccountType:  req.AccountType,
-				Symbol:       req.Symbol,
-				TradeId:      strconv.FormatInt(trade.Id, 10),
-				OrderId:      strconv.FormatInt(trade.OrderId, 10),
-				Price:        trade.Price,
-				Quantity:     trade.Qty,
-				QuoteQty:     trade.QuoteQty,
-				Side:         b.bnConverter.FromBNOrderSide(trade.Side),
-				PositionSide: b.bnConverter.FromBNPositionSide(trade.PositionSide),
-				FeeAmount:    trade.Commission,
-				FeeCcy:       trade.CommissionAsset,
-				RealizedPnl:  trade.RealizedPnl,
-				IsMaker:      trade.Maker,
-				Timestamp:    trade.Time,
-			})
-		}
+		trades = b.handleTradesFromFutureTradeQuery(req, res)
 	case BN_AC_SWAP:
-		api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewSwapUserTrades().
-			Symbol(req.Symbol)
-		if req.OrderId != "" {
-			api = api.OrderId(orderId)
-		}
-		if req.StartTime != 0 {
-			api = api.StartTime(req.StartTime)
-		}
-		if req.EndTime != 0 {
-			api = api.EndTime(req.EndTime)
-		}
-		if req.Limit != 0 {
-			api = api.Limit(int64(req.Limit))
-		}
+		api := b.apiSwapTradeQuery(req)
 		res, err := api.Do()
 		if err != nil {
 			return nil, err
 		}
-
-		for _, trade := range *res {
-			trades = append(trades, &Trade{
-				Exchange:     BINANCE_NAME.String(),
-				AccountType:  req.AccountType,
-				Symbol:       req.Symbol,
-				TradeId:      strconv.FormatInt(trade.Id, 10),
-				OrderId:      strconv.FormatInt(trade.OrderId, 10),
-				Price:        trade.Price,
-				Quantity:     trade.Qty,
-				QuoteQty:     trade.BaseQty,
-				Side:         b.bnConverter.FromBNOrderSide(trade.Side),
-				PositionSide: b.bnConverter.FromBNPositionSide(trade.PositionSide),
-				FeeAmount:    trade.Commission,
-				FeeCcy:       trade.CommissionAsset,
-				RealizedPnl:  trade.RealizedPnl,
-				IsMaker:      trade.Maker,
-				Timestamp:    trade.Time,
-			})
-		}
+		trades = b.handleTradesFromSwapTradeQuery(req, res)
 	default:
 		return nil, ErrorAccountType
 	}

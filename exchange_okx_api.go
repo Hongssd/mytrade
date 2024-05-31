@@ -7,8 +7,34 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// 查询订单接口获取
+func (o *OkxTradeEngine) apiQueryOpenOrders(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrdersPendingAPI {
+	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
+	api := client.NewPrivateRestTradeOrdersPending().InstType(req.AccountType).InstId(req.Symbol)
+	return api
+}
+func (o *OkxTradeEngine) apiQueryOrder(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderGetAPI {
+	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
+	api := client.NewPrivateRestTradeOrderGet().InstId(req.Symbol)
+	if req.OrderId != "" {
+		api.OrdId(req.OrderId)
+	}
+	if req.ClientOrderId != "" {
+		api.ClOrdId(req.ClientOrderId)
+	}
+	return api
+}
+func (o *OkxTradeEngine) apiQueryTrades(req *QueryTradeParam) *myokxapi.PrivateRestTradeFillsAPI {
+	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
+	api := client.NewPrivateRestTradeFills().InstType(req.AccountType).InstId(req.Symbol)
+	if req.OrderId != "" {
+		api.OrdId(req.OrderId)
+	}
+	return api
+}
+
 // 单订单接口获取
-func (o *OkxTradeEngine) apiOrderCreate(req *OrderParam) (*myokxapi.PrivateRestTradeOrderPostAPI, error) {
+func (o *OkxTradeEngine) apiOrderCreate(req *OrderParam) *myokxapi.PrivateRestTradeOrderPostAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
 
 	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), req.IsIsolated)
@@ -24,9 +50,9 @@ func (o *OkxTradeEngine) apiOrderCreate(req *OrderParam) (*myokxapi.PrivateRestT
 		api.ClOrdId(req.ClientOrderId)
 	}
 
-	return api, nil
+	return api
 }
-func (o *OkxTradeEngine) apiOrderAmend(req *OrderParam) (*myokxapi.PrivateRestTradeAmendOrderAPI, error) {
+func (o *OkxTradeEngine) apiOrderAmend(req *OrderParam) *myokxapi.PrivateRestTradeAmendOrderAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
 
 	api := client.NewPrivateRestTradeAmendOrder().
@@ -44,9 +70,9 @@ func (o *OkxTradeEngine) apiOrderAmend(req *OrderParam) (*myokxapi.PrivateRestTr
 		api.NewSz(req.Quantity.String())
 	}
 
-	return api, nil
+	return api
 }
-func (o *OkxTradeEngine) apiOrderCancel(req *OrderParam) (*myokxapi.PrivateRestTradeCancelOrderAPI, error) {
+func (o *OkxTradeEngine) apiOrderCancel(req *OrderParam) *myokxapi.PrivateRestTradeCancelOrderAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
 
 	api := client.NewPrivateRestTradeCancelOrder().
@@ -58,51 +84,130 @@ func (o *OkxTradeEngine) apiOrderCancel(req *OrderParam) (*myokxapi.PrivateRestT
 		api.ClOrdId(req.ClientOrderId)
 	}
 
-	return api, nil
+	return api
 }
 
 // 批量订单接口获取
-func (o *OkxTradeEngine) apiBatchOrderCreate(reqs []*OrderParam) (*myokxapi.PrivateRestTradeBatchOrdersAPI, error) {
+func (o *OkxTradeEngine) apiBatchOrderCreate(reqs []*OrderParam) *myokxapi.PrivateRestTradeBatchOrdersAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-
 	api := client.NewPrivateRestTradeBatchOrders()
 	for _, req := range reqs {
-		a, err := o.apiOrderCreate(req)
-		if err != nil {
-			return nil, err
-		}
-		api.AddNewOrderReq(a)
+		api.AddNewOrderReq(o.apiOrderCreate(req))
 	}
-	return api, nil
+	return api
 }
-func (o *OkxTradeEngine) apiBatchOrderAmend(reqs []*OrderParam) (*myokxapi.PrivateRestTradeAmendBatchOrdersAPI, error) {
+func (o *OkxTradeEngine) apiBatchOrderAmend(reqs []*OrderParam) *myokxapi.PrivateRestTradeAmendBatchOrdersAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-
 	api := client.NewPrivateRestTradeAmendBatchOrders()
 	for _, req := range reqs {
-		a, err := o.apiOrderAmend(req)
-		if err != nil {
-			return nil, err
-		}
-		api.AddNewOrderReq(a)
+		api.AddNewOrderReq(o.apiOrderAmend(req))
 	}
-	return api, nil
+	return api
 }
-func (o *OkxTradeEngine) apiBatchOrderCancel(reqs []*OrderParam) (*myokxapi.PrivateRestTradeCancelBatchOrdersAPI, error) {
+func (o *OkxTradeEngine) apiBatchOrderCancel(reqs []*OrderParam) *myokxapi.PrivateRestTradeCancelBatchOrdersAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-
 	api := client.NewPrivateRestTradeCancelBatchOrders()
 	for _, req := range reqs {
-		a, err := o.apiOrderCancel(req)
-		if err != nil {
-			return nil, err
-		}
-		api.AddNewOrderReq(a)
+		api.AddNewOrderReq(o.apiOrderCancel(req))
 	}
-	return api, nil
+	return api
 }
 
-// 订单返回结果处理
+// 查询订单返回结果处理
+func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrdersPendingRes]) ([]*Order, error) {
+	if res.Code != "0" {
+		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
+	}
+	orders := make([]*Order, 0, len(res.Data))
+	for _, r := range res.Data {
+		orderType, timeInForce := o.okxConverter.FromOKXOrderType(r.OrdType)
+		order := &Order{
+			Exchange:      OKX_NAME.String(),
+			OrderId:       r.OrdId,
+			ClientOrderId: r.ClOrdId,
+			AccountType:   req.AccountType,
+			Symbol:        req.Symbol,
+			Price:         r.Px,
+			Quantity:      r.Sz,
+			ExecutedQty:   r.FillSz,
+			Status:        o.okxConverter.FromOKXOrderStatus(r.State),
+			Type:          orderType,
+			Side:          o.okxConverter.FromOKXOrderSide(r.Side),
+			PositionSide:  o.okxConverter.FromOKXPositionSide(r.PosSide),
+			TimeInForce:   timeInForce,
+			ReduceOnly:    stringToBool(r.ReduceOnly),
+			CreateTime:    stringToInt64(r.CTime),
+			UpdateTime:    stringToInt64(r.UTime),
+			RealizedPnl:   r.Pnl,
+		}
+		orders = append(orders, order)
+	}
+	return orders, nil
+}
+func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderGetRes]) (*Order, error) {
+	if res.Code != "0" {
+		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
+	}
+	if len(res.Data) != 1 {
+		return nil, errors.New("api return invalid data")
+	}
+	r := res.Data[0]
+
+	orderType, timeInForce := o.okxConverter.FromOKXOrderType(r.OrdType)
+
+	order := &Order{
+		Exchange:      OKX_NAME.String(),
+		OrderId:       r.OrdId,
+		ClientOrderId: r.ClOrdId,
+		AccountType:   req.AccountType,
+		Symbol:        req.Symbol,
+		Price:         r.Px,
+		Quantity:      r.Sz,
+		ExecutedQty:   r.FillSz,
+		Status:        o.okxConverter.FromOKXOrderStatus(r.State),
+		Type:          orderType,
+		Side:          o.okxConverter.FromOKXOrderSide(r.Side),
+		PositionSide:  o.okxConverter.FromOKXPositionSide(r.PosSide),
+		TimeInForce:   timeInForce,
+		ReduceOnly:    stringToBool(r.ReduceOnly),
+		CreateTime:    stringToInt64(r.CTime),
+		UpdateTime:    stringToInt64(r.UTime),
+		RealizedPnl:   r.Pnl,
+	}
+	return order, nil
+}
+func (o *OkxTradeEngine) handleTradesFromQueryTrades(req *QueryTradeParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeFillsRes]) ([]*Trade, error) {
+	if res.Code != "0" {
+		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
+	}
+	trades := make([]*Trade, 0, len(res.Data))
+
+	for _, r := range res.Data {
+		quoteQty := decimal.RequireFromString(r.FillPx).Mul(decimal.RequireFromString(r.FillSz))
+		isMaker := r.ExecType == "M"
+		trade := &Trade{
+			Exchange:     OKX_NAME.String(),
+			AccountType:  req.AccountType,
+			Symbol:       req.Symbol,
+			TradeId:      r.TradeId,
+			OrderId:      r.OrdId,
+			Price:        r.FillPx,
+			Quantity:     r.FillSz,
+			QuoteQty:     quoteQty.String(),
+			Side:         o.okxConverter.FromOKXOrderSide(r.Side),
+			PositionSide: o.okxConverter.FromOKXPositionSide(r.PosSide),
+			FeeAmount:    r.Fee,
+			FeeCcy:       r.FeeCcy,
+			RealizedPnl:  r.FillPnl,
+			IsMaker:      isMaker,
+			Timestamp:    stringToInt64(r.FillTime),
+		}
+		trades = append(trades, trade)
+	}
+	return trades, nil
+}
+
+// 单订单返回结果处理
 func (o *OkxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderPostRes]) (*Order, error) {
 
 	if res.Code != "0" {
@@ -272,4 +377,16 @@ func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order 
 		ErrorCode: order.Code,
 	}
 
+}
+func (o *OkxTradeEngine) getBoardcastFromAccountType(accountType string) **okxOrderBroadcaster {
+	switch OkxAccountType(accountType) {
+	case OKX_AC_SPOT:
+		return &o.broadcasterSpot
+	case OKX_AC_SWAP:
+		return &o.broadcasterSwap
+	case OKX_AC_FUTURES:
+		return &o.broadcasterFuture
+	default:
+		return nil
+	}
 }

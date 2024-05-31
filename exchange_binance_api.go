@@ -8,6 +8,40 @@ import (
 )
 
 // 现货订单API接口
+func (b *BinanceTradeEngine) apiSpotOpenOrders(req *QueryOrderParam) *mybinanceapi.SpotOpenOrdersApi {
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewOpenOrders().
+		Symbol(req.Symbol)
+	return api
+}
+func (b *BinanceTradeEngine) apiSpotOrderQuery(req *QueryOrderParam) *mybinanceapi.SpotOrderGetApi {
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotOrderGet().Symbol(req.Symbol)
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api = api.OrderId(orderId)
+	} else {
+		api = api.OrigClientOrderId(req.ClientOrderId)
+	}
+	return api
+}
+func (b *BinanceTradeEngine) apiSpotTradeQuery(req *QueryTradeParam) *mybinanceapi.SpotMyTradesApi {
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMyTrades().
+		Symbol(req.Symbol)
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api = api.OrderId(orderId)
+	}
+	if req.StartTime != 0 {
+		api = api.StartTime(req.StartTime)
+	}
+	if req.EndTime != 0 {
+		api = api.EndTime(req.EndTime)
+	}
+	if req.Limit != 0 {
+		api = api.Limit(req.Limit)
+	}
+	return api
+}
+
 func (b *BinanceTradeEngine) apiSpotOrderCreate(req *OrderParam) *mybinanceapi.SpotOrderPostApi {
 	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotOrderPost().
 		Symbol(req.Symbol).
@@ -59,6 +93,40 @@ func (b *BinanceTradeEngine) apiSpotOrderCancel(req *OrderParam) *mybinanceapi.S
 }
 
 // U本位合约订单API接口
+func (b *BinanceTradeEngine) apiFutureOpenOrders(req *QueryOrderParam) *mybinanceapi.FutureOpenOrdersApi {
+	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewOpenOrders().
+		Symbol(req.Symbol)
+	return api
+}
+func (b *BinanceTradeEngine) apiFutureOrderQuery(req *QueryOrderParam) *mybinanceapi.FutureOrderGetApi {
+	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureOrderGet().Symbol(req.Symbol)
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api = api.OrderId(orderId)
+	} else {
+		api = api.OrigClientOrderId(req.ClientOrderId)
+	}
+	return api
+}
+func (b *BinanceTradeEngine) apiFutureTradeQuery(req *QueryTradeParam) *mybinanceapi.FutureUserTradesApi {
+	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureUserTrades().
+		Symbol(req.Symbol)
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api = api.OrderId(orderId)
+	}
+	if req.StartTime != 0 {
+		api = api.StartTime(req.StartTime)
+	}
+	if req.EndTime != 0 {
+		api = api.EndTime(req.EndTime)
+	}
+	if req.Limit != 0 {
+		api = api.Limit(int64(req.Limit))
+	}
+	return api
+}
+
 func (b *BinanceTradeEngine) apiFutureOrderCreate(req *OrderParam) *mybinanceapi.FutureOrderPostApi {
 	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureOrderPost().
 		Symbol(req.Symbol).
@@ -171,6 +239,40 @@ func (b *BinanceTradeEngine) apiFutureBatchOrderCancel(reqs []*OrderParam) (*myb
 }
 
 // 币本位合约订单API接口
+func (b *BinanceTradeEngine) apiSwapOpenOrders(req *QueryOrderParam) *mybinanceapi.SwapOpenOrdersApi {
+	api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewOpenOrders().
+		Symbol(req.Symbol)
+	return api
+}
+func (b *BinanceTradeEngine) apiSwapOrderQuery(req *QueryOrderParam) *mybinanceapi.SwapOrderGetApi {
+	api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewSwapOrderGet().Symbol(req.Symbol)
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api = api.OrderId(orderId)
+	} else {
+		api = api.OrigClientOrderId(req.ClientOrderId)
+	}
+	return api
+}
+func (b *BinanceTradeEngine) apiSwapTradeQuery(req *QueryTradeParam) *mybinanceapi.SwapUserTradesApi {
+	api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewSwapUserTrades().
+		Symbol(req.Symbol)
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api = api.OrderId(orderId)
+	}
+	if req.StartTime != 0 {
+		api = api.StartTime(req.StartTime)
+	}
+	if req.EndTime != 0 {
+		api = api.EndTime(req.EndTime)
+	}
+	if req.Limit != 0 {
+		api = api.Limit(int64(req.Limit))
+	}
+	return api
+}
+
 func (b *BinanceTradeEngine) apiSwapOrderCreate(req *OrderParam) *mybinanceapi.SwapOrderPostApi {
 	api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewSwapOrderPost().
 		Symbol(req.Symbol).
@@ -281,6 +383,77 @@ func (b *BinanceTradeEngine) apiSwapBatchOrderCancel(reqs []*OrderParam) (*mybin
 }
 
 // 现货订单处理
+func (b *BinanceTradeEngine) handleOrdersFromSpotOpenOrders(req *QueryOrderParam, res *mybinanceapi.SpotOpenOrdersRes) []*Order {
+	var orders []*Order
+	for _, order := range *res {
+		orders = append(orders, &Order{
+			Exchange:      BINANCE_NAME.String(),
+			AccountType:   req.AccountType,
+			Symbol:        req.Symbol,
+			OrderId:       strconv.FormatInt(order.OrderId, 10),
+			ClientOrderId: order.ClientOrderId,
+			Price:         order.Price,
+			Quantity:      order.OrigQty,
+			ExecutedQty:   order.ExecutedQty,
+			CumQuoteQty:   order.CummulativeQuoteQty,
+			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
+			Type:          b.bnConverter.FromBNOrderType(order.Type),
+			Side:          b.bnConverter.FromBNOrderSide(order.Side),
+			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			CreateTime:    order.Time,
+			UpdateTime:    order.UpdateTime,
+		})
+	}
+	return orders
+}
+func (b *BinanceTradeEngine) handleOrderFromSpotOrderQuery(req *QueryOrderParam, res *mybinanceapi.SpotOrderGetRes) *Order {
+	order := &Order{
+		Exchange:      BINANCE_NAME.String(),
+		AccountType:   req.AccountType,
+		Symbol:        req.Symbol,
+		OrderId:       strconv.FormatInt(res.OrderId, 10),
+		ClientOrderId: res.ClientOrderId,
+		Price:         res.Price,
+		Quantity:      res.OrigQty,
+		ExecutedQty:   res.ExecutedQty,
+		CumQuoteQty:   res.CummulativeQuoteQty,
+		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
+		Type:          b.bnConverter.FromBNOrderType(res.Type),
+		Side:          b.bnConverter.FromBNOrderSide(res.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
+		CreateTime:    res.Time,
+		UpdateTime:    res.UpdateTime,
+	}
+	return order
+}
+func (b *BinanceTradeEngine) handleTradesFromSpotTradeQuery(req *QueryTradeParam, res *mybinanceapi.SpotMyTradesRes) []*Trade {
+	var trades []*Trade
+	for _, trade := range *res {
+		var orderSide OrderSide
+		if trade.IsBuyer {
+			orderSide = ORDER_SIDE_BUY
+		} else {
+			orderSide = ORDER_SIDE_SELL
+		}
+		trades = append(trades, &Trade{
+			Exchange:    BINANCE_NAME.String(),
+			AccountType: req.AccountType,
+			Symbol:      req.Symbol,
+			TradeId:     strconv.FormatInt(trade.Id, 10),
+			OrderId:     strconv.FormatInt(trade.OrderId, 10),
+			Price:       trade.Price,
+			Quantity:    trade.Qty,
+			QuoteQty:    trade.QuoteQty,
+			Side:        orderSide,
+			FeeAmount:   trade.Commission,
+			FeeCcy:      trade.CommissionAsset,
+			IsMaker:     trade.IsMaker,
+			Timestamp:   trade.Time,
+		})
+	}
+	return trades
+}
+
 func (b *BinanceTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *mybinanceapi.SpotOrderPostRes) *Order {
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
@@ -362,6 +535,77 @@ func (b *BinanceTradeEngine) handleOrderFromSpotBatchErr(req *OrderParam, err er
 }
 
 // U合约订单处理
+func (b *BinanceTradeEngine) handleOrdersFromFutureOpenOrders(req *QueryOrderParam, res *mybinanceapi.FutureOpenOrdersRes) []*Order {
+	var orders []*Order
+	for _, order := range *res {
+		orders = append(orders, &Order{
+			Exchange:      BINANCE_NAME.String(),
+			AccountType:   req.AccountType,
+			Symbol:        req.Symbol,
+			OrderId:       strconv.FormatInt(order.OrderId, 10),
+			ClientOrderId: order.ClientOrderId,
+			Price:         order.Price,
+			Quantity:      order.OrigQty,
+			ExecutedQty:   order.ExecutedQty,
+			CumQuoteQty:   order.CumQuote,
+			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
+			Type:          b.bnConverter.FromBNOrderType(order.Type),
+			Side:          b.bnConverter.FromBNOrderSide(order.Side),
+			PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
+			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			ReduceOnly:    order.ReduceOnly,
+			CreateTime:    order.Time,
+			UpdateTime:    order.UpdateTime,
+		})
+	}
+	return orders
+}
+func (b *BinanceTradeEngine) handleOrderFromFutureOrderQuery(req *QueryOrderParam, res *mybinanceapi.FutureOrderGetRes) *Order {
+	order := &Order{
+		Exchange:      BINANCE_NAME.String(),
+		AccountType:   req.AccountType,
+		Symbol:        req.Symbol,
+		OrderId:       strconv.FormatInt(res.OrderId, 10),
+		ClientOrderId: res.ClientOrderId,
+		Price:         res.Price,
+		Quantity:      res.OrigQty,
+		ExecutedQty:   res.ExecutedQty,
+		CumQuoteQty:   res.CumQuote,
+		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
+		Type:          b.bnConverter.FromBNOrderType(res.Type),
+		Side:          b.bnConverter.FromBNOrderSide(res.Side),
+		PositionSide:  b.bnConverter.FromBNPositionSide(res.PositionSide),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
+		ReduceOnly:    res.ReduceOnly,
+		CreateTime:    res.Time,
+		UpdateTime:    res.UpdateTime,
+	}
+	return order
+}
+func (b *BinanceTradeEngine) handleTradesFromFutureTradeQuery(req *QueryTradeParam, res *mybinanceapi.FutureUserTradesRes) []*Trade {
+	var trades []*Trade
+	for _, trade := range *res {
+		trades = append(trades, &Trade{
+			Exchange:     BINANCE_NAME.String(),
+			AccountType:  req.AccountType,
+			Symbol:       req.Symbol,
+			TradeId:      strconv.FormatInt(trade.Id, 10),
+			OrderId:      strconv.FormatInt(trade.OrderId, 10),
+			Price:        trade.Price,
+			Quantity:     trade.Qty,
+			QuoteQty:     trade.QuoteQty,
+			Side:         b.bnConverter.FromBNOrderSide(trade.Side),
+			PositionSide: b.bnConverter.FromBNPositionSide(trade.PositionSide),
+			FeeAmount:    trade.Commission,
+			FeeCcy:       trade.CommissionAsset,
+			RealizedPnl:  trade.RealizedPnl,
+			IsMaker:      trade.Maker,
+			Timestamp:    trade.Time,
+		})
+	}
+	return trades
+}
+
 func (b *BinanceTradeEngine) handleOrderFromFutureOrderCreate(req *OrderParam, res *mybinanceapi.FutureOrderPostRes) *Order {
 	nowTimestamp := time.Now().UnixMilli()
 	order := &Order{
@@ -517,6 +761,77 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderCancel(reqs []*Orde
 }
 
 // 币本位合约订单处理
+func (b *BinanceTradeEngine) handleOrdersFromSwapOpenOrders(req *QueryOrderParam, res *mybinanceapi.SwapOpenOrdersRes) []*Order {
+	var orders []*Order
+	for _, order := range *res {
+		orders = append(orders, &Order{
+			Exchange:      BINANCE_NAME.String(),
+			AccountType:   req.AccountType,
+			Symbol:        req.Symbol,
+			OrderId:       strconv.FormatInt(order.OrderId, 10),
+			ClientOrderId: order.ClientOrderId,
+			Price:         order.Price,
+			Quantity:      order.OrigQty,
+			ExecutedQty:   order.ExecutedQty,
+			CumQuoteQty:   order.CumQuote,
+			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
+			Type:          b.bnConverter.FromBNOrderType(order.Type),
+			Side:          b.bnConverter.FromBNOrderSide(order.Side),
+			PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
+			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			ReduceOnly:    order.ReduceOnly,
+			CreateTime:    order.Time,
+			UpdateTime:    order.UpdateTime,
+		})
+	}
+	return orders
+}
+func (b *BinanceTradeEngine) handleOrderFromSwapOrderQuery(req *QueryOrderParam, res *mybinanceapi.SwapOrderGetRes) *Order {
+	order := &Order{
+		Exchange:      BINANCE_NAME.String(),
+		AccountType:   req.AccountType,
+		Symbol:        req.Symbol,
+		OrderId:       strconv.FormatInt(res.OrderId, 10),
+		ClientOrderId: res.ClientOrderId,
+		Price:         res.Price,
+		Quantity:      res.OrigQty,
+		ExecutedQty:   res.ExecutedQty,
+		CumQuoteQty:   res.CumQuote,
+		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
+		Type:          b.bnConverter.FromBNOrderType(res.Type),
+		Side:          b.bnConverter.FromBNOrderSide(res.Side),
+		PositionSide:  b.bnConverter.FromBNPositionSide(res.PositionSide),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
+		ReduceOnly:    res.ReduceOnly,
+		CreateTime:    res.Time,
+		UpdateTime:    res.UpdateTime,
+	}
+	return order
+}
+func (b *BinanceTradeEngine) handleTradesFromSwapTradeQuery(req *QueryTradeParam, res *mybinanceapi.SwapUserTradesRes) []*Trade {
+	var trades []*Trade
+	for _, trade := range *res {
+		trades = append(trades, &Trade{
+			Exchange:     BINANCE_NAME.String(),
+			AccountType:  req.AccountType,
+			Symbol:       req.Symbol,
+			TradeId:      strconv.FormatInt(trade.Id, 10),
+			OrderId:      strconv.FormatInt(trade.OrderId, 10),
+			Price:        trade.Price,
+			Quantity:     trade.Qty,
+			QuoteQty:     trade.BaseQty,
+			Side:         b.bnConverter.FromBNOrderSide(trade.Side),
+			PositionSide: b.bnConverter.FromBNPositionSide(trade.PositionSide),
+			FeeAmount:    trade.Commission,
+			FeeCcy:       trade.CommissionAsset,
+			RealizedPnl:  trade.RealizedPnl,
+			IsMaker:      trade.Maker,
+			Timestamp:    trade.Time,
+		})
+	}
+	return trades
+}
+
 func (b *BinanceTradeEngine) handleOrderFromSwapOrderCreate(req *OrderParam, res *mybinanceapi.SwapOrderPostRes) *Order {
 	nowTimestamp := time.Now().UnixMilli()
 	order := Order{

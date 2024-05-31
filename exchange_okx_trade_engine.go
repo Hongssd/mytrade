@@ -16,11 +16,16 @@ type OkxTradeEngine struct {
 	secretKey    string
 	passphrase   string
 
-	broadcaster *okxOrderBroadcaster
+	broadcasterSpot   *okxOrderBroadcaster
+	broadcasterSwap   *okxOrderBroadcaster
+	broadcasterFuture *okxOrderBroadcaster
+
+	parent *OkxExchange
 }
 
 // 广播 用于异步接收订单操作的返回结果
 type okxOrderBroadcaster struct {
+	accountType      string
 	okxWsAccount     *myokxapi.PrivateWsStreamClient
 	currentSubscribe *myokxapi.Subscription[myokxapi.WsOrders]
 	subscribers      *MySyncMap[string, *okxOrderSubscriber]
@@ -30,43 +35,47 @@ type okxOrderBroadcaster struct {
 
 // 订阅者 用于异步接收订单操作的返回结果
 type okxOrderSubscriber struct {
+	symbol        string
 	clientOrderId string
-	accountType   string
-	ch            chan Order
+	ch            *subscription[Order]
 }
 
 // 新建订阅者
-func (o *OkxTradeEngine) newOrderSubscriber(clientOrderId, accountType string) (*okxOrderSubscriber, error) {
-	var err error
+func (o *OkxTradeEngine) newOrderSubscriber(ob **okxOrderBroadcaster, clientOrderId, accountType, symbol string) (*okxOrderSubscriber, error) {
+
 	sub := &okxOrderSubscriber{
+		symbol:        symbol,
 		clientOrderId: clientOrderId,
-		accountType:   accountType,
-		ch:            make(chan Order, 10),
+		ch: &subscription[Order]{
+			resultChan: make(chan Order, 100),
+			errChan:    make(chan error, 10),
+			closeChan:  make(chan struct{}, 10),
+		},
 	}
-	if o.broadcaster == nil {
-		o.broadcaster, err = o.newOrderBroadcaster()
+	if *ob == nil {
+		newOb, err := o.newOrderBroadcaster(accountType)
 		if err != nil {
 			return nil, err
 		}
+		*ob = newOb
 	}
 
-	o.broadcaster.mu.Lock()
-	defer o.broadcaster.mu.Unlock()
+	(*ob).mu.Lock()
+	defer (*ob).mu.Unlock()
 
 	key := clientOrderId
-	o.broadcaster.subscribers.Store(key, sub)
-	o.broadcaster.keys.Store(sub, key)
+	(*ob).subscribers.Store(key, sub)
+	(*ob).keys.Store(sub, key)
 	return sub, nil
 }
 
 // 关闭订阅者
-func (o *OkxTradeEngine) closeSubscribe(sub *okxOrderSubscriber) {
-	o.broadcaster.mu.Lock()
-	defer o.broadcaster.mu.Unlock()
-
-	key, _ := o.broadcaster.keys.Load(sub)
-	o.broadcaster.subscribers.Delete(key)
-	o.broadcaster.keys.Delete(sub)
+func (o *OkxTradeEngine) closeSubscribe(b **okxOrderBroadcaster, sub *okxOrderSubscriber) {
+	(*b).mu.Lock()
+	defer (*b).mu.Unlock()
+	key, _ := (*b).keys.Load(sub)
+	(*b).subscribers.Delete(key)
+	(*b).keys.Delete(sub)
 }
 
 // 等待广播消息，超时返回
@@ -74,17 +83,21 @@ func (o *OkxTradeEngine) waitSubscribeReturn(sub *okxOrderSubscriber, timeout ti
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	select {
+	//超时返回
 	case <-ctx.Done():
 		return nil, errors.New("api msg timeout")
-	case order := <-sub.ch:
-		order.AccountType = sub.accountType
+	case <-sub.ch.CloseChan():
+		//链接关闭的情况，使用接口查询
+		return o.QueryOrder(o.NewQueryOrderReq().SetSymbol(sub.symbol).SetClientOrderId(sub.clientOrderId))
+	case order := <-sub.ch.ResultChan():
 		return &order, nil
 	}
 }
 
 // 新建广播者，本质上是一条ws链接接收所有的订单推送结果进行广播
-func (o *OkxTradeEngine) newOrderBroadcaster() (*okxOrderBroadcaster, error) {
+func (o *OkxTradeEngine) newOrderBroadcaster(accountType string) (*okxOrderBroadcaster, error) {
 	broadcaster := &okxOrderBroadcaster{
+		accountType:  accountType,
 		okxWsAccount: okx.NewPrivateWsStreamClient(),
 		subscribers:  GetPointer(NewMySyncMap[string, *okxOrderSubscriber]()),
 		keys:         GetPointer(NewMySyncMap[*okxOrderSubscriber, string]()),
@@ -100,7 +113,7 @@ func (o *OkxTradeEngine) newOrderBroadcaster() (*okxOrderBroadcaster, error) {
 		return nil, err
 	}
 
-	sub, err := broadcaster.okxWsAccount.SubscribeOrders("ANY", "", "")
+	sub, err := broadcaster.okxWsAccount.SubscribeOrders(accountType, "", "")
 	if err != nil {
 		return nil, err
 	}
@@ -109,19 +122,29 @@ func (o *OkxTradeEngine) newOrderBroadcaster() (*okxOrderBroadcaster, error) {
 
 	go func() {
 		for {
-			sub := o.broadcaster.currentSubscribe
+			sub := broadcaster.currentSubscribe
 			select {
 			case err := <-sub.ErrChan():
-				log.Error(err)
+				broadcaster.subscribers.Range(func(key string, value *okxOrderSubscriber) bool {
+					value.ch.ErrChan() <- err
+
+					return true
+				})
 			case result := <-sub.ResultChan():
 				//log.Infof("订单频道订阅接收到消息：%s", result)
 				order := o.handleOrderFromWsOrder(result)
+				order.AccountType = broadcaster.accountType
 				broadcaster.subscribers.Range(func(key string, value *okxOrderSubscriber) bool {
-					value.ch <- *order
+					if value.clientOrderId == "" || order.ClientOrderId == value.clientOrderId {
+						value.ch.ResultChan() <- *order
+					}
 					return true
 				})
 			case <-sub.CloseChan():
-				log.Info("订阅已关闭: ", sub.Args)
+				broadcaster.subscribers.Range(func(key string, value *okxOrderSubscriber) bool {
+					value.ch.CloseChan() <- struct{}{}
+					return true
+				})
 				return
 			}
 		}
@@ -143,33 +166,62 @@ func (o *OkxTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 }
 
 func (o *OkxTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
-	//TODO implement me
-	panic("implement me")
+	api := o.apiQueryOpenOrders(req)
+	res, err := api.Do()
+	if err != nil {
+		return nil, err
+	}
+
+	orders, err := o.handleOrdersFromQueryOpenOrders(req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
 }
 
 func (o *OkxTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
-	//TODO implement me
-	panic("implement me")
+	api := o.apiQueryOrder(req)
+	res, err := api.Do()
+	if err != nil {
+		return nil, err
+	}
+
+	order, err := o.handleOrderFromQueryOrderGet(req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return order, nil
 }
 
 func (o *OkxTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
-	//TODO implement me
-	panic("implement me")
+	api := o.apiQueryTrades(req)
+	res, err := api.Do()
+	if err != nil {
+		return nil, err
+	}
+
+	trades, err := o.handleTradesFromQueryTrades(req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return trades, nil
 }
 
 func (o *OkxTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 	//获取API
-	api, err := o.apiOrderCreate(req)
-	if err != nil {
-		return nil, err
-	}
+	api := o.apiOrderCreate(req)
+
+	b := o.getBoardcastFromAccountType(req.AccountType)
 
 	//创建订阅
-	sub, err := o.newOrderSubscriber(req.ClientOrderId, req.AccountType)
+	sub, err := o.newOrderSubscriber(b, req.ClientOrderId, req.AccountType, req.Symbol)
 	if err != nil {
 		return nil, err
 	}
-	defer o.closeSubscribe(sub)
+	defer o.closeSubscribe(b, sub)
 
 	//执行API
 	res, err := api.Do()
@@ -188,17 +240,16 @@ func (o *OkxTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 }
 func (o *OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 	//获取API
-	api, err := o.apiOrderAmend(req)
-	if err != nil {
-		return nil, err
-	}
+	api := o.apiOrderAmend(req)
+
+	b := o.getBoardcastFromAccountType(req.AccountType)
 
 	//创建订阅
-	sub, err := o.newOrderSubscriber(req.ClientOrderId, req.AccountType)
+	sub, err := o.newOrderSubscriber(b, req.ClientOrderId, req.AccountType, req.Symbol)
 	if err != nil {
 		return nil, err
 	}
-	defer o.closeSubscribe(sub)
+	defer o.closeSubscribe(b, sub)
 
 	//执行API
 	res, err := api.Do()
@@ -217,16 +268,16 @@ func (o *OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 }
 func (o *OkxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	//获取API
-	api, err := o.apiOrderCancel(req)
-	if err != nil {
-		return nil, err
-	}
+	api := o.apiOrderCancel(req)
+
+	b := o.getBoardcastFromAccountType(req.AccountType)
+
 	//创建订阅
-	sub, err := o.newOrderSubscriber(req.ClientOrderId, req.AccountType)
+	sub, err := o.newOrderSubscriber(b, req.ClientOrderId, req.AccountType, req.Symbol)
 	if err != nil {
 		return nil, err
 	}
-	defer o.closeSubscribe(sub)
+	defer o.closeSubscribe(b, sub)
 	//执行API
 	res, err := api.Do()
 	if err != nil {
@@ -245,24 +296,28 @@ func (o *OkxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 
 func (o *OkxTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 	//获取API
-	api, err := o.apiBatchOrderCreate(reqs)
-	if err != nil {
-		return nil, err
-	}
+	api := o.apiBatchOrderCreate(reqs)
+
+	var defers []func()
 
 	subs := make([]*okxOrderSubscriber, 0, len(reqs))
 	//批量创建订阅
 	for _, req := range reqs {
-		sub, err := o.newOrderSubscriber(req.ClientOrderId, req.AccountType)
+		b := o.getBoardcastFromAccountType(req.AccountType)
+
+		sub, err := o.newOrderSubscriber(b, req.ClientOrderId, req.AccountType, req.Symbol)
 		if err != nil {
 			return nil, err
 		}
 
 		subs = append(subs, sub)
+		defers = append(defers, func() {
+			o.closeSubscribe(b, sub)
+		})
 	}
 	defer func() {
-		for _, sub := range subs {
-			o.closeSubscribe(sub)
+		for _, d := range defers {
+			d()
 		}
 	}()
 	//执行API
@@ -270,7 +325,6 @@ func (o *OkxTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	//处理API返回值
 	_, err = o.handleOrderFromBatchOrderCreate(reqs, res)
 	if err != nil {
@@ -301,23 +355,28 @@ func (o *OkxTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 }
 func (o *OkxTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 	//获取API
-	api, err := o.apiBatchOrderAmend(reqs)
-	if err != nil {
-		return nil, err
-	}
+	api := o.apiBatchOrderAmend(reqs)
+
+	var defers []func()
 
 	subs := make([]*okxOrderSubscriber, 0, len(reqs))
 	//批量创建订阅
 	for _, req := range reqs {
-		sub, err := o.newOrderSubscriber(req.ClientOrderId, req.AccountType)
+		b := o.getBoardcastFromAccountType(req.AccountType)
+
+		sub, err := o.newOrderSubscriber(b, req.ClientOrderId, req.AccountType, req.Symbol)
 		if err != nil {
 			return nil, err
 		}
 		subs = append(subs, sub)
+
+		defers = append(defers, func() {
+			o.closeSubscribe(b, sub)
+		})
 	}
 	defer func() {
-		for _, sub := range subs {
-			o.closeSubscribe(sub)
+		for _, d := range defers {
+			d()
 		}
 	}()
 	//执行API
@@ -356,23 +415,28 @@ func (o *OkxTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 }
 func (o *OkxTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 	//获取API
-	api, err := o.apiBatchOrderCancel(reqs)
-	if err != nil {
-		return nil, err
-	}
+	api := o.apiBatchOrderCancel(reqs)
+
+	var defers []func()
 
 	subs := make([]*okxOrderSubscriber, 0, len(reqs))
 	//批量创建订阅
 	for _, req := range reqs {
-		sub, err := o.newOrderSubscriber(req.ClientOrderId, req.AccountType)
+		b := o.getBoardcastFromAccountType(req.AccountType)
+
+		sub, err := o.newOrderSubscriber(b, req.ClientOrderId, req.AccountType, req.Symbol)
 		if err != nil {
 			return nil, err
 		}
 		subs = append(subs, sub)
+
+		defers = append(defers, func() {
+			o.closeSubscribe(b, sub)
+		})
 	}
 	defer func() {
-		for _, sub := range subs {
-			o.closeSubscribe(sub)
+		for _, d := range defers {
+			d()
 		}
 	}()
 	//执行API
@@ -412,13 +476,46 @@ func (o *OkxTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 }
 
 func (o *OkxTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
-	//TODO implement me
-	panic("implement me")
+	return &SubscribeOrderParam{}
 }
 
 func (o *OkxTradeEngine) SubscribeOrder(req *SubscribeOrderParam) (TradeSubscribe[Order], error) {
-	//TODO implement me
-	panic("implement me")
+
+	switch OkxAccountType(req.AccountType) {
+	case OKX_AC_SPOT, OKX_AC_SWAP, OKX_AC_FUTURES:
+	default:
+		return nil, ErrorAccountType
+	}
+	b := o.getBoardcastFromAccountType(req.AccountType)
+
+	sub, err := o.newOrderSubscriber(b, "", req.AccountType, "")
+	if err != nil {
+		return nil, err
+	}
+
+	middleSub := &subscription[Order]{
+		resultChan: make(chan Order, 100),
+		errChan:    make(chan error, 10),
+		closeChan:  make(chan struct{}, 10),
+	}
+
+	//循环将订单数据中转到目标订阅
+	go func() {
+		for {
+			select {
+			case <-sub.ch.CloseChan():
+				middleSub.closeChan <- struct{}{}
+				return
+			case err := <-sub.ch.ErrChan():
+				middleSub.errChan <- err
+			case order := <-sub.ch.ResultChan():
+				middleSub.resultChan <- order
+			}
+		}
+	}()
+
+	return middleSub, nil
+
 }
 
 func (o *OkxTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
