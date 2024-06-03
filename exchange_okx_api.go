@@ -45,7 +45,9 @@ func (o *OkxTradeEngine) apiOrderCreate(req *OrderParam) *myokxapi.PrivateRestTr
 		OrdType(o.okxConverter.ToOKXOrderType(req.OrderType, req.TimeInForce)).
 		Px(req.Price.String()).
 		Sz(req.Quantity.String())
-
+	if OkxAccountType(req.AccountType) != "SPOT" {
+		api.PosSide(o.okxConverter.ToOKXPositionSide(req.PositionSide))
+	}
 	if req.ClientOrderId != "" {
 		api.ClOrdId(req.ClientOrderId)
 	}
@@ -210,14 +212,11 @@ func (o *OkxTradeEngine) handleTradesFromQueryTrades(req *QueryTradeParam, res *
 // 单订单返回结果处理
 func (o *OkxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderPostRes]) (*Order, error) {
 
-	if res.Code != "0" {
-		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
-	}
 	if len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
-		return nil, fmt.Errorf("[%s]:%s", res.Data[0].SCode, res.Data[0].SMsg)
+		return nil, fmt.Errorf("[%s]%s: {[%s]:%s}", res.Code, res.Msg, res.Data[0].SCode, res.Data[0].SMsg)
 	}
 	r := res.Data[0]
 	order := &Order{
@@ -231,14 +230,11 @@ func (o *OkxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *myokxa
 }
 func (o *OkxTradeEngine) handleOrderFromOrderAmend(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeAmendOrderRes]) (*Order, error) {
 
-	if res.Code != "0" {
-		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
-	}
 	if len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
-		return nil, fmt.Errorf("[%s]:%s", res.Data[0].SCode, res.Data[0].SMsg)
+		return nil, fmt.Errorf("[%s]%s: {[%s]:%s}", res.Code, res.Msg, res.Data[0].SCode, res.Data[0].SMsg)
 	}
 	r := res.Data[0]
 	order := &Order{
@@ -252,14 +248,11 @@ func (o *OkxTradeEngine) handleOrderFromOrderAmend(req *OrderParam, res *myokxap
 }
 func (o *OkxTradeEngine) handleOrderFromOrderCancel(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeCancelOrderRes]) (*Order, error) {
 
-	if res.Code != "0" {
-		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
-	}
 	if len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
-		return nil, fmt.Errorf("[%s]:%s", res.Data[0].SCode, res.Data[0].SMsg)
+		return nil, fmt.Errorf("[%s]%s: {[%s]:%s}", res.Code, res.Msg, res.Data[0].SCode, res.Data[0].SMsg)
 	}
 	r := res.Data[0]
 	order := &Order{
@@ -274,16 +267,14 @@ func (o *OkxTradeEngine) handleOrderFromOrderCancel(req *OrderParam, res *myokxa
 
 // 批量订单返回结果处理
 func (o *OkxTradeEngine) handleOrderFromBatchOrderCreate(reqs []*OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeBatchOrdersRes]) ([]*Order, error) {
-	if res.Code != "0" {
-		return nil, fmt.Errorf("API ERRO[%s]:%s", res.Code, res.Msg)
-	}
 	if len(res.Data) != len(reqs) {
 		return nil, errors.New("api return invalid data")
 	}
+	errStr := ""
 	orders := make([]*Order, 0, len(reqs))
 	for i, r := range res.Data {
 		if r.SCode != "0" {
-			return nil, fmt.Errorf("ORDE ERRO[%s]:%s", r.SCode, r.SMsg)
+			errStr += fmt.Sprintf("{[%s][%s]:%s}", r.ClOrdId, r.SCode, r.SMsg)
 		}
 		order := &Order{
 			Exchange:      OKX_NAME.String(),
@@ -293,20 +284,21 @@ func (o *OkxTradeEngine) handleOrderFromBatchOrderCreate(reqs []*OrderParam, res
 			Symbol:        reqs[i].Symbol,
 		}
 		orders = append(orders, order)
+	}
+	if errStr != "" {
+		return orders, fmt.Errorf("[%s]%s: [%s]", res.Code, res.Msg, errStr)
 	}
 	return orders, nil
 }
 func (o *OkxTradeEngine) handleOrderFromBatchOrderAmend(reqs []*OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeAmendBatchOrdersRes]) ([]*Order, error) {
-	if res.Code != "0" {
-		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
-	}
 	if len(res.Data) != len(reqs) {
 		return nil, errors.New("api return invalid data")
 	}
+	errStr := ""
 	orders := make([]*Order, 0, len(reqs))
 	for i, r := range res.Data {
 		if r.SCode != "0" {
-			return nil, fmt.Errorf("[%s]:%s", r.SCode, r.SMsg)
+			errStr += fmt.Sprintf("{[%s][%s]:%s}", r.ClOrdId, r.SCode, r.SMsg)
 		}
 		order := &Order{
 			Exchange:      OKX_NAME.String(),
@@ -316,20 +308,21 @@ func (o *OkxTradeEngine) handleOrderFromBatchOrderAmend(reqs []*OrderParam, res 
 			Symbol:        reqs[i].Symbol,
 		}
 		orders = append(orders, order)
+	}
+	if errStr != "" {
+		return orders, fmt.Errorf("[%s]%s: [%s]", res.Code, res.Msg, errStr)
 	}
 	return orders, nil
 }
 func (o *OkxTradeEngine) handleOrderFromBatchOrderCancel(reqs []*OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeCancelBatchOrdersRes]) ([]*Order, error) {
-	if res.Code != "0" {
-		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
-	}
 	if len(res.Data) != len(reqs) {
 		return nil, errors.New("api return invalid data")
 	}
+	errStr := ""
 	orders := make([]*Order, 0, len(reqs))
 	for i, r := range res.Data {
 		if r.SCode != "0" {
-			return nil, fmt.Errorf("[%s]:%s", r.SCode, r.SMsg)
+			errStr += fmt.Sprintf("{[%s][%s]:%s}", r.ClOrdId, r.SCode, r.SMsg)
 		}
 		order := &Order{
 			Exchange:      OKX_NAME.String(),
@@ -339,6 +332,9 @@ func (o *OkxTradeEngine) handleOrderFromBatchOrderCancel(reqs []*OrderParam, res
 			Symbol:        reqs[i].Symbol,
 		}
 		orders = append(orders, order)
+	}
+	if errStr != "" {
+		return orders, fmt.Errorf("[%s]%s: [%s]", res.Code, res.Msg, errStr)
 	}
 	return orders, nil
 }
@@ -378,15 +374,125 @@ func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order 
 	}
 
 }
-func (o *OkxTradeEngine) getBoardcastFromAccountType(accountType string) **okxOrderBroadcaster {
-	switch OkxAccountType(accountType) {
-	case OKX_AC_SPOT:
-		return &o.broadcasterSpot
-	case OKX_AC_SWAP:
-		return &o.broadcasterSwap
-	case OKX_AC_FUTURES:
-		return &o.broadcasterFuture
-	default:
-		return nil
+
+// ws订单请求前置检查
+func (o *OkxTradeEngine) wsOrderPreCheck() (bool, error) {
+	o.wsForOrderMu.Lock()
+	defer o.wsForOrderMu.Unlock()
+
+	if o.wsForOrder == nil {
+		newWs := okx.NewPrivateWsStreamClient()
+		err := newWs.OpenConn()
+		if err != nil {
+			return false, err
+		}
+
+		err = newWs.Login(okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase))
+		if err != nil {
+			return false, err
+		}
+		o.wsForOrder = newWs
 	}
+	return true, nil
+}
+
+// ws单订单请求相关
+func (o *OkxTradeEngine) handleWsOrderCreateFromOrderParam(req *OrderParam) myokxapi.WsOrderArgData {
+	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), req.IsIsolated)
+	return myokxapi.WsOrderArgData{
+		InstId:     req.Symbol,
+		TdMode:     tdMode,
+		Px:         req.Price.String(),
+		Sz:         req.Quantity.String(),
+		Side:       o.okxConverter.ToOKXOrderSide(req.OrderSide),
+		PosSide:    o.okxConverter.ToOKXPositionSide(req.PositionSide),
+		OrdType:    o.okxConverter.ToOKXOrderType(req.OrderType, req.TimeInForce),
+		ClOrdId:    req.ClientOrderId,
+		ReduceOnly: req.ReduceOnly,
+	}
+}
+func (o *OkxTradeEngine) handleWsOrderAmendFromOrderParam(req *OrderParam) myokxapi.WsAmendOrderArgData {
+	return myokxapi.WsAmendOrderArgData{
+		InstId:    req.Symbol,
+		CxlOnFail: false,
+		OrdId:     req.OrderId,
+		ClOrdId:   req.ClientOrderId,
+		NewPx:     req.Price.String(),
+		NewSz:     req.Quantity.String(),
+	}
+}
+func (o *OkxTradeEngine) handleWsOrderCancelFromOrderParam(req *OrderParam) myokxapi.WsCancelOrderArgData {
+	return myokxapi.WsCancelOrderArgData{
+		InstId:  req.Symbol,
+		OrdId:   req.OrderId,
+		ClOrdId: req.ClientOrderId,
+	}
+}
+
+// ws批量订单请求相关
+func (o *OkxTradeEngine) handleBatchWsOrderCreateFromOrderParams(reqs []*OrderParam) []myokxapi.WsOrderArgData {
+	args := make([]myokxapi.WsOrderArgData, 0, len(reqs))
+	for _, req := range reqs {
+		args = append(args, o.handleWsOrderCreateFromOrderParam(req))
+	}
+	return args
+}
+func (o *OkxTradeEngine) handleBatchWsOrderAmendFromOrderParams(reqs []*OrderParam) []myokxapi.WsAmendOrderArgData {
+	args := make([]myokxapi.WsAmendOrderArgData, 0, len(reqs))
+	for _, req := range reqs {
+		args = append(args, o.handleWsOrderAmendFromOrderParam(req))
+	}
+	return args
+}
+func (o *OkxTradeEngine) handleBatchWsOrderCancelFromOrderParams(reqs []*OrderParam) []myokxapi.WsCancelOrderArgData {
+	args := make([]myokxapi.WsCancelOrderArgData, 0, len(reqs))
+	for _, req := range reqs {
+		args = append(args, o.handleWsOrderCancelFromOrderParam(req))
+	}
+	return args
+}
+
+// ws单订单结果返回
+func (o *OkxTradeEngine) handleOrderFromWsOrderResult(req *OrderParam, res *myokxapi.WsOrderResult) (*Order, error) {
+	if len(res.Data) != 1 {
+		return nil, errors.New("api return invalid data")
+	}
+	if res.Data[0].SCode != "0" {
+		return nil, fmt.Errorf("[%s]%s: {[%s]:%s}", res.Code, res.Msg, res.Data[0].SCode, res.Data[0].SMsg)
+	}
+	r := res.Data[0]
+	order := &Order{
+		Exchange:      OKX_NAME.String(),
+		OrderId:       r.OrdId,
+		ClientOrderId: r.ClOrdId,
+		AccountType:   req.AccountType,
+		Symbol:        req.Symbol,
+	}
+	return order, nil
+}
+
+// ws批量订单结果返回
+func (o *OkxTradeEngine) handleOrdersFromWsBatchOrderResult(reqs []*OrderParam, res *myokxapi.WsOrderResult) ([]*Order, error) {
+	if len(res.Data) != len(reqs) {
+		return nil, errors.New("api return invalid data")
+	}
+	errStr := ""
+	orders := make([]*Order, 0, len(reqs))
+	for i, r := range res.Data {
+		if r.SCode != "0" {
+			errStr += fmt.Sprintf("{[%s][%s]:%s}", r.ClOrdId, r.SCode, r.SMsg)
+		}
+		order := &Order{
+			Exchange:      OKX_NAME.String(),
+			OrderId:       r.OrdId,
+			ClientOrderId: r.ClOrdId,
+			AccountType:   reqs[i].AccountType,
+			Symbol:        reqs[i].Symbol,
+		}
+		orders = append(orders, order)
+	}
+	if errStr != "" {
+		return orders, fmt.Errorf("[%s]%s: [%s]", res.Code, res.Msg, errStr)
+	}
+	return orders, nil
 }

@@ -73,6 +73,8 @@ func (c *OkxEnumConverter) FromOKXPositionSide(t string) PositionSide {
 		return POSITION_SIDE_LONG
 	case OKX_POSITION_SIDE_SHORT:
 		return POSITION_SIDE_SHORT
+	case OKX_POSITION_SIDE_BOTH:
+		return POSITION_SIDE_BOTH
 	default:
 		return POSITION_SIDE_UNKNOWN
 	}
@@ -83,6 +85,8 @@ func (c *OkxEnumConverter) ToOKXPositionSide(t PositionSide) string {
 		return OKX_POSITION_SIDE_LONG
 	case POSITION_SIDE_SHORT:
 		return OKX_POSITION_SIDE_SHORT
+	case POSITION_SIDE_BOTH:
+		return OKX_POSITION_SIDE_BOTH
 	default:
 		return ""
 	}

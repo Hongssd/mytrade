@@ -39,6 +39,7 @@ const (
 const (
 	OKX_POSITION_SIDE_LONG  = "long"
 	OKX_POSITION_SIDE_SHORT = "short"
+	OKX_POSITION_SIDE_BOTH  = "net"
 )
 
 // 订单状态
