@@ -496,3 +496,29 @@ func (o *OkxTradeEngine) handleOrdersFromWsBatchOrderResult(reqs []*OrderParam, 
 	}
 	return orders, nil
 }
+
+func (o *OkxTradeEngine) restBatchPreCheck(reqs []*OrderParam) error {
+	//检测长度，OKX最多批量下20个订单
+	if len(reqs) > 20 {
+		return ErrorInvalid("okx order param length require less than 20")
+
+	}
+
+	//检测类型是否相同
+	for _, req := range reqs {
+		if err := o.accountTypePreCheck(req.AccountType); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *OkxTradeEngine) accountTypePreCheck(accountType string) error {
+	switch OkxAccountType(accountType) {
+	case OKX_AC_SPOT, OKX_AC_SWAP, OKX_AC_FUTURES:
+	default:
+		return ErrorAccountType
+	}
+	return nil
+}

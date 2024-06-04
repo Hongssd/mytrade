@@ -25,11 +25,9 @@ type BinanceTradeEngine struct {
 func (b *BinanceTradeEngine) NewOrderReq() *OrderParam {
 	return &OrderParam{}
 }
-
 func (b *BinanceTradeEngine) NewQueryOrderReq() *QueryOrderParam {
 	return &QueryOrderParam{}
 }
-
 func (b *BinanceTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 	return &QueryTradeParam{}
 }
@@ -225,19 +223,10 @@ func (b *BinanceTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 
 func (b *BinanceTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 	var orders []*Order
-	//检测长度，最多批量下5个订单
-	if len(reqs) > 5 {
-		return nil, ErrorInvalid("order param length require less than 5")
-
+	err := b.restBatchPreCheck(reqs)
+	if err != nil {
+		return nil, err
 	}
-
-	//检测类型是否相同
-	for _, req := range reqs {
-		if req.AccountType != reqs[0].AccountType {
-			return nil, ErrorInvalid("order param account type require same")
-		}
-	}
-
 	switch BinanceAccountType(reqs[0].AccountType) {
 	case BN_AC_SPOT:
 		//现货无批量接口，直接并发下单
@@ -282,17 +271,9 @@ func (b *BinanceTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) 
 }
 func (b *BinanceTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 	var orders []*Order
-	//检测长度，最多批量改5个订单
-	if len(reqs) > 5 {
-		return nil, ErrorInvalid("order param length require less than 5")
-
-	}
-
-	//检测类型是否相同
-	for _, req := range reqs {
-		if req.AccountType != reqs[0].AccountType {
-			return nil, ErrorInvalid("order param account type require same")
-		}
+	err := b.restBatchPreCheck(reqs)
+	if err != nil {
+		return nil, err
 	}
 
 	switch BinanceAccountType(reqs[0].AccountType) {
@@ -339,17 +320,10 @@ func (b *BinanceTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 }
 func (b *BinanceTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 	var orders []*Order
-	//检测长度，最多批量撤单10个订单
-	if len(reqs) > 10 {
-		return nil, ErrorInvalid("order param length require less than 10")
 
-	}
-
-	//检测类型是否相同
-	for _, req := range reqs {
-		if req.AccountType != reqs[0].AccountType {
-			return nil, ErrorInvalid("order param account type require same")
-		}
+	err := b.restBatchPreCheck(reqs)
+	if err != nil {
+		return nil, err
 	}
 
 	switch BinanceAccountType(reqs[0].AccountType) {
@@ -401,7 +375,6 @@ func (b *BinanceTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) 
 func (b *BinanceTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
 	return &SubscribeOrderParam{}
 }
-
 func (b *BinanceTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscribe[Order], error) {
 	req := *r
 	binance := &mybinanceapi.MyBinance{}
@@ -652,6 +625,11 @@ func (b *BinanceTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
 
 func (b *BinanceTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
 
+	err := b.restBatchPreCheck(reqs)
+	if err != nil {
+		return nil, err
+	}
+
 	var orders []*Order
 	switch BinanceAccountType(reqs[0].AccountType) {
 	case BN_AC_SPOT:
@@ -687,6 +665,11 @@ func (b *BinanceTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error
 	return orders, nil
 }
 func (b *BinanceTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
+	err := b.restBatchPreCheck(reqs)
+	if err != nil {
+		return nil, err
+	}
+
 	var orders []*Order
 	switch BinanceAccountType(reqs[0].AccountType) {
 	case BN_AC_SPOT:
@@ -721,6 +704,11 @@ func (b *BinanceTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error)
 	return orders, nil
 }
 func (b *BinanceTradeEngine) WsCancelOrders(reqs []*OrderParam) ([]*Order, error) {
+	err := b.restBatchPreCheck(reqs)
+	if err != nil {
+		return nil, err
+	}
+
 	var orders []*Order
 	switch BinanceAccountType(reqs[0].AccountType) {
 	case BN_AC_SPOT:

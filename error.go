@@ -7,6 +7,7 @@ var (
 	ErrorAccountType    = errors.New("account type error")
 	ErrorInvalidParam   = errors.New("invalid param")
 	ErrorNotSupport     = errors.New("not support")
+	ErrorOrderNotFound  = errors.New("order not found")
 )
 
 func ErrorInvalid(paramName string) error {

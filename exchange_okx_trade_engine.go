@@ -35,6 +35,9 @@ func (o *OkxTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 }
 
 func (o *OkxTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
+	if err := o.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
 	api := o.apiQueryOpenOrders(req)
 	res, err := api.Do()
 	if err != nil {
@@ -49,6 +52,9 @@ func (o *OkxTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error)
 	return orders, nil
 }
 func (o *OkxTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
+	if err := o.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
 	api := o.apiQueryOrder(req)
 	res, err := api.Do()
 	if err != nil {
@@ -63,6 +69,9 @@ func (o *OkxTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 	return order, nil
 }
 func (o *OkxTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
+	if err := o.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
 	api := o.apiQueryTrades(req)
 	res, err := api.Do()
 	if err != nil {
@@ -78,6 +87,9 @@ func (o *OkxTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
 }
 
 func (o *OkxTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
+	if err := o.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
 	//获取API
 	api := o.apiOrderCreate(req)
 
@@ -106,6 +118,9 @@ func (o *OkxTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 	return o.waitSubscribeReturn(sub, 10*time.Second)
 }
 func (o *OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
+	if err := o.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
 	//获取API
 	api := o.apiOrderAmend(req)
 
@@ -134,6 +149,9 @@ func (o *OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 	return o.waitSubscribeReturn(sub, 10*time.Second)
 }
 func (o *OkxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
+	if err := o.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
 	//获取API
 	api := o.apiOrderCancel(req)
 
@@ -162,6 +180,9 @@ func (o *OkxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 }
 
 func (o *OkxTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
+	if err := o.restBatchPreCheck(reqs); err != nil {
+		return nil, err
+	}
 	//获取API
 	api := o.apiBatchOrderCreate(reqs)
 
@@ -221,6 +242,9 @@ func (o *OkxTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 
 }
 func (o *OkxTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
+	if err := o.restBatchPreCheck(reqs); err != nil {
+		return nil, err
+	}
 	//获取API
 	api := o.apiBatchOrderAmend(reqs)
 
@@ -281,6 +305,10 @@ func (o *OkxTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 	return orders, nil
 }
 func (o *OkxTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
+	if err := o.restBatchPreCheck(reqs); err != nil {
+		return nil, err
+	}
+
 	//获取API
 	api := o.apiBatchOrderCancel(reqs)
 
@@ -347,12 +375,13 @@ func (o *OkxTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
 }
 
 func (o *OkxTradeEngine) SubscribeOrder(req *SubscribeOrderParam) (TradeSubscribe[Order], error) {
-
-	switch OkxAccountType(req.AccountType) {
-	case OKX_AC_SPOT, OKX_AC_SWAP, OKX_AC_FUTURES:
-	default:
-		return nil, ErrorAccountType
+	if err := o.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
 	}
+	if ok, err := o.wsOrderPreCheck(); !ok {
+		return nil, err
+	}
+
 	b := o.getBroadcastFromAccountType(req.AccountType)
 
 	sub, err := o.newOrderSubscriber(b, "", req.AccountType, "")
@@ -386,6 +415,9 @@ func (o *OkxTradeEngine) SubscribeOrder(req *SubscribeOrderParam) (TradeSubscrib
 }
 
 func (o *OkxTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
+	if err := o.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
 	if ok, err := o.wsOrderPreCheck(); !ok {
 		return nil, err
 	}
@@ -398,7 +430,6 @@ func (o *OkxTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 	defer o.closeSubscribe(b, sub)
-	log.Warn(o.handleWsOrderCreateFromOrderParam(req))
 
 	res, err := o.wsForOrder.Order(o.handleWsOrderCreateFromOrderParam(req), time.Now().UnixMilli()+5000)
 	if err != nil {
@@ -415,6 +446,9 @@ func (o *OkxTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
 	return o.waitSubscribeReturn(sub, 10*time.Second)
 }
 func (o *OkxTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
+	if err := o.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
 	if ok, err := o.wsOrderPreCheck(); !ok {
 		return nil, err
 	}
@@ -443,6 +477,9 @@ func (o *OkxTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
 	return o.waitSubscribeReturn(sub, 10*time.Second)
 }
 func (o *OkxTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
+	if err := o.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
 	if ok, err := o.wsOrderPreCheck(); !ok {
 		return nil, err
 	}
@@ -472,6 +509,9 @@ func (o *OkxTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
 }
 
 func (o *OkxTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
+	if err := o.restBatchPreCheck(reqs); err != nil {
+		return nil, err
+	}
 	if ok, err := o.wsOrderPreCheck(); !ok {
 		return nil, err
 	}
@@ -532,6 +572,12 @@ func (o *OkxTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
 	return orders, nil
 }
 func (o *OkxTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
+	if err := o.restBatchPreCheck(reqs); err != nil {
+		return nil, err
+	}
+	if ok, err := o.wsOrderPreCheck(); !ok {
+		return nil, err
+	}
 
 	var defers []func()
 
@@ -590,6 +636,12 @@ func (o *OkxTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
 	return orders, nil
 }
 func (o *OkxTradeEngine) WsCancelOrders(reqs []*OrderParam) ([]*Order, error) {
+	if err := o.restBatchPreCheck(reqs); err != nil {
+		return nil, err
+	}
+	if ok, err := o.wsOrderPreCheck(); !ok {
+		return nil, err
+	}
 
 	var defers []func()
 

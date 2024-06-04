@@ -12,7 +12,7 @@ require (
 
 require (
 	github.com/Hongssd/marketdata v0.2.7 // indirect
-	github.com/Hongssd/mybybitapi v0.0.7 // indirect
+	github.com/Hongssd/mybybitapi v0.0.8 // indirect
 	github.com/bwmarrin/snowflake v0.3.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect

@@ -1164,3 +1164,32 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromSwapPayload(req SubscribeOr
 		}
 	}()
 }
+
+func (b *BinanceTradeEngine) restBatchPreCheck(reqs []*OrderParam) error {
+	//检测长度，BINANCE最多批量下5个订单
+	if len(reqs) > 5 {
+		return ErrorInvalid("binance order param length require less than 5")
+
+	}
+
+	//检测类型是否相同
+	for _, req := range reqs {
+		if err := b.accountTypePreCheck(req.AccountType); err != nil {
+			return err
+		}
+		if req.AccountType != reqs[0].AccountType {
+			return ErrorInvalid("order param account type require same")
+		}
+	}
+
+	return nil
+}
+
+func (b *BinanceTradeEngine) accountTypePreCheck(accountType string) error {
+	switch BinanceAccountType(accountType) {
+	case BN_AC_SPOT, BN_AC_FUTURE, BN_AC_SWAP:
+		return nil
+	default:
+		return ErrorInvalid("binance account type invalid")
+	}
+}
