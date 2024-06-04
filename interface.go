@@ -12,16 +12,14 @@ type TradeExchangeType interface {
 type TradeExchange interface {
 	TradeExchangeType
 	//获取交易规范
-	ExchangeInfo() TradeExchangeInfo
+	NewExchangeInfo() TradeExchangeInfo
 
 	//获取市场数据
-	MarketData() TradeMarketData
+	NewMarketData() TradeMarketData
 
 	//获取交易引擎
-	TradeEngine(apiKey, secretKey string, options ...TradeEngineOption) TradeEngine
+	NewTradeEngine(apiKey, secretKey, passphrase string) TradeEngine
 }
-
-type TradeEngineOption func(e TradeEngine)
 
 // 交易规范
 type TradeExchangeInfo interface {

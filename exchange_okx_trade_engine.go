@@ -20,8 +20,6 @@ type OkxTradeEngine struct {
 
 	wsForOrder   *myokxapi.PrivateWsStreamClient
 	wsForOrderMu sync.Mutex
-
-	parent *OkxExchange
 }
 
 func (o *OkxTradeEngine) NewOrderReq() *OrderParam {

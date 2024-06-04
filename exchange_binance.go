@@ -2,40 +2,24 @@ package mytrade
 
 type BinanceExchange struct {
 	exchangeBase
-	*BinanceExchangeInfo
-	*BinanceMarketData
-	*BinanceTradeEngine
 }
 
-func (b *BinanceExchange) ExchangeInfo() TradeExchangeInfo {
-	if b.BinanceExchangeInfo == nil {
-		b.BinanceExchangeInfo = &BinanceExchangeInfo{
-			isLoaded: false,
-		}
+// 获取交易规范
+func (b *BinanceExchange) NewExchangeInfo() TradeExchangeInfo {
+	return &BinanceExchangeInfo{
+		isLoaded: false,
 	}
-	return b.BinanceExchangeInfo
 }
 
 // 获取市场数据
-func (b *BinanceExchange) MarketData() TradeMarketData {
-	if b.BinanceMarketData == nil {
-		b.BinanceMarketData = &BinanceMarketData{}
-	}
-	return b.BinanceMarketData
+func (b *BinanceExchange) NewMarketData() TradeMarketData {
+	return &BinanceMarketData{}
 }
 
 // 获取交易引擎
-func (b *BinanceExchange) TradeEngine(apiKey, secretKey string, options ...TradeEngineOption) TradeEngine {
-	if b.BinanceTradeEngine == nil {
-		b.BinanceTradeEngine = &BinanceTradeEngine{
-			apiKey:    apiKey,
-			secretKey: secretKey,
-		}
-		if len(options) > 0 {
-			for _, option := range options {
-				option(b.BinanceTradeEngine)
-			}
-		}
+func (b *BinanceExchange) NewTradeEngine(apiKey, secretKey, passphrase string) TradeEngine {
+	return &BinanceTradeEngine{
+		apiKey:    apiKey,
+		secretKey: secretKey,
 	}
-	return b.BinanceTradeEngine
 }
