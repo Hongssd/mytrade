@@ -630,39 +630,15 @@ func (b *BinanceTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error
 		return nil, err
 	}
 
-	var orders []*Order
 	switch BinanceAccountType(reqs[0].AccountType) {
-	case BN_AC_SPOT:
-		//现货无批量接口，直接并发下单
-		var wg sync.WaitGroup
-		var mu sync.Mutex
-		for _, req := range reqs {
-			req := req
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				order, err := b.WsCreateOrder(req)
-				if err != nil {
-					mu.Lock()
-					orders = append(orders, b.handleOrderFromSpotBatchErr(req, err))
-					mu.Unlock()
-				}
-				mu.Lock()
-				orders = append(orders, order)
-				mu.Unlock()
-			}()
-		}
-
-		wg.Wait()
-
-	case BN_AC_FUTURE, BN_AC_SWAP:
+	case BN_AC_SPOT, BN_AC_FUTURE, BN_AC_SWAP:
 		//合约WS无批量接口库，直接调用REST批量接口
+
 		return b.CreateOrders(reqs)
 	default:
 		return nil, ErrorAccountType
 	}
 
-	return orders, nil
 }
 func (b *BinanceTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
 	err := b.restBatchPreCheck(reqs)
@@ -670,38 +646,13 @@ func (b *BinanceTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error)
 		return nil, err
 	}
 
-	var orders []*Order
 	switch BinanceAccountType(reqs[0].AccountType) {
-	case BN_AC_SPOT:
-		//现货无批量接口，直接并发改单
-		var wg sync.WaitGroup
-		var mu sync.Mutex
-		for _, req := range reqs {
-			req := req
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				order, err := b.WsAmendOrder(req)
-				if err != nil {
-					mu.Lock()
-					orders = append(orders, b.handleOrderFromSpotBatchErr(req, err))
-					mu.Unlock()
-				}
-				mu.Lock()
-				orders = append(orders, order)
-				mu.Unlock()
-			}()
-		}
-
-		wg.Wait()
-
-	case BN_AC_FUTURE, BN_AC_SWAP:
+	case BN_AC_SPOT, BN_AC_FUTURE, BN_AC_SWAP:
 		//合约WS无批量接口库，直接调用REST批量接口
+		return b.AmendOrders(reqs)
 	default:
 		return nil, ErrorAccountType
 	}
-
-	return orders, nil
 }
 func (b *BinanceTradeEngine) WsCancelOrders(reqs []*OrderParam) ([]*Order, error) {
 	err := b.restBatchPreCheck(reqs)
@@ -709,37 +660,12 @@ func (b *BinanceTradeEngine) WsCancelOrders(reqs []*OrderParam) ([]*Order, error
 		return nil, err
 	}
 
-	var orders []*Order
 	switch BinanceAccountType(reqs[0].AccountType) {
-	case BN_AC_SPOT:
-		//现货无批量接口，直接并发撤单
-		var wg sync.WaitGroup
-		var mu sync.Mutex
-		for _, req := range reqs {
-			req := req
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				order, err := b.WsCancelOrder(req)
-				if err != nil {
-					mu.Lock()
-					orders = append(orders, b.handleOrderFromSpotBatchErr(req, err))
-					mu.Unlock()
-				}
-				mu.Lock()
-				orders = append(orders, order)
-				mu.Unlock()
-			}()
-		}
-
-		wg.Wait()
-
-	case BN_AC_FUTURE, BN_AC_SWAP:
+	case BN_AC_SPOT, BN_AC_FUTURE, BN_AC_SWAP:
 		//合约WS无批量接口库，直接调用REST批量接口
+
 		return b.CancelOrders(reqs)
 	default:
 		return nil, ErrorAccountType
 	}
-
-	return orders, nil
 }
