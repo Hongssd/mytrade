@@ -10,6 +10,7 @@ type Order struct {
 	Quantity      string       `json:"quantity"`      //下单数量
 	ExecutedQty   string       `json:"executedQty"`   //成交数量
 	CumQuoteQty   string       `json:"cumQuoteQty"`   //成交金额
+	AvgPrice      string       `json:"avgPrice"`      //成交均价
 	Status        OrderStatus  `json:"status"`        //订单状态
 	Type          OrderType    `json:"orderType"`     //订单类型
 	Side          OrderSide    `json:"orderSide"`     //买卖方向

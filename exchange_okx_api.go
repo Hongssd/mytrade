@@ -359,6 +359,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order 
 		Quantity:      order.Sz,
 		ExecutedQty:   order.FillSz,
 		CumQuoteQty:   cumQuoteQty.String(),
+		AvgPrice:      order.AvgPx,
 		Status:        o.okxConverter.FromOKXOrderStatus(order.State),
 		Type:          orderType,
 		Side:          o.okxConverter.FromOKXOrderSide(order.Side),

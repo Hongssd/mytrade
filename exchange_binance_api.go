@@ -385,7 +385,16 @@ func (b *BinanceTradeEngine) apiSwapBatchOrderCancel(reqs []*OrderParam) (*mybin
 // 现货订单处理
 func (b *BinanceTradeEngine) handleOrdersFromSpotOpenOrders(req *QueryOrderParam, res *mybinanceapi.SpotOpenOrdersRes) []*Order {
 	var orders []*Order
+
 	for _, order := range *res {
+		avgPrice := decimal.Zero
+		if order.ExecutedQty != "" && order.CummulativeQuoteQty != "" {
+			executedQty, _ := decimal.NewFromString(order.ExecutedQty)
+			cumQuoteQty, _ := decimal.NewFromString(order.CummulativeQuoteQty)
+			if !executedQty.IsZero() {
+				avgPrice = cumQuoteQty.Div(executedQty)
+			}
+		}
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
@@ -396,6 +405,7 @@ func (b *BinanceTradeEngine) handleOrdersFromSpotOpenOrders(req *QueryOrderParam
 			Quantity:      order.OrigQty,
 			ExecutedQty:   order.ExecutedQty,
 			CumQuoteQty:   order.CummulativeQuoteQty,
+			AvgPrice:      avgPrice.String(),
 			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
@@ -407,6 +417,14 @@ func (b *BinanceTradeEngine) handleOrdersFromSpotOpenOrders(req *QueryOrderParam
 	return orders
 }
 func (b *BinanceTradeEngine) handleOrderFromSpotOrderQuery(req *QueryOrderParam, res *mybinanceapi.SpotOrderGetRes) *Order {
+	avgPrice := decimal.Zero
+	if res.ExecutedQty != "" && res.CummulativeQuoteQty != "" {
+		executedQty, _ := decimal.NewFromString(res.ExecutedQty)
+		cumQuoteQty, _ := decimal.NewFromString(res.CummulativeQuoteQty)
+		if !executedQty.IsZero() {
+			avgPrice = cumQuoteQty.Div(executedQty)
+		}
+	}
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
@@ -417,6 +435,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderQuery(req *QueryOrderParam,
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecutedQty,
 		CumQuoteQty:   res.CummulativeQuoteQty,
+		AvgPrice:      avgPrice.String(),
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.Side),
@@ -455,6 +474,14 @@ func (b *BinanceTradeEngine) handleTradesFromSpotTradeQuery(req *QueryTradeParam
 }
 
 func (b *BinanceTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *mybinanceapi.SpotOrderPostRes) *Order {
+	avgPrice := decimal.Zero
+	if res.ExecutedQty != "" && res.CummulativeQuoteQty != "" {
+		executedQty, _ := decimal.NewFromString(res.ExecutedQty)
+		cumQuoteQty, _ := decimal.NewFromString(res.CummulativeQuoteQty)
+		if !executedQty.IsZero() {
+			avgPrice = cumQuoteQty.Div(executedQty)
+		}
+	}
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
@@ -465,6 +492,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecutedQty,
 		CumQuoteQty:   res.CummulativeQuoteQty,
+		AvgPrice:      avgPrice.String(),
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.Side),
@@ -475,6 +503,14 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res
 	return order
 }
 func (b *BinanceTradeEngine) handleOrderFromSpotOrderAmend(req *OrderParam, res *mybinanceapi.SpotOrderCancelReplaceRes) *Order {
+	avgPrice := decimal.Zero
+	if res.NewOrderResponse.ExecutedQty != "" && res.NewOrderResponse.CummulativeQuoteQty != "" {
+		executedQty, _ := decimal.NewFromString(res.NewOrderResponse.ExecutedQty)
+		cumQuoteQty, _ := decimal.NewFromString(res.NewOrderResponse.CummulativeQuoteQty)
+		if !executedQty.IsZero() {
+			avgPrice = cumQuoteQty.Div(executedQty)
+		}
+	}
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
@@ -485,6 +521,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderAmend(req *OrderParam, res 
 		Quantity:      res.NewOrderResponse.OrigQty,
 		ExecutedQty:   res.NewOrderResponse.ExecutedQty,
 		CumQuoteQty:   res.NewOrderResponse.CummulativeQuoteQty,
+		AvgPrice:      avgPrice.String(),
 		Status:        b.bnConverter.FromBNOrderStatus(res.NewOrderResponse.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.NewOrderResponse.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.NewOrderResponse.Side),
@@ -496,6 +533,14 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderAmend(req *OrderParam, res 
 }
 func (b *BinanceTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res *mybinanceapi.SpotOrderDeleteRes) *Order {
 	nowTimestamp := time.Now().UnixMilli()
+	avgPrice := decimal.Zero
+	if res.ExecutedQty != "" && res.CummulativeQuoteQty != "" {
+		executedQty, _ := decimal.NewFromString(res.ExecutedQty)
+		cumQuoteQty, _ := decimal.NewFromString(res.CummulativeQuoteQty)
+		if !executedQty.IsZero() {
+			avgPrice = cumQuoteQty.Div(executedQty)
+		}
+	}
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
@@ -506,6 +551,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecutedQty,
 		CumQuoteQty:   res.CummulativeQuoteQty,
+		AvgPrice:      avgPrice.String(),
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.Side),
@@ -548,6 +594,7 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureOpenOrders(req *QueryOrderPar
 			Quantity:      order.OrigQty,
 			ExecutedQty:   order.ExecutedQty,
 			CumQuoteQty:   order.CumQuote,
+			AvgPrice:      order.AvgPrice,
 			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
@@ -571,6 +618,7 @@ func (b *BinanceTradeEngine) handleOrderFromFutureOrderQuery(req *QueryOrderPara
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecutedQty,
 		CumQuoteQty:   res.CumQuote,
+		AvgPrice:      res.AvgPrice,
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.Side),
@@ -618,6 +666,7 @@ func (b *BinanceTradeEngine) handleOrderFromFutureOrderCreate(req *OrderParam, r
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecutedQty,
 		CumQuoteQty:   res.CumQuote,
+		AvgPrice:      res.AvgPrice,
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.Side),
@@ -641,6 +690,7 @@ func (b *BinanceTradeEngine) handleOrderFromFutureOrderAmend(req *OrderParam, re
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecutedQty,
 		CumQuoteQty:   res.CumQuote,
+		AvgPrice:      res.AvgPrice,
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.Side),
@@ -663,6 +713,7 @@ func (b *BinanceTradeEngine) handleOrderFromFutureOrderCancel(req *OrderParam, r
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecutedQty,
 		CumQuoteQty:   res.CumQuote,
+		AvgPrice:      res.AvgPrice,
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.Side),
@@ -689,6 +740,7 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderCreate(reqs []*Orde
 			Quantity:      order.OrigQty,
 			ExecutedQty:   order.ExecutedQty,
 			CumQuoteQty:   order.CumQuote,
+			AvgPrice:      order.AvgPrice,
 			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
@@ -717,6 +769,7 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderAmend(reqs []*Order
 			Quantity:      order.OrigQty,
 			ExecutedQty:   order.ExecutedQty,
 			CumQuoteQty:   order.CumQuote,
+			AvgPrice:      order.AvgPrice,
 			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
@@ -745,6 +798,7 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderCancel(reqs []*Orde
 			Quantity:      order.OrigQty,
 			ExecutedQty:   order.ExecutedQty,
 			CumQuoteQty:   order.CumQuote,
+			AvgPrice:      order.AvgPrice,
 			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
@@ -774,6 +828,7 @@ func (b *BinanceTradeEngine) handleOrdersFromSwapOpenOrders(req *QueryOrderParam
 			Quantity:      order.OrigQty,
 			ExecutedQty:   order.ExecutedQty,
 			CumQuoteQty:   order.CumQuote,
+			AvgPrice:      order.AvgPrice,
 			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
@@ -797,6 +852,7 @@ func (b *BinanceTradeEngine) handleOrderFromSwapOrderQuery(req *QueryOrderParam,
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecutedQty,
 		CumQuoteQty:   res.CumQuote,
+		AvgPrice:      res.AvgPrice,
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.Side),
@@ -844,6 +900,7 @@ func (b *BinanceTradeEngine) handleOrderFromSwapOrderCreate(req *OrderParam, res
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecutedQty,
 		CumQuoteQty:   res.CumQuote,
+		AvgPrice:      res.AvgPrice,
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.Side),
@@ -867,6 +924,7 @@ func (b *BinanceTradeEngine) handleOrderFromSwapOrderAmend(req *OrderParam, res 
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecutedQty,
 		CumQuoteQty:   res.CumQuote,
+		AvgPrice:      res.AvgPrice,
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.Side),
@@ -889,6 +947,7 @@ func (b *BinanceTradeEngine) handleOrderFromSwapOrderCancel(req *OrderParam, res
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecutedQty,
 		CumQuoteQty:   res.CumQuote,
+		AvgPrice:      res.AvgPrice,
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
 		Side:          b.bnConverter.FromBNOrderSide(res.Side),
@@ -915,6 +974,7 @@ func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderCreate(reqs []*OrderP
 			Quantity:      order.OrigQty,
 			ExecutedQty:   order.ExecutedQty,
 			CumQuoteQty:   order.CumQuote,
+			AvgPrice:      order.AvgPrice,
 			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
@@ -943,6 +1003,7 @@ func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderAmend(reqs []*OrderPa
 			Quantity:      order.OrigQty,
 			ExecutedQty:   order.ExecutedQty,
 			CumQuoteQty:   order.CumQuote,
+			AvgPrice:      order.AvgPrice,
 			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
@@ -971,6 +1032,7 @@ func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderCancel(reqs []*OrderP
 			Quantity:      order.OrigQty,
 			ExecutedQty:   order.ExecutedQty,
 			CumQuoteQty:   order.CumQuote,
+			AvgPrice:      order.AvgPrice,
 			Status:        b.bnConverter.FromBNOrderStatus(order.Status),
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
@@ -1024,6 +1086,14 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromSpotPayload(req SubscribeOr
 				newSub.CloseChan() <- struct{}{}
 				return
 			case r := <-newPayload.ExecutionReportPayload.ResultChan():
+				avgPrice := decimal.Zero
+				if r.ExecutedQty != "" && r.CummulativeQuoteQty != "" {
+					executedQty, _ := decimal.NewFromString(r.ExecutedQty)
+					cumQuoteQty, _ := decimal.NewFromString(r.CummulativeQuoteQty)
+					if !executedQty.IsZero() {
+						avgPrice = cumQuoteQty.Div(executedQty)
+					}
+				}
 				order := Order{
 					Exchange:      BINANCE_NAME.String(),
 					AccountType:   req.AccountType,
@@ -1034,6 +1104,7 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromSpotPayload(req SubscribeOr
 					Quantity:      r.OrigQty,
 					ExecutedQty:   r.ExecutedQty,
 					CumQuoteQty:   r.CummulativeQuoteQty,
+					AvgPrice:      avgPrice.String(),
 					Status:        b.bnConverter.FromBNOrderStatus(r.Status),
 					Type:          b.bnConverter.FromBNOrderType(r.Type),
 					Side:          b.bnConverter.FromBNOrderSide(r.Side),
@@ -1090,6 +1161,7 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromFuturePayload(req Subscribe
 					Quantity:      r.OrigQty,
 					ExecutedQty:   r.ExecutedQty,
 					CumQuoteQty:   CumQuoteQty.String(),
+					AvgPrice:      r.AvgPrice,
 					Status:        b.bnConverter.FromBNOrderStatus(r.Status),
 					Type:          b.bnConverter.FromBNOrderType(r.Type),
 					Side:          b.bnConverter.FromBNOrderSide(r.Side),
@@ -1148,6 +1220,7 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromSwapPayload(req SubscribeOr
 					Quantity:      r.OrigQty,
 					ExecutedQty:   r.ExecutedQty,
 					CumQuoteQty:   CumQuoteQty.String(),
+					AvgPrice:      r.AvgPrice,
 					Status:        b.bnConverter.FromBNOrderStatus(r.Status),
 					Type:          b.bnConverter.FromBNOrderType(r.Type),
 					Side:          b.bnConverter.FromBNOrderSide(r.Side),
