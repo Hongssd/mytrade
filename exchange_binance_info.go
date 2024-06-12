@@ -114,7 +114,7 @@ func (b *BinanceExchangeInfo) GetSymbolInfo(accountType string, symbol string) (
 			return nil, ErrorSymbolNotFound
 		}
 		baseCoin, quoteCoin = v.BaseAsset, v.QuoteAsset
-		isTrading, isContract, isContractAmt = v.Status == "TRADING", false, false
+		isTrading, isContract, isContractAmt = v.Status == "TRADING", true, false
 		contractType = v.ContractType
 		for _, m := range v.Filters {
 			switch m["filterType"].(string) {
