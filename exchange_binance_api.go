@@ -47,8 +47,10 @@ func (b *BinanceTradeEngine) apiSpotOrderCreate(req *OrderParam) *mybinanceapi.S
 		Symbol(req.Symbol).
 		Type(b.bnConverter.ToBNOrderType(req.OrderType)).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
-		Price(req.Price).
 		Quantity(req.Quantity)
+	if !req.Price.IsZero() {
+		api = api.Price(req.Price)
+	}
 	if req.ClientOrderId != "" {
 		api = api.NewClientOrderId(req.ClientOrderId)
 	}
@@ -62,8 +64,10 @@ func (b *BinanceTradeEngine) apiSpotOrderAmend(req *OrderParam) *mybinanceapi.Sp
 		Symbol(req.Symbol).CancelReplaceMode("STOP_ON_FAILURE").
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		Type(b.bnConverter.ToBNOrderType(req.OrderType)).
-		Price(req.Price).
 		Quantity(req.Quantity)
+	if !req.Price.IsZero() {
+		api = api.Price(req.Price)
+	}
 	if req.OrderId != "" {
 		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
 		api = api.CancelOrderId(orderId)
@@ -133,8 +137,10 @@ func (b *BinanceTradeEngine) apiFutureOrderCreate(req *OrderParam) *mybinanceapi
 		Type(b.bnConverter.ToBNOrderType(req.OrderType)).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-		Price(req.Price).
 		Quantity(req.Quantity)
+	if !req.Price.IsZero() {
+		api = api.Price(req.Price)
+	}
 	if req.ClientOrderId != "" {
 		api = api.NewClientOrderId(req.ClientOrderId)
 	}
@@ -147,8 +153,10 @@ func (b *BinanceTradeEngine) apiFutureOrderAmend(req *OrderParam) *mybinanceapi.
 	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureOrderPut().
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
-		Price(req.Price).
 		Quantity(req.Quantity)
+	if !req.Price.IsZero() {
+		api = api.Price(req.Price)
+	}
 	if req.OrderId != "" {
 		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
 		api = api.OrderId(orderId)
@@ -178,8 +186,10 @@ func (b *BinanceTradeEngine) apiFutureBatchOrderCreate(reqs []*OrderParam) *mybi
 			Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 			Type(b.bnConverter.ToBNOrderType(req.OrderType)).
 			PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-			Price(req.Price).
 			Quantity(req.Quantity)
+		if !req.Price.IsZero() {
+			thisApi = thisApi.Price(req.Price)
+		}
 		if req.ClientOrderId != "" {
 			thisApi = thisApi.NewClientOrderId(req.ClientOrderId)
 		}
@@ -196,8 +206,10 @@ func (b *BinanceTradeEngine) apiFutureBatchOrderAmend(reqs []*OrderParam) *mybin
 	for _, req := range reqs {
 		thisApi := client.NewFutureOrderPut().Symbol(req.Symbol).
 			Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
-			Price(req.Price).
 			Quantity(req.Quantity)
+		if !req.Price.IsZero() {
+			thisApi = thisApi.Price(req.Price)
+		}
 		if req.OrderId != "" {
 			orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
 			thisApi = thisApi.OrderId(orderId)
@@ -279,8 +291,10 @@ func (b *BinanceTradeEngine) apiSwapOrderCreate(req *OrderParam) *mybinanceapi.S
 		Type(b.bnConverter.ToBNOrderType(req.OrderType)).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-		Price(req.Price).
 		Quantity(req.Quantity)
+	if !req.Price.IsZero() {
+		api = api.Price(req.Price)
+	}
 	if req.ClientOrderId != "" {
 		api = api.NewClientOrderId(req.ClientOrderId)
 	}
@@ -293,8 +307,10 @@ func (b *BinanceTradeEngine) apiSwapOrderAmend(req *OrderParam) *mybinanceapi.Sw
 	api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewSwapOrderPut().
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
-		Price(req.Price).
 		Quantity(req.Quantity)
+	if !req.Price.IsZero() {
+		api = api.Price(req.Price)
+	}
 	if req.OrderId != "" {
 		api = api.OrderId(req.OrderId)
 	}
@@ -323,8 +339,10 @@ func (b *BinanceTradeEngine) apiSwapBatchOrderCreate(reqs []*OrderParam) *mybina
 			Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 			Type(b.bnConverter.ToBNOrderType(req.OrderType)).
 			PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-			Price(req.Price).
 			Quantity(req.Quantity)
+		if !req.Price.IsZero() {
+			thisApi = thisApi.Price(req.Price)
+		}
 		if req.ClientOrderId != "" {
 			thisApi = thisApi.NewClientOrderId(req.ClientOrderId)
 		}
@@ -341,8 +359,10 @@ func (b *BinanceTradeEngine) apiSwapBatchOrderAmend(reqs []*OrderParam) *mybinan
 	for _, req := range reqs {
 		thisApi := client.NewSwapOrderPut().Symbol(req.Symbol).
 			Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
-			Price(req.Price).
 			Quantity(req.Quantity)
+		if !req.Price.IsZero() {
+			thisApi = thisApi.Price(req.Price)
+		}
 		if req.OrderId != "" {
 			thisApi = thisApi.OrderId(req.OrderId)
 		}
