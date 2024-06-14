@@ -1262,7 +1262,6 @@ func (b *BinanceTradeEngine) restBatchPreCheck(reqs []*OrderParam) error {
 	//检测长度，BINANCE最多批量下5个订单
 	if len(reqs) > 5 {
 		return ErrorInvalid("binance order param length require less than 5")
-
 	}
 
 	//检测类型是否相同

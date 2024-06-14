@@ -60,6 +60,9 @@ func (b *BybitTradeEngine) apiOrderCreate(req *OrderParam) *mybybitapi.OrderCrea
 		Price(req.Price.String()).
 		Qty(req.Quantity.String())
 
+	if req.PositionSide != "" {
+		api.PositionIdx(b.bybitConverter.ToBYBITPositionSide(req.OrderSide, req.PositionSide))
+	}
 	if req.ClientOrderId != "" {
 		api.OrderLinkId(req.ClientOrderId)
 	}
@@ -69,6 +72,7 @@ func (b *BybitTradeEngine) apiOrderCreate(req *OrderParam) *mybybitapi.OrderCrea
 	if req.ReduceOnly {
 		api.ReduceOnly(req.ReduceOnly)
 	}
+
 	return api
 }
 func (b *BybitTradeEngine) apiOrderAmend(req *OrderParam) *mybybitapi.OrderAmendAPI {
@@ -83,6 +87,7 @@ func (b *BybitTradeEngine) apiOrderAmend(req *OrderParam) *mybybitapi.OrderAmend
 	if req.ClientOrderId != "" {
 		api.OrderLinkId(req.ClientOrderId)
 	}
+
 	if req.Price != decimal.Zero {
 		api.Price(req.Price.String())
 	}

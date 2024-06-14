@@ -32,9 +32,9 @@ const (
 // 2: 賣側雙向持倉
 // 僅對linear和inverse有效
 const (
+	BYBIT_POSITION_SIDE_BOTH  = 0
 	BYBIT_POSITION_SIDE_LONG  = 1
 	BYBIT_POSITION_SIDE_SHORT = 2
-	BYBIT_POSITION_SIDE_BOTH  = 0
 )
 
 // 订单状态
