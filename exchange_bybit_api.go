@@ -61,7 +61,7 @@ func (b *BybitTradeEngine) apiOrderCreate(req *OrderParam) *mybybitapi.OrderCrea
 		Qty(req.Quantity.String())
 
 	if req.PositionSide != "" {
-		api.PositionIdx(b.bybitConverter.ToBYBITPositionSide(req.OrderSide, req.PositionSide))
+		api.PositionIdx(b.bybitConverter.ToBYBITPositionSide(req.PositionSide))
 	}
 	if req.ClientOrderId != "" {
 		api.OrderLinkId(req.ClientOrderId)

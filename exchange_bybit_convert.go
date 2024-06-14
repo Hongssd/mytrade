@@ -60,24 +60,14 @@ func (c *BybitEnumConverter) FromBYBITPositionSide(t int) PositionSide {
 		return POSITION_SIDE_UNKNOWN
 	}
 }
-func (c *BybitEnumConverter) ToBYBITPositionSide(o OrderSide, t PositionSide) int {
+func (c *BybitEnumConverter) ToBYBITPositionSide(t PositionSide) int {
 	switch t {
 	case POSITION_SIDE_LONG:
 		return BYBIT_POSITION_SIDE_LONG
 	case POSITION_SIDE_SHORT:
-		switch o {
-		case ORDER_SIDE_BUY:
-			return BYBIT_POSITION_SIDE_LONG
-		case ORDER_SIDE_SELL:
-			return BYBIT_POSITION_SIDE_SHORT
-		}
+		return BYBIT_POSITION_SIDE_SHORT
 	case POSITION_SIDE_BOTH:
-		switch o {
-		case ORDER_SIDE_BUY:
-			return BYBIT_POSITION_SIDE_LONG
-		case ORDER_SIDE_SELL:
-			return BYBIT_POSITION_SIDE_SHORT
-		}
+		return BYBIT_POSITION_SIDE_BOTH
 	}
 	return 0
 }
