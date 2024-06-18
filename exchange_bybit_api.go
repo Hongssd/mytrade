@@ -24,6 +24,22 @@ func (b *BybitTradeEngine) apiQueryOrder(req *QueryOrderParam) *mybybitapi.Order
 	if req.ClientOrderId != "" {
 		api.OrderLinkId(req.ClientOrderId)
 	}
+
+	return api
+}
+func (b *BybitTradeEngine) apiQueryOrders(req *QueryOrderParam) *mybybitapi.OrderHistoryAPI {
+	client := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient()
+	api := client.NewOrderHistory().Category(req.AccountType).Symbol(req.Symbol)
+
+	if req.StartTime != 0 {
+		api.StartTime(req.StartTime)
+	}
+	if req.EndTime != 0 {
+		api.EndTime(req.EndTime)
+	}
+	if req.Limit != 0 {
+		api.Limit(req.Limit)
+	}
 	return api
 }
 func (b *BybitTradeEngine) apiQueryTrades(req *QueryTradeParam, pageCursor string) *mybybitapi.OrderExecutionListAPI {
@@ -165,6 +181,35 @@ func (b *BybitTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam,
 			FeeCcy:    "",
 		})
 
+	}
+	return orders
+}
+func (b *BybitTradeEngine) handleOrdersFromQueryOrders(req *QueryOrderParam, res mybybitapi.OrderHistoryRes) []*Order {
+	var orders []*Order
+	for _, order := range res.List {
+		orders = append(orders, &Order{
+			Exchange:      BYBIT_NAME.String(),
+			AccountType:   req.AccountType,
+			Symbol:        req.Symbol,
+			OrderId:       order.OrderId,
+			ClientOrderId: order.OrderLinkId,
+			Price:         order.Price,
+			Quantity:      order.Qty,
+			ExecutedQty:   order.CumExecQty,
+			CumQuoteQty:   order.CumExecValue,
+			AvgPrice:      order.AvgPrice,
+			Status:        b.bybitConverter.FromBYBITOrderStatus(order.OrderStatus),
+			Type:          b.bybitConverter.FromBYBITOrderType(order.OrderType),
+			Side:          b.bybitConverter.FromBYBITOrderSide(order.Side),
+			PositionSide:  b.bybitConverter.FromBYBITPositionSide(order.PositionIdx),
+			TimeInForce:   b.bybitConverter.FromBYBITTimeInForce(order.TimeInForce),
+			ReduceOnly:    order.ReduceOnly,
+			CreateTime:    stringToInt64(order.CreatedTime),
+			UpdateTime:    stringToInt64(order.UpdatedTime),
+
+			FeeAmount: order.CumExecFee,
+			FeeCcy:    "",
+		})
 	}
 	return orders
 }

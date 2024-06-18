@@ -105,6 +105,21 @@ func (q *QueryOrderParam) SetClientOrderId(clientOrderId string) *QueryOrderPara
 	return q
 }
 
+func (q *QueryOrderParam) SetStartTime(startTime int64) *QueryOrderParam {
+	q.StartTime = startTime
+	return q
+}
+
+func (q *QueryOrderParam) SetEndTime(endTime int64) *QueryOrderParam {
+	q.EndTime = endTime
+	return q
+}
+
+func (q *QueryOrderParam) SetLimit(limit int) *QueryOrderParam {
+	q.Limit = limit
+	return q
+}
+
 type QueryTradeParam struct {
 	AccountType string //账户类型
 	Symbol      string //交易对

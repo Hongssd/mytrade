@@ -74,6 +74,22 @@ func (b *BybitTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 
 	return orders[0], nil
 }
+func (b *BybitTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
+	if err := b.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
+
+	api := b.apiQueryOrders(req)
+
+	res, err := api.Do()
+	if err != nil {
+		return nil, err
+	}
+
+	orders := b.handleOrdersFromQueryOrders(req, res.Result)
+	return orders, nil
+}
+
 func (b *BybitTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
 	if err := b.accountTypePreCheck(req.AccountType); err != nil {
 		return nil, err

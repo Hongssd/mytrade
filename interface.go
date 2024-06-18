@@ -101,6 +101,10 @@ type TradeEngine interface {
 	QueryOpenOrders(*QueryOrderParam) ([]*Order, error)
 	//查指定单
 	QueryOrder(*QueryOrderParam) (*Order, error)
+
+	//查订单列表
+	QueryOrders(*QueryOrderParam) ([]*Order, error)
+
 	//查成交
 	QueryTrades(*QueryTradeParam) ([]*Trade, error)
 

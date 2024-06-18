@@ -92,6 +92,37 @@ func (b *BinanceTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 
 	return order, nil
 }
+func (b *BinanceTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
+	var orders []*Order
+
+	switch BinanceAccountType(req.AccountType) {
+	case BN_AC_SPOT:
+		api := b.apiSpotOrdersQuery(req)
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		orders = b.handleOrderFromSpotOrdersQuery(req, res)
+	case BN_AC_FUTURE:
+		api := b.apiFutureOrdersQuery(req)
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		orders = b.handleOrderFromFutureOrdersQuery(req, res)
+	case BN_AC_SWAP:
+		api := b.apiSwapOrdersQuery(req)
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		orders = b.handleOrderFromSwapOrdersQuery(req, res)
+	default:
+		return nil, ErrorAccountType
+	}
+
+	return orders, nil
+}
 func (b *BinanceTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
 	var trades []*Trade
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Hongssd/myokxapi"
 	"github.com/shopspring/decimal"
+	"strconv"
 )
 
 // 查询订单接口获取
@@ -23,6 +24,22 @@ func (o *OkxTradeEngine) apiQueryOrder(req *QueryOrderParam) *myokxapi.PrivateRe
 		api.ClOrdId(req.ClientOrderId)
 	}
 	return api
+}
+func (o *OkxTradeEngine) apiQueryOrders(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderHistoryAPI {
+	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
+	api := client.NewPrivateRestTradeOrderHistory().InstType(req.AccountType).InstId(req.Symbol)
+	if req.StartTime != 0 {
+		api.Begin(strconv.FormatInt(req.StartTime, 10))
+	}
+	if req.EndTime != 0 {
+		api.End(strconv.FormatInt(req.EndTime, 10))
+	}
+	if req.Limit != 0 {
+		api.Limit(strconv.Itoa(req.Limit))
+	}
+
+	return api
+
 }
 func (o *OkxTradeEngine) apiQueryTrades(req *QueryTradeParam) *myokxapi.PrivateRestTradeFillsAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
@@ -177,6 +194,37 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 		RealizedPnl:   r.Pnl,
 	}
 	return order, nil
+}
+func (o *OkxTradeEngine) handleOrdersFromQueryOrderGet(req *QueryOrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderHistoryRes]) ([]*Order, error) {
+	if res.Code != "0" {
+		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
+	}
+
+	var orders []*Order
+	for _, r := range res.Data {
+		orderType, timeInForce := o.okxConverter.FromOKXOrderType(r.OrdType)
+		order := &Order{
+			Exchange:      OKX_NAME.String(),
+			OrderId:       r.OrdId,
+			ClientOrderId: r.ClOrdId,
+			AccountType:   req.AccountType,
+			Symbol:        req.Symbol,
+			Price:         r.Px,
+			Quantity:      r.Sz,
+			ExecutedQty:   r.FillSz,
+			Status:        o.okxConverter.FromOKXOrderStatus(r.State),
+			Type:          orderType,
+			Side:          o.okxConverter.FromOKXOrderSide(r.Side),
+			PositionSide:  o.okxConverter.FromOKXPositionSide(r.PosSide),
+			TimeInForce:   timeInForce,
+			ReduceOnly:    stringToBool(r.ReduceOnly),
+			CreateTime:    stringToInt64(r.CTime),
+			UpdateTime:    stringToInt64(r.UTime),
+			RealizedPnl:   r.Pnl,
+		}
+		orders = append(orders, order)
+	}
+	return orders, nil
 }
 func (o *OkxTradeEngine) handleTradesFromQueryTrades(req *QueryTradeParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeFillsRes]) ([]*Trade, error) {
 	if res.Code != "0" {

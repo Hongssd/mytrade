@@ -66,6 +66,22 @@ func (o *OkxTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 
 	return order, nil
 }
+func (o *OkxTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
+	if err := o.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
+	api := o.apiQueryOrders(req)
+	res, err := api.Do()
+	if err != nil {
+		return nil, err
+	}
+	orders, err := o.handleOrdersFromQueryOrderGet(req, res)
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
 func (o *OkxTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
 	if err := o.accountTypePreCheck(req.AccountType); err != nil {
 		return nil, err
