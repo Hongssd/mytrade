@@ -103,15 +103,6 @@ func (b *BybitTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
 	}
 
 	trades := b.handleTradesFromQueryTrades(req, res.Result)
-	for res.Result.NextPageCursor != "" {
-		api = b.apiQueryTrades(req, res.Result.NextPageCursor)
-		res, err = api.Do()
-		if err != nil {
-			return nil, err
-		}
-		trades = append(trades, b.handleTradesFromQueryTrades(req, res.Result)...)
-	}
-
 	return trades, nil
 }
 
