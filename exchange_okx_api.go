@@ -149,6 +149,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, r
 			Price:         r.Px,
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,
+			AvgPrice:      r.AvgPx,
 			Status:        o.okxConverter.FromOKXOrderStatus(r.State),
 			Type:          orderType,
 			Side:          o.okxConverter.FromOKXOrderSide(r.Side),
@@ -183,6 +184,7 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 		Price:         r.Px,
 		Quantity:      r.Sz,
 		ExecutedQty:   r.FillSz,
+		AvgPrice:      r.AvgPx,
 		Status:        o.okxConverter.FromOKXOrderStatus(r.State),
 		Type:          orderType,
 		Side:          o.okxConverter.FromOKXOrderSide(r.Side),
@@ -212,6 +214,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderGet(req *QueryOrderParam, res
 			Price:         r.Px,
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,
+			AvgPrice:      r.AvgPx,
 			Status:        o.okxConverter.FromOKXOrderStatus(r.State),
 			Type:          orderType,
 			Side:          o.okxConverter.FromOKXOrderSide(r.Side),
@@ -392,12 +395,6 @@ func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order 
 
 	orderType, timeInForce := o.okxConverter.FromOKXOrderType(order.OrdType)
 
-	avgPx := decimal.RequireFromString(order.AvgPx)
-	cumQuoteQty := decimal.Zero
-	if !avgPx.IsZero() {
-		cumQuoteQty = avgPx.Mul(decimal.RequireFromString(order.FillSz))
-	}
-
 	return &Order{
 		Exchange:      OKX_NAME.String(),
 		Symbol:        order.Orders.InstId,
@@ -406,7 +403,6 @@ func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order 
 		Price:         order.Px,
 		Quantity:      order.Sz,
 		ExecutedQty:   order.FillSz,
-		CumQuoteQty:   cumQuoteQty.String(),
 		AvgPrice:      order.AvgPx,
 		Status:        o.okxConverter.FromOKXOrderStatus(order.State),
 		Type:          orderType,
