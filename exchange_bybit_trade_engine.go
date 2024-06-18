@@ -122,8 +122,8 @@ func (b *BybitTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 
-	//异步接收ws结果，10秒超时
-	return b.waitSubscribeReturn(sub, 10*time.Second)
+	//异步接收ws结果，1秒超时
+	return b.waitSubscribeReturn(sub, 1*time.Second)
 }
 func (b *BybitTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 	if err := b.accountTypePreCheck(req.AccountType); err != nil {
@@ -148,8 +148,8 @@ func (b *BybitTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 
-	//异步接收ws结果，10秒超时
-	return b.waitSubscribeReturn(sub, 10*time.Second)
+	//异步接收ws结果，1秒超时
+	return b.waitSubscribeReturn(sub, 1*time.Second)
 }
 func (b *BybitTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	if err := b.accountTypePreCheck(req.AccountType); err != nil {
@@ -174,8 +174,8 @@ func (b *BybitTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 
-	//异步接收ws结果，10秒超时
-	return b.waitSubscribeReturn(sub, 10*time.Second)
+	//异步接收ws结果，1秒超时
+	return b.waitSubscribeReturn(sub, 1*time.Second)
 }
 
 func (b *BybitTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
@@ -243,14 +243,14 @@ func (b *BybitTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 			return ords, err
 		}
 
-		//批量异步接收ws结果，10秒超时
+		//批量异步接收ws结果，1秒超时
 		var wg sync.WaitGroup
 		var mu sync.Mutex
 		for _, sub := range subs {
 			wg.Add(1)
 			go func(sub *bybitOrderSubscriber) {
 				defer wg.Done()
-				order, err := b.waitSubscribeReturn(sub, 10*time.Second)
+				order, err := b.waitSubscribeReturn(sub, 1*time.Second)
 				if err != nil {
 					log.Error(err)
 				}
@@ -336,14 +336,14 @@ func (b *BybitTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 			return ords, err
 		}
 
-		//批量异步接收ws结果，10秒超时
+		//批量异步接收ws结果，1秒超时
 		var wg sync.WaitGroup
 		var mu sync.Mutex
 		for _, sub := range subs {
 			wg.Add(1)
 			go func(sub *bybitOrderSubscriber) {
 				defer wg.Done()
-				order, err := b.waitSubscribeReturn(sub, 10*time.Second)
+				order, err := b.waitSubscribeReturn(sub, 1*time.Second)
 				if err != nil {
 					log.Error(err)
 				}
@@ -429,14 +429,14 @@ func (b *BybitTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 			return ords, err
 		}
 
-		//批量异步接收ws结果，10秒超时
+		//批量异步接收ws结果，1秒超时
 		var wg sync.WaitGroup
 		var mu sync.Mutex
 		for _, sub := range subs {
 			wg.Add(1)
 			go func(sub *bybitOrderSubscriber) {
 				defer wg.Done()
-				order, err := b.waitSubscribeReturn(sub, 10*time.Second)
+				order, err := b.waitSubscribeReturn(sub, 1*time.Second)
 				if err != nil {
 					log.Error(err)
 				}
@@ -522,8 +522,8 @@ func (b *BybitTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
 			return nil, err
 		}
 
-		//异步接收ws结果，10秒超时
-		return b.waitSubscribeReturn(sub, 10*time.Second)
+		//异步接收ws结果，1秒超时
+		return b.waitSubscribeReturn(sub, 1*time.Second)
 	default:
 		return nil, ErrorAccountType
 	}
@@ -555,8 +555,8 @@ func (b *BybitTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
 			return nil, err
 		}
 
-		//异步接收ws结果，10秒超时
-		return b.waitSubscribeReturn(sub, 10*time.Second)
+		//异步接收ws结果，1秒超时
+		return b.waitSubscribeReturn(sub, 1*time.Second)
 	default:
 		return nil, ErrorAccountType
 	}
@@ -588,8 +588,8 @@ func (b *BybitTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
 			return nil, err
 		}
 
-		//异步接收ws结果，10秒超时
-		return b.waitSubscribeReturn(sub, 10*time.Second)
+		//异步接收ws结果，1秒超时
+		return b.waitSubscribeReturn(sub, 1*time.Second)
 	default:
 		return nil, ErrorAccountType
 	}

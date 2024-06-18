@@ -112,8 +112,8 @@ func (o *OkxTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 
-	//异步接收ws结果，10秒超时
-	return o.waitSubscribeReturn(sub, 10*time.Second)
+	//异步接收ws结果，1秒超时
+	return o.waitSubscribeReturn(sub, 1*time.Second)
 }
 func (o *OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 	if err := o.accountTypePreCheck(req.AccountType); err != nil {
@@ -143,8 +143,8 @@ func (o *OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 
-	//异步接收ws结果，10秒超时
-	return o.waitSubscribeReturn(sub, 10*time.Second)
+	//异步接收ws结果，1秒超时
+	return o.waitSubscribeReturn(sub, 1*time.Second)
 }
 func (o *OkxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	if err := o.accountTypePreCheck(req.AccountType); err != nil {
@@ -173,8 +173,8 @@ func (o *OkxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 
-	//异步接收ws结果，10秒超时
-	return o.waitSubscribeReturn(sub, 10*time.Second)
+	//异步接收ws结果，1秒超时
+	return o.waitSubscribeReturn(sub, 1*time.Second)
 }
 
 func (o *OkxTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
@@ -218,14 +218,14 @@ func (o *OkxTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 	}
 
 	var orders []*Order
-	//批量异步接收ws结果，10秒超时
+	//批量异步接收ws结果，1秒超时
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	for _, sub := range subs {
 		wg.Add(1)
 		go func(sub *okxOrderSubscriber) {
 			defer wg.Done()
-			order, err := o.waitSubscribeReturn(sub, 10*time.Second)
+			order, err := o.waitSubscribeReturn(sub, 1*time.Second)
 			if err != nil {
 				log.Error(err)
 			}
@@ -282,14 +282,14 @@ func (o *OkxTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 
 	var orders []*Order
 
-	//批量异步接收ws结果，10秒超时
+	//批量异步接收ws结果，1秒超时
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	for _, sub := range subs {
 		wg.Add(1)
 		go func(sub *okxOrderSubscriber) {
 			defer wg.Done()
-			order, err := o.waitSubscribeReturn(sub, 10*time.Second)
+			order, err := o.waitSubscribeReturn(sub, 1*time.Second)
 			if err != nil {
 				log.Error(err)
 			}
@@ -346,14 +346,14 @@ func (o *OkxTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 
 	var orders []*Order
 
-	//批量异步接收ws结果，10秒超时
+	//批量异步接收ws结果，1秒超时
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	for _, sub := range subs {
 		wg.Add(1)
 		go func(sub *okxOrderSubscriber) {
 			defer wg.Done()
-			order, err := o.waitSubscribeReturn(sub, 10*time.Second)
+			order, err := o.waitSubscribeReturn(sub, 1*time.Second)
 			if err != nil {
 				log.Error(err)
 			}
@@ -440,8 +440,8 @@ func (o *OkxTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 
-	//异步接收ws结果，10秒超时
-	return o.waitSubscribeReturn(sub, 10*time.Second)
+	//异步接收ws结果，1秒超时
+	return o.waitSubscribeReturn(sub, 1*time.Second)
 }
 func (o *OkxTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
 	if err := o.accountTypePreCheck(req.AccountType); err != nil {
@@ -471,8 +471,8 @@ func (o *OkxTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 
-	//异步接收ws结果，10秒超时
-	return o.waitSubscribeReturn(sub, 10*time.Second)
+	//异步接收ws结果，1秒超时
+	return o.waitSubscribeReturn(sub, 1*time.Second)
 }
 func (o *OkxTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
 	if err := o.accountTypePreCheck(req.AccountType); err != nil {
@@ -502,8 +502,8 @@ func (o *OkxTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 
-	//异步接收ws结果，10秒超时
-	return o.waitSubscribeReturn(sub, 10*time.Second)
+	//异步接收ws结果，1秒超时
+	return o.waitSubscribeReturn(sub, 1*time.Second)
 }
 
 func (o *OkxTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
@@ -549,14 +549,14 @@ func (o *OkxTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
 	}
 
 	var orders []*Order
-	//批量异步接收ws结果，10秒超时
+	//批量异步接收ws结果，1秒超时
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	for _, sub := range subs {
 		wg.Add(1)
 		go func(sub *okxOrderSubscriber) {
 			defer wg.Done()
-			order, err := o.waitSubscribeReturn(sub, 10*time.Second)
+			order, err := o.waitSubscribeReturn(sub, 1*time.Second)
 			if err != nil {
 				log.Error(err)
 			}
@@ -613,14 +613,14 @@ func (o *OkxTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
 
 	var orders []*Order
 
-	//批量异步接收ws结果，10秒超时
+	//批量异步接收ws结果，1秒超时
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	for _, sub := range subs {
 		wg.Add(1)
 		go func(sub *okxOrderSubscriber) {
 			defer wg.Done()
-			order, err := o.waitSubscribeReturn(sub, 10*time.Second)
+			order, err := o.waitSubscribeReturn(sub, 1*time.Second)
 			if err != nil {
 				log.Error(err)
 			}
@@ -677,14 +677,14 @@ func (o *OkxTradeEngine) WsCancelOrders(reqs []*OrderParam) ([]*Order, error) {
 
 	var orders []*Order
 
-	//批量异步接收ws结果，10秒超时
+	//批量异步接收ws结果，1秒超时
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	for _, sub := range subs {
 		wg.Add(1)
 		go func(sub *okxOrderSubscriber) {
 			defer wg.Done()
-			order, err := o.waitSubscribeReturn(sub, 10*time.Second)
+			order, err := o.waitSubscribeReturn(sub, 1*time.Second)
 			if err != nil {
 				log.Error(err)
 			}
