@@ -143,7 +143,7 @@ func (b *BinanceExchangeInfo) GetSymbolInfo(accountType string, symbol string) (
 		if !ok {
 			return nil, ErrorSymbolNotFound
 		}
-		baseCoin, quoteCoin = v.BaseAsset, v.QuoteAsset
+		baseCoin, quoteCoin = v.QuoteAsset, v.BaseAsset
 		isTrading, isContract, isContractAmt = v.ContractStatus == "TRADING", true, true
 		contractSize = strconv.FormatInt(v.ContractSize, 10)
 		contractCoin = v.QuoteAsset
