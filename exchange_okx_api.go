@@ -64,6 +64,8 @@ func (o *OkxTradeEngine) apiOrderCreate(req *OrderParam) *myokxapi.PrivateRestTr
 		Sz(req.Quantity.String())
 	if OkxAccountType(req.AccountType) != "SPOT" {
 		api.PosSide(o.okxConverter.ToOKXPositionSide(req.PositionSide))
+	} else {
+		api.TgtCcy("base_ccy")
 	}
 	if req.ClientOrderId != "" {
 		api.ClOrdId(req.ClientOrderId)
