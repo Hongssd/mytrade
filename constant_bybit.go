@@ -44,11 +44,12 @@ const (
 // Rejected 訂單被拒絕
 // Cancelled 已撤销
 const (
-	BYBIT_ORDER_STATUS_NEW              = "New"
-	BYBIT_ORDER_STATUS_PARTIALLY_FILLED = "PartiallyFilled"
-	BYBIT_ORDER_STATUS_FILLED           = "Filled"
-	BYBIT_ORDER_STATUS_CANCELED         = "Cancelled"
-	BYBIT_ORDER_STATUS_REJECTED         = "Rejected"
+	BYBIT_ORDER_STATUS_NEW                       = "New"
+	BYBIT_ORDER_STATUS_PARTIALLY_FILLED          = "PartiallyFilled"
+	BYBIT_ORDER_STATUS_FILLED                    = "Filled"
+	BYBIT_ORDER_STATUS_CANCELED                  = "Cancelled"
+	BYBIT_ORDER_STATUS_REJECTED                  = "Rejected"
+	BYBIT_ORDER_STATUS_PARTIALLY_FILLED_CANCELED = "PartiallyFilledCanceled"
 )
 
 // 支持的timeInForce策略:
