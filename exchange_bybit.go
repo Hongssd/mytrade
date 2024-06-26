@@ -18,7 +18,17 @@ func (b *BybitExchange) NewMarketData() TradeMarketData {
 // 获取交易引擎
 func (b *BybitExchange) NewTradeEngine(apiKey, secretKey, passphrase string) TradeEngine {
 	return &BybitTradeEngine{
-		apiKey:    apiKey,
-		secretKey: secretKey,
+		exchangeBase: b.exchangeBase,
+		apiKey:       apiKey,
+		secretKey:    secretKey,
+	}
+}
+
+// 获取交易账户
+func (b *BybitExchange) NewTradeAccount(apiKey, secretKey, passphrase string) TradeAccount {
+	return &BybitTradeAccount{
+		exchangeBase: b.exchangeBase,
+		apiKey:       apiKey,
+		secretKey:    secretKey,
 	}
 }

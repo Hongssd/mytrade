@@ -19,6 +19,9 @@ type TradeExchange interface {
 
 	//获取交易引擎
 	NewTradeEngine(apiKey, secretKey, passphrase string) TradeEngine
+
+	//获取账户信息
+	NewTradeAccount(apiKey, secretKey, passphrase string) TradeAccount
 }
 
 // 交易规范
@@ -141,6 +144,27 @@ type TradeEngine interface {
 	WsAmendOrders([]*OrderParam) ([]*Order, error)
 	//websocket批量撤单
 	WsCancelOrders([]*OrderParam) ([]*Order, error)
+}
+
+// 交易账户接口
+type TradeAccount interface {
+	GetAccountMode() (AccountMode, error)                                                    //获取账户模式 无保证金/单币种保证金/多币种保证金/组合保证金
+	GetMarginMode(accountType, symbol string, positionSide PositionSide) (MarginMode, error) //获取保证金模式 全仓/逐仓
+	GetPositionMode(accountType, symbol string) (PositionMode, error)                        //获取持仓模式 单向/多向
+	GetLeverage(accountType, symbol string,
+		marginMode MarginMode, positionSide PositionSide) (decimal.Decimal, error) //获取杠杆
+
+	GetFeeRate(accountType, symbol string) (*FeeRate, error)                 //获取手续费率,taker maker
+	GetPositions(accountType string, symbols ...string) ([]*Position, error) //获取持仓
+	GetAssets(accountType string, currencies ...string) ([]*Asset, error)    //获取资产
+
+	SetAccountMode(mode AccountMode) error                               //设置账户模式
+	SetMarginMode(accountType, symbol string, mode MarginMode) error     //设置保证金模式
+	SetPositionMode(accountType, symbol string, mode PositionMode) error //设置持仓模式
+	SetLeverage(accountType, symbol string,
+		marginMode MarginMode, positionSide PositionSide,
+		leverage decimal.Decimal) error //设置杠杆
+
 }
 
 type TradeSubscribe[T any] interface {

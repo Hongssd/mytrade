@@ -135,3 +135,73 @@ func (c *BybitEnumConverter) ToBYBITOrderStatus(t OrderStatus) string {
 		return ""
 	}
 }
+
+// 账户模式
+func (c *BybitEnumConverter) FromBYBITAccountMode(t string) AccountMode {
+	switch t {
+	case BYBIT_ACCOUNT_MOED_ISOLATED_MARGIN:
+		return ACCOUNT_MODE_SINGLE_MARGIN
+	case BYBIT_ACCOUNT_MODE_REGULAR_MARGIN:
+		return ACCOUNT_MODE_MULTI_MARGIN
+	case BYBIT_ACCOUNT_MODE_PORTFOLIO_MARGIN:
+		return ACCOUNT_MODE_PORTFOLIO
+	default:
+		return ACCOUNT_MODE_UNKNOWN
+	}
+}
+func (c *BybitEnumConverter) ToBYBITAccountMode(t AccountMode) string {
+	switch t {
+	case ACCOUNT_MODE_SINGLE_MARGIN:
+		return BYBIT_ACCOUNT_MOED_ISOLATED_MARGIN
+	case ACCOUNT_MODE_FREE_MARGIN, ACCOUNT_MODE_MULTI_MARGIN:
+		return BYBIT_ACCOUNT_MODE_REGULAR_MARGIN
+	case ACCOUNT_MODE_PORTFOLIO:
+		return BYBIT_ACCOUNT_MODE_PORTFOLIO_MARGIN
+	default:
+		return ""
+	}
+}
+
+// 保证金模式
+func (c *BybitEnumConverter) FromBYBITMarginMode(t int) MarginMode {
+	switch t {
+	case BYBIT_MARGIN_MODE_ISOLATED:
+		return MARGIN_MODE_ISOLATED
+	case BYBIT_MARGIN_MODE_CROSSED:
+		return MARGIN_MODE_CROSSED
+	default:
+		return MARGIN_MODE_UNKNOWN
+	}
+}
+func (c *BybitEnumConverter) ToBYBITMarginMode(t MarginMode) int {
+	switch t {
+	case MARGIN_MODE_ISOLATED:
+		return BYBIT_MARGIN_MODE_ISOLATED
+	case MARGIN_MODE_CROSSED:
+		return BYBIT_MARGIN_MODE_CROSSED
+	default:
+		return 0
+	}
+}
+
+// 仓位模式
+func (c *BybitEnumConverter) FromBYBITPositionMode(t int) PositionMode {
+	switch t {
+	case BYBIT_POSITION_MODE_HEDGE:
+		return POSITION_MODE_HEDGE
+	case BYBIT_POSITION_MODE_ONEWAY:
+		return POSITION_MODE_ONEWAY
+	default:
+		return POSITION_MODE_UNKNOWN
+	}
+}
+func (c *BybitEnumConverter) ToBYBITPositionMode(t PositionMode) int {
+	switch t {
+	case POSITION_MODE_HEDGE:
+		return BYBIT_POSITION_MODE_HEDGE
+	case POSITION_MODE_ONEWAY:
+		return BYBIT_POSITION_MODE_ONEWAY
+	default:
+		return 0
+	}
+}

@@ -146,3 +146,77 @@ func (c *OkxEnumConverter) getTdModeFromAccountType(accountType OkxAccountType, 
 	}
 	return tdMode
 }
+
+// 账户模式
+func (c *OkxEnumConverter) FromOKXAccountMode(t string) AccountMode {
+	switch t {
+	case OKX_ACCOUNT_MODE_FREE_MARGIN:
+		return ACCOUNT_MODE_FREE_MARGIN
+	case OKX_ACCOUNT_MODE_SINGLE_CURRENCY_MARGIN:
+		return ACCOUNT_MODE_SINGLE_MARGIN
+	case OKX_ACCOUNT_MODE_MULTI_CURRENCY_MARGIN:
+		return ACCOUNT_MODE_MULTI_MARGIN
+	case OKX_ACCOUNT_MODE_PORTFOLIO_MARGIN:
+		return ACCOUNT_MODE_PORTFOLIO
+	default:
+		return ACCOUNT_MODE_UNKNOWN
+	}
+}
+func (c *OkxEnumConverter) ToOKXAccountMode(t AccountMode) string {
+	switch t {
+	case ACCOUNT_MODE_FREE_MARGIN:
+		return OKX_ACCOUNT_MODE_FREE_MARGIN
+	case ACCOUNT_MODE_SINGLE_MARGIN:
+		return OKX_ACCOUNT_MODE_SINGLE_CURRENCY_MARGIN
+	case ACCOUNT_MODE_MULTI_MARGIN:
+		return OKX_ACCOUNT_MODE_MULTI_CURRENCY_MARGIN
+	case ACCOUNT_MODE_PORTFOLIO:
+		return OKX_ACCOUNT_MODE_PORTFOLIO_MARGIN
+	default:
+		return ""
+	}
+}
+
+// 保证金模式
+func (c *OkxEnumConverter) FromOKXMarginMode(t string) MarginMode {
+	switch t {
+	case OKX_MARGIN_MODE_ISOLATED:
+		return MARGIN_MODE_ISOLATED
+	case OKX_MARGIN_MODE_CROSSED:
+		return MARGIN_MODE_CROSSED
+	default:
+		return MARGIN_MODE_UNKNOWN
+	}
+}
+func (c *OkxEnumConverter) ToOKXMarginMode(t MarginMode) string {
+	switch t {
+	case MARGIN_MODE_ISOLATED:
+		return OKX_MARGIN_MODE_ISOLATED
+	case MARGIN_MODE_CROSSED:
+		return OKX_MARGIN_MODE_CROSSED
+	default:
+		return ""
+	}
+}
+
+// 仓位模式
+func (c *OkxEnumConverter) FromOKXPositionMode(t string) PositionMode {
+	switch t {
+	case OKX_POSITION_MODE_HEDGE:
+		return POSITION_MODE_HEDGE
+	case OKX_POSITION_MODE_ONEWAY:
+		return POSITION_MODE_ONEWAY
+	default:
+		return POSITION_MODE_UNKNOWN
+	}
+}
+func (c *OkxEnumConverter) ToOKXPositionMode(t PositionMode) string {
+	switch t {
+	case POSITION_MODE_HEDGE:
+		return OKX_POSITION_MODE_HEDGE
+	case POSITION_MODE_ONEWAY:
+		return OKX_POSITION_MODE_ONEWAY
+	default:
+		return ""
+	}
+}

@@ -43,3 +43,30 @@ const (
 	BN_TIME_IN_FORCE_FOK       = "FOK"
 	BN_TIME_IN_FORCE_POST_ONLY = "GTX"
 )
+
+// {
+// "multiAssetsMargin": true // "true": 联合保证金模式开启；"false": 联合保证金模式关闭
+// }
+const (
+	BN_ACCOUNT_MOED_MULTI_CURRENCY_MARGIN  = true
+	BN_ACCOUNT_MODE_SINGLE_CURRENCY_MARGIN = false
+)
+
+// "isolated": true,  // 是否是逐仓模式
+const (
+	BN_MARGIN_MODE_ISOLATED = true
+	BN_MARGIN_MODE_CROSSED  = false
+)
+
+const (
+	BN_MARGIN_MODE_ISOLATED_STR = "ISOLATED"
+	BN_MARGIN_MODE_CROSSED_STR  = "CROSSED"
+)
+
+// {
+// "dualSidePosition": true // "true": 双向持仓模式；"false": 单向持仓模式
+// }
+const (
+	BN_POSITION_MODE_HEDGE  = true
+	BN_POSITION_MODE_ONEWAY = false
+)

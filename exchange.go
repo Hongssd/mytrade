@@ -9,11 +9,23 @@ func (e *exchangeBase) ExchangeType() ExchangeType {
 }
 
 func NewBinanceExchange() TradeExchange {
-	return &BinanceExchange{}
+	return &BinanceExchange{
+		exchangeBase: exchangeBase{
+			exchangeType: BINANCE_NAME,
+		},
+	}
 }
 func NewOkxExchange() TradeExchange {
-	return &OkxExchange{}
+	return &OkxExchange{
+		exchangeBase: exchangeBase{
+			exchangeType: OKX_NAME,
+		},
+	}
 }
 func NewBybitExchange() TradeExchange {
-	return &BybitExchange{}
+	return &BybitExchange{
+		exchangeBase: exchangeBase{
+			exchangeType: BYBIT_NAME,
+		},
+	}
 }

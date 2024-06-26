@@ -19,7 +19,17 @@ func (b *BinanceExchange) NewMarketData() TradeMarketData {
 // 获取交易引擎
 func (b *BinanceExchange) NewTradeEngine(apiKey, secretKey, passphrase string) TradeEngine {
 	return &BinanceTradeEngine{
-		apiKey:    apiKey,
-		secretKey: secretKey,
+		exchangeBase: b.exchangeBase,
+		apiKey:       apiKey,
+		secretKey:    secretKey,
+	}
+}
+
+// 获取账户信息
+func (b *BinanceExchange) NewTradeAccount(apiKey, secretKey, passphrase string) TradeAccount {
+	return &BinanceTradeAccount{
+		exchangeBase: b.exchangeBase,
+		apiKey:       apiKey,
+		secretKey:    secretKey,
 	}
 }

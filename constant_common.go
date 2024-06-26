@@ -77,3 +77,44 @@ const (
 	TIME_IN_FORCE_FOK       TimeInForce = "FOK"       //全部成交或立即取消
 	TIME_IN_FORCE_POST_ONLY TimeInForce = "POST_ONLY" //只做maker
 )
+
+// 账户模式 无保证金/单币种保证金/多币种保证金/组合保证金
+type AccountMode string
+
+func (a AccountMode) String() string {
+	return string(a)
+}
+
+const (
+	ACCOUNT_MODE_UNKNOWN       = ""          //未知
+	ACCOUNT_MODE_FREE_MARGIN   = "FREE"      //无保证金
+	ACCOUNT_MODE_SINGLE_MARGIN = "SINGLE"    //单币种保证金
+	ACCOUNT_MODE_MULTI_MARGIN  = "MULTI"     //多币种保证金
+	ACCOUNT_MODE_PORTFOLIO     = "PORTFOLIO" //组合保证金
+)
+
+// 仓位保证金模式 全仓 逐仓
+type MarginMode string
+
+func (m MarginMode) String() string {
+	return string(m)
+}
+
+const (
+	MARGIN_MODE_UNKNOWN  = ""         //未知
+	MARGIN_MODE_CROSSED  = "CROSSED"  //全仓
+	MARGIN_MODE_ISOLATED = "ISOLATED" //逐仓
+)
+
+// 仓位模式 双向持仓/单向持仓
+type PositionMode string
+
+func (p PositionMode) String() string {
+	return string(p)
+}
+
+const (
+	POSITION_MODE_UNKNOWN = ""        //未知
+	POSITION_MODE_HEDGE   = "HEDGE"   //双向持仓
+	POSITION_MODE_ONEWAY  = "ONE_WAY" //单向持仓
+)

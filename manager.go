@@ -3,6 +3,7 @@ package mytrade
 import (
 	"errors"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"time"
 )
 
@@ -12,6 +13,7 @@ type ExchangeManager struct {
 	ExchangeInfoMap *MySyncMap[string, TradeExchangeInfo]
 	MarketDataMap   *MySyncMap[string, TradeMarketData]
 	TradeEngineMap  *MySyncMap[string, TradeEngine]
+	TradeAccountMap *MySyncMap[string, TradeAccount]
 }
 
 type ExchangeApiParam struct {
@@ -28,6 +30,7 @@ func NewExchangeManager() *ExchangeManager {
 		ExchangeInfoMap: GetPointer(NewMySyncMap[string, TradeExchangeInfo]()),
 		MarketDataMap:   GetPointer(NewMySyncMap[string, TradeMarketData]()),
 		TradeEngineMap:  GetPointer(NewMySyncMap[string, TradeEngine]()),
+		TradeAccountMap: GetPointer(NewMySyncMap[string, TradeAccount]()),
 	}
 	e.ExchangeMap.Store(BINANCE_NAME.String(), NewBinanceExchange())
 	e.ExchangeMap.Store(OKX_NAME.String(), NewOkxExchange())
@@ -78,6 +81,23 @@ func (e *ExchangeManager) getTradeEngine(exchange string, apikey, apiSecret, pas
 		e.TradeEngineMap.Store(key, tradeEngine)
 	}
 	return tradeEngine, nil
+}
+
+// 获取交易账号
+func (e *ExchangeManager) getTradeAccount(exchange string, apikey, apiSecret, passphrase string) (TradeAccount, error) {
+	tradeExchange, ok := e.ExchangeMap.Load(exchange)
+	if !ok {
+		return nil, errors.Join(errors.New(exchange), ErrorNotSupport)
+	}
+
+	key := fmt.Sprintf("%s_%s", exchange, apikey)
+
+	tradeAccount, ok := e.TradeAccountMap.Load(key)
+	if !ok {
+		tradeAccount = tradeExchange.NewTradeAccount(apikey, apiSecret, passphrase)
+		e.TradeAccountMap.Store(key, tradeAccount)
+	}
+	return tradeAccount, nil
 }
 
 // 刷新交易所规范
@@ -145,6 +165,105 @@ func (e *ExchangeManager) GetBookData(symbolInfo TradeSymbolInfo, level int) (*O
 	}
 
 	return marketData.GetBook(req)
+}
+
+// 获取账户模式
+func (e *ExchangeManager) GetAccountMode(api ExchangeApiParam) (AccountMode, error) {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return ACCOUNT_MODE_UNKNOWN, err
+	}
+	return tradeAccount.GetAccountMode()
+}
+
+// 获取保证金模式
+func (e *ExchangeManager) GetMarginMode(api ExchangeApiParam, accountType, symbol string, positionSide PositionSide) (MarginMode, error) {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return MARGIN_MODE_UNKNOWN, err
+	}
+	return tradeAccount.GetMarginMode(accountType, symbol, positionSide)
+}
+
+// 获取仓位模式
+func (e *ExchangeManager) GetPositionMode(api ExchangeApiParam, accountType, symbol string) (PositionMode, error) {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return POSITION_MODE_UNKNOWN, err
+	}
+	return tradeAccount.GetPositionMode(accountType, symbol)
+}
+
+// 获取杠杆倍数
+func (e *ExchangeManager) GetLeverage(api ExchangeApiParam, accountType, symbol string, marginMode MarginMode, positionSide PositionSide) (decimal.Decimal, error) {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return decimal.Zero, err
+	}
+	return tradeAccount.GetLeverage(accountType, symbol, marginMode, positionSide)
+}
+
+// 获取手续费率
+func (e *ExchangeManager) GetFeeRate(api ExchangeApiParam, accountType, symbol string) (*FeeRate, error) {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return nil, err
+	}
+	return tradeAccount.GetFeeRate(accountType, symbol)
+}
+
+// 获取持仓
+func (e *ExchangeManager) GetPositions(api ExchangeApiParam, accountType string, symbols ...string) ([]*Position, error) {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return nil, err
+	}
+	return tradeAccount.GetPositions(accountType, symbols...)
+}
+
+// 获取资产
+func (e *ExchangeManager) GetAssets(api ExchangeApiParam, accountType string, currencies ...string) ([]*Asset, error) {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return nil, err
+	}
+	return tradeAccount.GetAssets(accountType, currencies...)
+}
+
+// 设置账户模式
+func (e *ExchangeManager) SetAccountMode(api ExchangeApiParam, mode AccountMode) error {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return err
+	}
+	return tradeAccount.SetAccountMode(mode)
+}
+
+// 设置保证金模式
+func (e *ExchangeManager) SetMarginMode(api ExchangeApiParam, accountType, symbol string, mode MarginMode) error {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return err
+	}
+	return tradeAccount.SetMarginMode(accountType, symbol, mode)
+}
+
+// 设置仓位模式
+func (e *ExchangeManager) SetPositionMode(api ExchangeApiParam, accountType, symbol string, mode PositionMode) error {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return err
+	}
+	return tradeAccount.SetPositionMode(accountType, symbol, mode)
+}
+
+// 设置杠杆倍数
+func (e *ExchangeManager) SetLeverage(api ExchangeApiParam, accountType, symbol string, marginMode MarginMode, positionSide PositionSide, leverage decimal.Decimal) error {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return err
+	}
+	return tradeAccount.SetLeverage(accountType, symbol, marginMode, positionSide, leverage)
 }
 
 // 查询单个订单

@@ -19,8 +19,19 @@ func (o *OkxExchange) NewMarketData() TradeMarketData {
 // 获取交易引擎
 func (o *OkxExchange) NewTradeEngine(apiKey, secretKey, passphrase string) TradeEngine {
 	return &OkxTradeEngine{
-		apiKey:     apiKey,
-		secretKey:  secretKey,
-		passphrase: passphrase,
+		exchangeBase: o.exchangeBase,
+		apiKey:       apiKey,
+		secretKey:    secretKey,
+		passphrase:   passphrase,
+	}
+}
+
+// 获取交易账户
+func (o *OkxExchange) NewTradeAccount(apiKey, secretKey, passphrase string) TradeAccount {
+	return &OkxTradeAccount{
+		exchangeBase: o.exchangeBase,
+		apiKey:       apiKey,
+		secretKey:    secretKey,
+		passphrase:   passphrase,
 	}
 }

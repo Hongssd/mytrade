@@ -1,5 +1,7 @@
 package mytrade
 
+import "strconv"
+
 // 枚举转换器
 type BinanceEnumConverter struct{}
 
@@ -132,6 +134,82 @@ func (c *BinanceEnumConverter) ToBNOrderStatus(t OrderStatus) string {
 		return BN_ORDER_STATUS_CANCELED
 	case ORDER_STATUS_REJECTED:
 		return BN_ORDER_STATUS_REJECTED
+	default:
+		return ""
+	}
+}
+
+// 账户模式
+func (c *BinanceEnumConverter) FromBNAccountMode(t bool) AccountMode {
+	switch t {
+	case BN_ACCOUNT_MOED_MULTI_CURRENCY_MARGIN:
+		return ACCOUNT_MODE_MULTI_MARGIN
+	case BN_ACCOUNT_MODE_SINGLE_CURRENCY_MARGIN:
+		return ACCOUNT_MODE_SINGLE_MARGIN
+	default:
+		return ACCOUNT_MODE_UNKNOWN
+	}
+}
+func (c *BinanceEnumConverter) ToBNAccountMode(t AccountMode) string {
+	switch t {
+	case ACCOUNT_MODE_MULTI_MARGIN, ACCOUNT_MODE_PORTFOLIO:
+		return strconv.FormatBool(BN_ACCOUNT_MOED_MULTI_CURRENCY_MARGIN)
+	case ACCOUNT_MODE_FREE_MARGIN, ACCOUNT_MODE_SINGLE_MARGIN:
+		return strconv.FormatBool(BN_ACCOUNT_MODE_SINGLE_CURRENCY_MARGIN)
+	default:
+		return ""
+	}
+}
+
+// 保证金模式
+func (c *BinanceEnumConverter) FromBNMarginMode(t bool) MarginMode {
+	switch t {
+	case BN_MARGIN_MODE_ISOLATED:
+		return MARGIN_MODE_ISOLATED
+	case BN_MARGIN_MODE_CROSSED:
+		return MARGIN_MODE_CROSSED
+	default:
+		return MARGIN_MODE_UNKNOWN
+	}
+}
+func (c *BinanceEnumConverter) ToBNMarginMode(t MarginMode) bool {
+	switch t {
+	case MARGIN_MODE_ISOLATED:
+		return BN_MARGIN_MODE_ISOLATED
+	case MARGIN_MODE_CROSSED:
+		return BN_MARGIN_MODE_CROSSED
+	default:
+		return false
+	}
+}
+func (c *BinanceEnumConverter) ToBNMarginModeStr(t MarginMode) string {
+	switch t {
+	case MARGIN_MODE_ISOLATED:
+		return BN_MARGIN_MODE_ISOLATED_STR
+	case MARGIN_MODE_CROSSED:
+		return BN_MARGIN_MODE_CROSSED_STR
+	default:
+		return ""
+	}
+}
+
+// 仓位模式
+func (c *BinanceEnumConverter) FromBNPositionMode(t bool) PositionMode {
+	switch t {
+	case BN_POSITION_MODE_HEDGE:
+		return POSITION_MODE_HEDGE
+	case BN_POSITION_MODE_ONEWAY:
+		return POSITION_MODE_ONEWAY
+	default:
+		return POSITION_MODE_UNKNOWN
+	}
+}
+func (c *BinanceEnumConverter) ToBNPositionMode(t PositionMode) string {
+	switch t {
+	case POSITION_MODE_HEDGE:
+		return strconv.FormatBool(BN_POSITION_MODE_HEDGE)
+	case POSITION_MODE_ONEWAY:
+		return strconv.FormatBool(BN_POSITION_MODE_ONEWAY)
 	default:
 		return ""
 	}

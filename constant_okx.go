@@ -56,6 +56,33 @@ const (
 	OKX_ORDER_STATUS_REJECTED         = "mmp_canceled"
 )
 
+// 账户层级
+// 1：简单交易模式
+// 2：单币种保证金模式
+// 3：跨币种保证金模式
+// 4：组合保证金模式
+const (
+	OKX_ACCOUNT_MODE_FREE_MARGIN            = "1"
+	OKX_ACCOUNT_MODE_SINGLE_CURRENCY_MARGIN = "2"
+	OKX_ACCOUNT_MODE_MULTI_CURRENCY_MARGIN  = "3"
+	OKX_ACCOUNT_MODE_PORTFOLIO_MARGIN       = "4"
+)
+
+// 保证金模式
+// cross：全仓
+// isolated：逐仓
+const (
+	OKX_MARGIN_MODE_ISOLATED = "isolated"
+	OKX_MARGIN_MODE_CROSSED  = "cross"
+)
+
+// long_short_mode :双向持仓
+// net_mode:单向持仓
+const (
+	OKX_POSITION_MODE_HEDGE  = "long_short_mode"
+	OKX_POSITION_MODE_ONEWAY = "net_mode"
+)
+
 // 时间粒度，默认值1m
 // 如 [1m/3m/5m/15m/30m/1H/2H/4H]
 // 香港时间开盘价k线：[6H/12H/1D/2D/3D/1W/1M/3M]
