@@ -180,7 +180,7 @@ func (b *BybitExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Tr
 		if !ok {
 			return nil, ErrorSymbolNotFound
 		}
-		baseCoin, quoteCoin = v.QuoteCoin, v.BaseCoin
+		baseCoin, quoteCoin = v.BaseCoin, v.QuoteCoin
 		isTrading, isContract, isContractAmt = v.Status == "Trading", true, true
 		contractSize, contractCoin = "1", v.QuoteCoin
 		tickSize = v.PriceFilter.TickSize
