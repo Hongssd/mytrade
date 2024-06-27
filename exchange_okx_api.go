@@ -67,6 +67,9 @@ func (o *OkxTradeEngine) apiOrderCreate(req *OrderParam) *myokxapi.PrivateRestTr
 	} else {
 		api.TgtCcy("base_ccy")
 	}
+	if req.ReduceOnly {
+		api.ReduceOnly(req.ReduceOnly)
+	}
 	if req.ClientOrderId != "" {
 		api.ClOrdId(req.ClientOrderId)
 	}
