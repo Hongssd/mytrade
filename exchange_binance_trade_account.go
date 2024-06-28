@@ -274,6 +274,7 @@ func (b BinanceTradeAccount) GetFeeRate(accountType, symbol string) (*FeeRate, e
 func (b BinanceTradeAccount) GetPositions(accountType string, symbols ...string) ([]*Position, error) {
 	var positionList []*Position
 	switch BinanceAccountType(accountType) {
+	case BN_AC_SPOT:
 	case BN_AC_FUTURE:
 		res, err := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureAccount().Do()
 		if err != nil {

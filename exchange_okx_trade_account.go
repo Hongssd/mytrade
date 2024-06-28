@@ -129,6 +129,11 @@ func (o OkxTradeAccount) GetFeeRate(accountType, symbol string) (*FeeRate, error
 func (o OkxTradeAccount) GetPositions(accountType string, symbols ...string) ([]*Position, error) {
 
 	var positions []*Position
+
+	if OkxAccountType(accountType) == OKX_AC_SPOT {
+		return positions, nil
+	}
+
 	api := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().
 		NewPrivateRestAccountPosition().InstType(accountType)
 	if len(symbols) == 1 {

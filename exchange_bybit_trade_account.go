@@ -192,6 +192,9 @@ func (b BybitTradeAccount) GetFeeRate(accountType, symbol string) (*FeeRate, err
 }
 
 func (b BybitTradeAccount) GetPositions(accountType string, symbols ...string) ([]*Position, error) {
+	if BybitAccountType(accountType) == BYBIT_AC_SPOT {
+		return []*Position{}, nil
+	}
 
 	api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
 		NewPositionList().Category(accountType)
@@ -209,7 +212,7 @@ func (b BybitTradeAccount) GetPositions(accountType string, symbols ...string) (
 	if err != nil {
 		return nil, err
 	}
-	log.Warn(len(res.Result.List))
+	//log.Warn(len(res.Result.List))
 	var positions []*Position
 	for _, p := range res.Result.List {
 		if len(symbols) == 0 || stringInSlice(p.Symbol, symbols) {
@@ -244,8 +247,13 @@ func (b BybitTradeAccount) GetPositions(accountType string, symbols ...string) (
 }
 
 func (b BybitTradeAccount) GetAssets(accountType string, currencies ...string) ([]*Asset, error) {
+	acType := mybybitapi.ACCT_UNIFIED
+	if accountType == BYBIT_AC_INVERSE.String() {
+		acType = mybybitapi.ACCT_CONTRACT
+	}
+
 	api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
-		NewAccountWalletBalance().AccountType(mybybitapi.ACCT_UNIFIED.String())
+		NewAccountWalletBalance().AccountType(acType.String())
 	if len(currencies) == 1 {
 		api.Coin(currencies[0])
 	} else if len(currencies) > 1 {
