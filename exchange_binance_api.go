@@ -467,7 +467,7 @@ func (b *BinanceTradeEngine) handleOrdersFromSpotOpenOrders(req *QueryOrderParam
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			OrderId:       strconv.FormatInt(order.OrderId, 10),
 			ClientOrderId: order.ClientOrderId,
 			Price:         order.Price,
@@ -688,7 +688,7 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureOpenOrders(req *QueryOrderPar
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			OrderId:       strconv.FormatInt(order.OrderId, 10),
 			ClientOrderId: order.ClientOrderId,
 			Price:         order.Price,
@@ -948,7 +948,7 @@ func (b *BinanceTradeEngine) handleOrdersFromSwapOpenOrders(req *QueryOrderParam
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			OrderId:       strconv.FormatInt(order.OrderId, 10),
 			ClientOrderId: order.ClientOrderId,
 			Price:         order.Price,

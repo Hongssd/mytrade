@@ -180,7 +180,7 @@ func (b *BybitTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam,
 		orders = append(orders, &Order{
 			Exchange:      BYBIT_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			OrderId:       order.OrderId,
 			ClientOrderId: order.OrderLinkId,
 			Price:         order.Price,
