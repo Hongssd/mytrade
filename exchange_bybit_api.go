@@ -14,8 +14,7 @@ func (b *BybitTradeEngine) apiQueryOpenOrders(req *QueryOrderParam, pageCursor s
 	if req.Symbol != "" {
 		api.Symbol(req.Symbol)
 	} else {
-		if req.AccountType == BYBIT_AC_LINEAR.String() ||
-			req.AccountType == BYBIT_AC_INVERSE.String() {
+		if req.AccountType == BYBIT_AC_LINEAR.String() {
 			//合约必传交易对或币种名
 			if req.SettleCoin != "" {
 				api.SettleCoin(req.SettleCoin)
