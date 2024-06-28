@@ -9,7 +9,23 @@ import (
 // 查询订单接口获取
 func (b *BybitTradeEngine) apiQueryOpenOrders(req *QueryOrderParam, pageCursor string) *mybybitapi.OrderRealtimeAPI {
 	client := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient()
-	api := client.NewOrderRealtime().Category(req.AccountType).Symbol(req.Symbol).Limit(50)
+	api := client.NewOrderRealtime().Category(req.AccountType).Limit(50)
+
+	if req.Symbol != "" {
+		api.Symbol(req.Symbol)
+	} else {
+		if req.AccountType == BYBIT_AC_LINEAR.String() ||
+			req.AccountType == BYBIT_AC_INVERSE.String() {
+			//合约必传交易对或币种名
+			if req.SettleCoin != "" {
+				api.SettleCoin(req.SettleCoin)
+			}
+			if req.BaseCoin != "" {
+				api.BaseCoin(req.BaseCoin)
+			}
+		}
+	}
+
 	if pageCursor != "" {
 		api.Cursor(pageCursor)
 	}

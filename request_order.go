@@ -78,6 +78,8 @@ func (o *OrderParam) SetIsIsolated(isIsolated bool) *OrderParam {
 type QueryOrderParam struct {
 	AccountType   string //账户类型
 	Symbol        string //交易对
+	BaseCoin      string //交易幣種
+	SettleCoin    string //結算幣種
 	OrderId       string //交易所自动生成的订单ID 选填
 	ClientOrderId string //用户自己生成的订单ID 选填
 	StartTime     int64  //开始时间 选填 默认返回7天内订单
@@ -92,6 +94,16 @@ func (q *QueryOrderParam) SetAccountType(accountType string) *QueryOrderParam {
 
 func (q *QueryOrderParam) SetSymbol(symbol string) *QueryOrderParam {
 	q.Symbol = symbol
+	return q
+}
+
+func (q *QueryOrderParam) SetBaseCoin(baseCoin string) *QueryOrderParam {
+	q.BaseCoin = baseCoin
+	return q
+}
+
+func (q *QueryOrderParam) SetSettleCoin(settleCoin string) *QueryOrderParam {
+	q.SettleCoin = settleCoin
 	return q
 }
 

@@ -9,8 +9,10 @@ import (
 
 // 现货订单API接口
 func (b *BinanceTradeEngine) apiSpotOpenOrders(req *QueryOrderParam) *mybinanceapi.SpotOpenOrdersApi {
-	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewOpenOrders().
-		Symbol(req.Symbol)
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewOpenOrders()
+	if req.Symbol != "" {
+		api.Symbol(req.Symbol)
+	}
 	return api
 }
 func (b *BinanceTradeEngine) apiSpotOrderQuery(req *QueryOrderParam) *mybinanceapi.SpotOrderGetApi {
@@ -113,8 +115,10 @@ func (b *BinanceTradeEngine) apiSpotOrderCancel(req *OrderParam) *mybinanceapi.S
 
 // U本位合约订单API接口
 func (b *BinanceTradeEngine) apiFutureOpenOrders(req *QueryOrderParam) *mybinanceapi.FutureOpenOrdersApi {
-	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewOpenOrders().
-		Symbol(req.Symbol)
+	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewOpenOrders()
+	if req.Symbol != "" {
+		api.Symbol(req.Symbol)
+	}
 	return api
 }
 func (b *BinanceTradeEngine) apiFutureOrderQuery(req *QueryOrderParam) *mybinanceapi.FutureOrderGetApi {
@@ -282,8 +286,10 @@ func (b *BinanceTradeEngine) apiFutureBatchOrderCancel(reqs []*OrderParam) (*myb
 
 // 币本位合约订单API接口
 func (b *BinanceTradeEngine) apiSwapOpenOrders(req *QueryOrderParam) *mybinanceapi.SwapOpenOrdersApi {
-	api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewOpenOrders().
-		Symbol(req.Symbol)
+	api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewOpenOrders()
+	if req.Symbol != "" {
+		api.Symbol(req.Symbol)
+	}
 	return api
 }
 func (b *BinanceTradeEngine) apiSwapOrderQuery(req *QueryOrderParam) *mybinanceapi.SwapOrderGetApi {

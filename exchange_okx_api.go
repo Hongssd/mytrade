@@ -11,7 +11,13 @@ import (
 // 查询订单接口获取
 func (o *OkxTradeEngine) apiQueryOpenOrders(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrdersPendingAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-	api := client.NewPrivateRestTradeOrdersPending().InstType(req.AccountType).InstId(req.Symbol)
+	api := client.NewPrivateRestTradeOrdersPending()
+	if req.AccountType != "" {
+		api.InstType(req.AccountType)
+	}
+	if req.Symbol != "" {
+		api.InstId(req.Symbol)
+	}
 	return api
 }
 func (o *OkxTradeEngine) apiQueryOrder(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderGetAPI {
