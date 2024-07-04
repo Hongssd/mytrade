@@ -29,6 +29,10 @@ func (b *BinanceTradeEngine) apiSpotOrderQuery(req *QueryOrderParam) *mybinancea
 }
 func (b *BinanceTradeEngine) apiSpotOrdersQuery(req *QueryOrderParam) *mybinanceapi.SpotAllOrdersApi {
 	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewAllOrders().Symbol(req.Symbol)
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api.OrderId(orderId)
+	}
 	if req.StartTime != 0 {
 		api = api.StartTime(req.StartTime)
 	}
@@ -133,6 +137,11 @@ func (b *BinanceTradeEngine) apiFutureOrderQuery(req *QueryOrderParam) *mybinanc
 }
 func (b *BinanceTradeEngine) apiFutureOrdersQuery(req *QueryOrderParam) *mybinanceapi.FutureAllOrdersApi {
 	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewAllOrders().Symbol(req.Symbol)
+
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api = api.OrderId(orderId)
+	}
 
 	if req.StartTime != 0 {
 		api = api.StartTime(req.StartTime)
@@ -304,6 +313,10 @@ func (b *BinanceTradeEngine) apiSwapOrderQuery(req *QueryOrderParam) *mybinancea
 }
 func (b *BinanceTradeEngine) apiSwapOrdersQuery(req *QueryOrderParam) *mybinanceapi.SwapAllOrdersApi {
 	api := binance.NewSwapRestClient(b.apiKey, b.secretKey).NewAllOrders().Symbol(req.Symbol)
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api = api.OrderId(orderId)
+	}
 	if req.StartTime != 0 {
 		api = api.StartTime(req.StartTime)
 	}

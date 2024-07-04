@@ -44,8 +44,11 @@ func (b *BybitTradeEngine) apiQueryOrder(req *QueryOrderParam) *mybybitapi.Order
 }
 func (b *BybitTradeEngine) apiQueryOrders(req *QueryOrderParam) *mybybitapi.OrderHistoryAPI {
 	client := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient()
-	api := client.NewOrderHistory().Category(req.AccountType).Symbol(req.Symbol)
+	api := client.NewOrderHistory().Category(req.AccountType)
 
+	if req.Symbol != "" {
+		api.Symbol(req.Symbol)
+	}
 	if req.StartTime != 0 {
 		api.StartTime(req.StartTime)
 	}
@@ -55,6 +58,7 @@ func (b *BybitTradeEngine) apiQueryOrders(req *QueryOrderParam) *mybybitapi.Orde
 	if req.Limit != 0 {
 		api.Limit(req.Limit)
 	}
+
 	return api
 }
 func (b *BybitTradeEngine) apiQueryTrades(req *QueryTradeParam, pageCursor string) *mybybitapi.OrderExecutionListAPI {

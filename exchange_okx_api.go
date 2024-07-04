@@ -33,7 +33,13 @@ func (o *OkxTradeEngine) apiQueryOrder(req *QueryOrderParam) *myokxapi.PrivateRe
 }
 func (o *OkxTradeEngine) apiQueryOrders(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderHistoryAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-	api := client.NewPrivateRestTradeOrderHistory().InstType(req.AccountType).InstId(req.Symbol)
+	api := client.NewPrivateRestTradeOrderHistory().InstType(req.AccountType)
+	if req.Symbol != "" {
+		api.InstId(req.Symbol)
+	}
+	if req.OrderId != "" {
+		api.Before(req.OrderId)
+	}
 	if req.StartTime != 0 {
 		api.Begin(strconv.FormatInt(req.StartTime, 10))
 	}

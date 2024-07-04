@@ -1,6 +1,8 @@
 package mytrade
 
-import "strings"
+import (
+	"strings"
+)
 
 // 计算小数点后有效位数的函数
 func countDecimalPlaces(str string) int {
