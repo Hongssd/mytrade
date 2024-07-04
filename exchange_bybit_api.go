@@ -213,7 +213,7 @@ func (b *BybitTradeEngine) handleOrdersFromQueryOrders(req *QueryOrderParam, res
 		orders = append(orders, &Order{
 			Exchange:      BYBIT_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			OrderId:       order.OrderId,
 			ClientOrderId: order.OrderLinkId,
 			Price:         order.Price,
@@ -243,7 +243,7 @@ func (b *BybitTradeEngine) handleTradesFromQueryTrades(req *QueryTradeParam, res
 		trades = append(trades, &Trade{
 			Exchange:     BYBIT_NAME.String(),
 			AccountType:  req.AccountType,
-			Symbol:       req.Symbol,
+			Symbol:       r.Symbol,
 			TradeId:      r.ExecId,
 			OrderId:      r.OrderId,
 			Price:        r.ExecPrice,
