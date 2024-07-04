@@ -226,8 +226,8 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderGet(req *QueryOrderParam, res
 			Exchange:      OKX_NAME.String(),
 			OrderId:       r.OrdId,
 			ClientOrderId: r.ClOrdId,
-			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			AccountType:   r.InstType,
+			Symbol:        r.InstId,
 			Price:         r.Px,
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,
@@ -257,8 +257,8 @@ func (o *OkxTradeEngine) handleTradesFromQueryTrades(req *QueryTradeParam, res *
 		isMaker := r.ExecType == "M"
 		trade := &Trade{
 			Exchange:     OKX_NAME.String(),
-			AccountType:  req.AccountType,
-			Symbol:       req.Symbol,
+			AccountType:  r.InstType,
+			Symbol:       r.InstId,
 			TradeId:      r.TradeId,
 			OrderId:      r.OrdId,
 			Price:        r.FillPx,
