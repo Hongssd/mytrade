@@ -3,7 +3,7 @@ module github.com/Hongssd/mytrade
 go 1.19
 
 require (
-	github.com/Hongssd/mybinanceapi v1.5.1
+	github.com/Hongssd/mybinanceapi v1.5.2
 	github.com/Hongssd/myokxapi v0.3.9
 	github.com/json-iterator/go v1.1.12
 	github.com/shopspring/decimal v1.4.0
@@ -21,5 +21,5 @@ require (
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
 )
