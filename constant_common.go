@@ -86,11 +86,11 @@ func (a AccountMode) String() string {
 }
 
 const (
-	ACCOUNT_MODE_UNKNOWN       = ""          //未知
-	ACCOUNT_MODE_FREE_MARGIN   = "FREE"      //无保证金
-	ACCOUNT_MODE_SINGLE_MARGIN = "SINGLE"    //单币种保证金
-	ACCOUNT_MODE_MULTI_MARGIN  = "MULTI"     //多币种保证金
-	ACCOUNT_MODE_PORTFOLIO     = "PORTFOLIO" //组合保证金
+	ACCOUNT_MODE_UNKNOWN       AccountMode = ""          //未知
+	ACCOUNT_MODE_FREE_MARGIN   AccountMode = "FREE"      //无保证金
+	ACCOUNT_MODE_SINGLE_MARGIN AccountMode = "SINGLE"    //单币种保证金
+	ACCOUNT_MODE_MULTI_MARGIN  AccountMode = "MULTI"     //多币种保证金
+	ACCOUNT_MODE_PORTFOLIO     AccountMode = "PORTFOLIO" //组合保证金
 )
 
 // 仓位保证金模式 全仓 逐仓
@@ -101,9 +101,9 @@ func (m MarginMode) String() string {
 }
 
 const (
-	MARGIN_MODE_UNKNOWN  = ""         //未知
-	MARGIN_MODE_CROSSED  = "CROSSED"  //全仓
-	MARGIN_MODE_ISOLATED = "ISOLATED" //逐仓
+	MARGIN_MODE_UNKNOWN  MarginMode = ""         //未知
+	MARGIN_MODE_CROSSED  MarginMode = "CROSSED"  //全仓
+	MARGIN_MODE_ISOLATED MarginMode = "ISOLATED" //逐仓
 )
 
 // 仓位模式 双向持仓/单向持仓
@@ -114,7 +114,7 @@ func (p PositionMode) String() string {
 }
 
 const (
-	POSITION_MODE_UNKNOWN = ""        //未知
-	POSITION_MODE_HEDGE   = "HEDGE"   //双向持仓
-	POSITION_MODE_ONEWAY  = "ONE_WAY" //单向持仓
+	POSITION_MODE_UNKNOWN PositionMode = ""        //未知
+	POSITION_MODE_HEDGE   PositionMode = "HEDGE"   //双向持仓
+	POSITION_MODE_ONEWAY  PositionMode = "ONE_WAY" //单向持仓
 )
