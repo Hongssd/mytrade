@@ -41,7 +41,7 @@ func (b BybitTradeAccount) GetPositionMode(accountType, symbol string) (Position
 	res, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
 		NewPositionList().Category(accountType).Symbol(symbol).Do()
 	if err != nil {
-		return MARGIN_MODE_UNKNOWN, err
+		return POSITION_MODE_UNKNOWN, err
 	}
 	if len(res.Result.List) == 1 {
 		//单向
