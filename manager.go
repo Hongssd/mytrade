@@ -129,6 +129,15 @@ func (e *ExchangeManager) GetSymbolInfo(exchange, accountType, symbol string) (T
 	return tradeExchangeInfo.GetSymbolInfo(accountType, symbol)
 }
 
+// 获取全部交易对规范
+func (e *ExchangeManager) GetAllSymbolInfo(exchange, accountType string) ([]TradeSymbolInfo, error) {
+	tradeExchangeInfo, err := e.getTradeExchangeInfo(exchange)
+	if err != nil {
+		return nil, err
+	}
+	return tradeExchangeInfo.GetAllSymbolInfo(accountType)
+}
+
 // 获取K线数据
 func (e *ExchangeManager) GetKlineData(symbolInfo TradeSymbolInfo, interval string, start, end int64, limit int) (*[]Kline, error) {
 	marketData, err := e.getTradeMarketData(symbolInfo.Exchange())
