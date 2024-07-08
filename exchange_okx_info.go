@@ -165,3 +165,40 @@ func (e *OkxExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Trad
 		},
 	}}, nil
 }
+
+func (e *OkxExchangeInfo) GetAllSymbolInfo(accountType string) ([]TradeSymbolInfo, error) {
+
+	var symbolInfoList []TradeSymbolInfo
+	switch OkxAccountType(accountType) {
+	case OKX_AC_SPOT:
+		e.spotSymbolMap.Range(func(key string, value *myokxapi.PublicRestPublicInstrumentsResRow) bool {
+			symbolInfo, err := e.GetSymbolInfo(accountType, key)
+			if err != nil {
+				return false
+			}
+			symbolInfoList = append(symbolInfoList, symbolInfo)
+			return true
+		})
+	case OKX_AC_SWAP:
+		e.swapSymbolMap.Range(func(key string, value *myokxapi.PublicRestPublicInstrumentsResRow) bool {
+			symbolInfo, err := e.GetSymbolInfo(accountType, key)
+			if err != nil {
+				return false
+			}
+			symbolInfoList = append(symbolInfoList, symbolInfo)
+			return true
+		})
+	case OKX_AC_FUTURES:
+		e.futuresSymbolMap.Range(func(key string, value *myokxapi.PublicRestPublicInstrumentsResRow) bool {
+			symbolInfo, err := e.GetSymbolInfo(accountType, key)
+			if err != nil {
+				return false
+			}
+			symbolInfoList = append(symbolInfoList, symbolInfo)
+			return true
+		})
+	default:
+		return nil, ErrorAccountType
+	}
+	return symbolInfoList, nil
+}

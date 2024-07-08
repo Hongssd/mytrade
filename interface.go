@@ -30,6 +30,9 @@ type TradeExchangeInfo interface {
 	//获取交易对规范
 	GetSymbolInfo(accountType, symbol string) (TradeSymbolInfo, error)
 
+	//获取全部交易对规范
+	GetAllSymbolInfo(accountType string) ([]TradeSymbolInfo, error)
+
 	//刷新交易规范
 	Refresh() error
 }

@@ -242,3 +242,40 @@ func (b *BybitExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Tr
 		},
 	}}, nil
 }
+
+func (b *BybitExchangeInfo) GetAllSymbolInfo(accountType string) ([]TradeSymbolInfo, error) {
+
+	var symbolInfoList []TradeSymbolInfo
+	switch BybitAccountType(accountType) {
+	case BYBIT_AC_SPOT:
+		b.spotSymbolMap.Range(func(key string, value *mybybitapi.InstrumentsInfoResRow) bool {
+			symbolInfo, err := b.GetSymbolInfo(accountType, key)
+			if err != nil {
+				return false
+			}
+			symbolInfoList = append(symbolInfoList, symbolInfo)
+			return true
+		})
+	case BYBIT_AC_LINEAR:
+		b.linearSymbolMap.Range(func(key string, value *mybybitapi.InstrumentsInfoResRow) bool {
+			symbolInfo, err := b.GetSymbolInfo(accountType, key)
+			if err != nil {
+				return false
+			}
+			symbolInfoList = append(symbolInfoList, symbolInfo)
+			return true
+		})
+	case BYBIT_AC_INVERSE:
+		b.inverseSymbolMap.Range(func(key string, value *mybybitapi.InstrumentsInfoResRow) bool {
+			symbolInfo, err := b.GetSymbolInfo(accountType, key)
+			if err != nil {
+				return false
+			}
+			symbolInfoList = append(symbolInfoList, symbolInfo)
+			return true
+		})
+	default:
+		return nil, ErrorAccountType
+	}
+	return symbolInfoList, nil
+}

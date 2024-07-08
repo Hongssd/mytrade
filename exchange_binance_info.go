@@ -207,3 +207,41 @@ func (b *BinanceExchangeInfo) GetSymbolInfo(accountType string, symbol string) (
 		},
 	}}, nil
 }
+
+func (b *BinanceExchangeInfo) GetAllSymbolInfo(accountType string) ([]TradeSymbolInfo, error) {
+
+	var symbolInfoList []TradeSymbolInfo
+
+	switch BinanceAccountType(accountType) {
+	case BN_AC_SPOT:
+		b.spotSymbolMap.Range(func(key string, value *mybinanceapi.SpotExchangeInfoResSymbol) bool {
+			symbolInfo, err := b.GetSymbolInfo(accountType, key)
+			if err != nil {
+				return false
+			}
+			symbolInfoList = append(symbolInfoList, symbolInfo)
+			return true
+		})
+	case BN_AC_FUTURE:
+		b.futureSymbolMap.Range(func(key string, value *mybinanceapi.FutureExchangeInfoResSymbol) bool {
+			symbolInfo, err := b.GetSymbolInfo(accountType, key)
+			if err != nil {
+				return false
+			}
+			symbolInfoList = append(symbolInfoList, symbolInfo)
+			return true
+		})
+	case BN_AC_SWAP:
+		b.swapSymbolMap.Range(func(key string, value *mybinanceapi.SwapExchangeInfoResSymbol) bool {
+			symbolInfo, err := b.GetSymbolInfo(accountType, key)
+			if err != nil {
+				return false
+			}
+			symbolInfoList = append(symbolInfoList, symbolInfo)
+			return true
+		})
+	default:
+		return nil, ErrorAccountType
+	}
+	return symbolInfoList, nil
+}
