@@ -23,6 +23,10 @@ type Order struct {
 	UpdateTime    int64        `json:"updateTime"`    //更新时间
 	RealizedPnl   string       `json:"fillPnl"`       //成交盈亏
 
+	TriggerPrice         string                    `json:"triggerPrice"`         //触发价格
+	TriggerType          OrderTriggerType          `json:"triggerType"`          //触发类型
+	TriggerConditionType OrderTriggerConditionType `json:"triggerConditionType"` //触发条件类型
+
 	ErrorCode string `json:"errorCode"` //错误码
 	ErrorMsg  string `json:"errorMsg"`  //错误信息
 }

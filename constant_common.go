@@ -118,3 +118,21 @@ const (
 	POSITION_MODE_HEDGE   PositionMode = "HEDGE"   //双向持仓
 	POSITION_MODE_ONEWAY  PositionMode = "ONE_WAY" //单向持仓
 )
+
+// 止盈止损触发类型
+type OrderTriggerType string
+
+const (
+	ORDER_TRIGGER_TYPE_UNKNOWN     OrderTriggerType = ""
+	ORDER_TRIGGER_TYPE_STOP_LOSS   OrderTriggerType = "STOP_LOSS"   //止损
+	ORDER_TRIGGER_TYPE_TAKE_PROFIT OrderTriggerType = "TAKE_PROFIT" //止盈
+)
+
+// 触发条件类型 上穿 下穿
+type OrderTriggerConditionType string
+
+const (
+	ORDER_TRIGGER_CONDITION_TYPE_UNKNOWN      OrderTriggerConditionType = ""
+	ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP   OrderTriggerConditionType = "THROUGH_UP"   //上穿
+	ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN OrderTriggerConditionType = "THROUGH_DOWN" //下穿
+)

@@ -30,9 +30,17 @@ func (c *BinanceEnumConverter) ToBNOrderSide(t OrderSide) string {
 // 订单类型
 func (c *BinanceEnumConverter) FromBNOrderType(t string) OrderType {
 	switch t {
-	case BN_ORDER_TYPE_LIMIT:
+	//币安 标准限价 现货止盈止损限价 合约止盈止损限价 转为限价单
+	case BN_ORDER_TYPE_LIMIT,
+		BN_ORDER_TYPE_SPOT_STOP_LOSS_LIMIT,
+		BN_ORDER_TYPE_SPOT_TAKE_PROFIT_LIMIT,
+		BN_ORDER_TYPE_FUTURE_STOP,
+		BN_ORDER_TYPE_FUTURE_TAKE_PROFIT:
 		return ORDER_TYPE_LIMIT
-	case BN_ORDER_TYPE_MARKET:
+	//币安 市价 合约止盈止损市价 转为市价单
+	case BN_ORDER_TYPE_MARKET,
+		BN_ORDER_TYPE_FUTURE_STOP_MARKET,
+		BN_ORDER_TYPE_FUTURE_TAKE_PROFIT_MARKET:
 		return ORDER_TYPE_MARKET
 	default:
 		return ORDER_TYPE_UNKNOWN
@@ -47,6 +55,93 @@ func (c *BinanceEnumConverter) ToBNOrderType(t OrderType) string {
 	default:
 		return ""
 	}
+}
+
+// 触发类型
+func (c *BinanceEnumConverter) FromBNOrderTypeForTriggerType(t string) OrderTriggerType {
+	switch t {
+	case BN_ORDER_TYPE_LIMIT,
+		BN_ORDER_TYPE_MARKET:
+		return ORDER_TRIGGER_TYPE_UNKNOWN
+	case BN_ORDER_TYPE_SPOT_STOP_LOSS_LIMIT,
+		BN_ORDER_TYPE_FUTURE_STOP,
+		BN_ORDER_TYPE_FUTURE_STOP_MARKET:
+		return ORDER_TRIGGER_TYPE_STOP_LOSS
+	case BN_ORDER_TYPE_SPOT_TAKE_PROFIT_LIMIT,
+		BN_ORDER_TYPE_FUTURE_TAKE_PROFIT,
+		BN_ORDER_TYPE_FUTURE_TAKE_PROFIT_MARKET:
+		return ORDER_TRIGGER_TYPE_TAKE_PROFIT
+	default:
+		return ORDER_TRIGGER_TYPE_UNKNOWN
+	}
+
+}
+func (c *BinanceEnumConverter) ToTriggerBnOrderType(accountType BinanceAccountType, ot OrderType, tt OrderTriggerType) string {
+	switch ot {
+	case ORDER_TYPE_LIMIT:
+		switch tt {
+		case ORDER_TRIGGER_TYPE_STOP_LOSS:
+			switch accountType {
+			case BN_AC_SPOT:
+				return BN_ORDER_TYPE_SPOT_STOP_LOSS_LIMIT
+			case BN_AC_FUTURE, BN_AC_SWAP:
+				return BN_ORDER_TYPE_FUTURE_STOP
+			}
+		case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+			switch accountType {
+			case BN_AC_SPOT:
+				return BN_ORDER_TYPE_SPOT_TAKE_PROFIT_LIMIT
+			case BN_AC_FUTURE, BN_AC_SWAP:
+				return BN_ORDER_TYPE_FUTURE_TAKE_PROFIT
+			}
+		}
+	case ORDER_TYPE_MARKET:
+		switch tt {
+		case ORDER_TRIGGER_TYPE_STOP_LOSS:
+			switch accountType {
+			case BN_AC_SPOT:
+				return BN_ORDER_TYPE_SPOT_STOP_LOSS_LIMIT
+			case BN_AC_FUTURE, BN_AC_SWAP:
+				return BN_ORDER_TYPE_FUTURE_STOP_MARKET
+			}
+		case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+			switch accountType {
+			case BN_AC_SPOT:
+				return BN_ORDER_TYPE_SPOT_TAKE_PROFIT_LIMIT
+			case BN_AC_FUTURE, BN_AC_SWAP:
+				return BN_ORDER_TYPE_FUTURE_TAKE_PROFIT_MARKET
+			}
+		}
+	}
+	return ""
+}
+
+// 触发条件类型
+// 订单方向为买入时 止盈为下穿 止损为上穿
+// 订单方向为卖出时 止盈为上穿 止损为下穿
+func (c *BinanceEnumConverter) FromBNOrderSideForTriggerConditionType(bnOrderSide, bnOrderType string) OrderTriggerConditionType {
+	tt := c.FromBNOrderTypeForTriggerType(bnOrderType)
+	switch bnOrderSide {
+	case BN_ORDER_SIDE_BUY:
+		switch tt {
+		case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+			//买入止盈 价格下穿触发
+			return ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+		case ORDER_TRIGGER_TYPE_STOP_LOSS:
+			//买入止损 价格上穿触发
+			return ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+		}
+	case BN_ORDER_SIDE_SELL:
+		switch tt {
+		case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+			//卖出止盈 价格上穿触发
+			return ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+		case ORDER_TRIGGER_TYPE_STOP_LOSS:
+			//卖出止损 价格下穿触发
+			return ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+		}
+	}
+	return ORDER_TRIGGER_CONDITION_TYPE_UNKNOWN
 }
 
 // 仓位方向

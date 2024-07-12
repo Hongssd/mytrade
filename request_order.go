@@ -20,6 +20,10 @@ type OrderParam struct {
 	ReduceOnly       bool         //是否只减仓
 	NewClientOrderId string       //新的用户自己生成的订单ID 改单时可用
 	IsIsolated       bool         //是否是逐仓模式
+
+	//止盈止损
+	TriggerPrice decimal.Decimal  //止盈止损触发价
+	TriggerType  OrderTriggerType //触发类型
 }
 
 func (o *OrderParam) SetAccountType(accountType string) *OrderParam {
@@ -72,6 +76,14 @@ func (o *OrderParam) SetNewClientOrderId(newClientOrderId string) *OrderParam {
 }
 func (o *OrderParam) SetIsIsolated(isIsolated bool) *OrderParam {
 	o.IsIsolated = isIsolated
+	return o
+}
+func (o *OrderParam) SetTriggerPrice(triggerPrice decimal.Decimal) *OrderParam {
+	o.TriggerPrice = triggerPrice
+	return o
+}
+func (o *OrderParam) SetOrderTriggerType(orderTriggerType OrderTriggerType) *OrderParam {
+	o.TriggerType = orderTriggerType
 	return o
 }
 

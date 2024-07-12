@@ -161,6 +161,7 @@ func (b *BinanceTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 	case BN_AC_SPOT:
 		api := b.apiSpotOrderCreate(req)
 		res, err := api.Do()
+		log.Error(err)
 		if err != nil {
 			return nil, err
 		}
