@@ -122,6 +122,10 @@ const (
 // 止盈止损触发类型
 type OrderTriggerType string
 
+func (p OrderTriggerType) String() string {
+	return string(p)
+}
+
 const (
 	ORDER_TRIGGER_TYPE_UNKNOWN     OrderTriggerType = ""
 	ORDER_TRIGGER_TYPE_STOP_LOSS   OrderTriggerType = "STOP_LOSS"   //止损
@@ -130,6 +134,10 @@ const (
 
 // 触发条件类型 上穿 下穿
 type OrderTriggerConditionType string
+
+func (p OrderTriggerConditionType) String() string {
+	return string(p)
+}
 
 const (
 	ORDER_TRIGGER_CONDITION_TYPE_UNKNOWN      OrderTriggerConditionType = ""
