@@ -94,6 +94,8 @@ func (c *BinanceEnumConverter) ToTriggerBnOrderType(accountType BinanceAccountTy
 			case BN_AC_FUTURE, BN_AC_SWAP:
 				return BN_ORDER_TYPE_FUTURE_TAKE_PROFIT
 			}
+		default:
+			return BN_ORDER_TYPE_LIMIT
 		}
 	case ORDER_TYPE_MARKET:
 		switch tt {
@@ -111,6 +113,8 @@ func (c *BinanceEnumConverter) ToTriggerBnOrderType(accountType BinanceAccountTy
 			case BN_AC_FUTURE, BN_AC_SWAP:
 				return BN_ORDER_TYPE_FUTURE_TAKE_PROFIT_MARKET
 			}
+		default:
+			return BN_ORDER_TYPE_MARKET
 		}
 	}
 	return ""
