@@ -213,8 +213,6 @@ func (b BybitTradeAccount) GetPositions(accountType string, symbols ...string) (
 		return nil, err
 	}
 
-	d, _ := json.MarshalIndent(res, "", "  ")
-	log.Info(string(d))
 	//log.Warn(len(res.Result.List))
 	var positions []*Position
 	for _, p := range res.Result.List {
