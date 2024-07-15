@@ -212,6 +212,9 @@ func (b BybitTradeAccount) GetPositions(accountType string, symbols ...string) (
 	if err != nil {
 		return nil, err
 	}
+
+	d, _ := json.MarshalIndent(res, "", "  ")
+	log.Info(string(d))
 	//log.Warn(len(res.Result.List))
 	var positions []*Position
 	for _, p := range res.Result.List {
@@ -219,6 +222,12 @@ func (b BybitTradeAccount) GetPositions(accountType string, symbols ...string) (
 			updateTime, _ := strconv.ParseInt(p.UpdatedTime, 10, 64)
 			if p.LiqPrice == "" {
 				p.LiqPrice = "0"
+			}
+			amt, _ := decimal.NewFromString(p.Side)
+
+			if p.PositionIdx == BYBIT_POSITION_SIDE_BOTH && p.Side == "Sell" && amt.IsZero() {
+				//单向持仓模式下持有空仓，数量设置为负数
+				amt = amt.Mul(decimal.NewFromInt(-1))
 			}
 			position := &Position{
 				Exchange:               b.ExchangeType().String(),
@@ -234,7 +243,7 @@ func (b BybitTradeAccount) GetPositions(accountType string, symbols ...string) (
 				EntryPrice:             p.AvgPrice,
 				MaxNotional:            "0",
 				PositionSide:           b.bybitConverter.FromBYBITPositionSide(p.PositionIdx),
-				PositionAmt:            p.Size,
+				PositionAmt:            amt.String(),
 				MarkPrice:              p.MarkPrice,
 				LiquidationPrice:       p.LiqPrice,
 				MarginRatio:            p.Leverage,
