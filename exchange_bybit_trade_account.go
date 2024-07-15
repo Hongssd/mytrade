@@ -223,7 +223,7 @@ func (b BybitTradeAccount) GetPositions(accountType string, symbols ...string) (
 			if p.LiqPrice == "" {
 				p.LiqPrice = "0"
 			}
-			amt, _ := decimal.NewFromString(p.Side)
+			amt, _ := decimal.NewFromString(p.Size)
 
 			if p.PositionIdx == BYBIT_POSITION_SIDE_BOTH && p.Side == "Sell" && amt.IsZero() {
 				//单向持仓模式下持有空仓，数量设置为负数
