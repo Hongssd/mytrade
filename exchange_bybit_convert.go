@@ -136,6 +136,66 @@ func (c *BybitEnumConverter) ToBYBITOrderStatus(t OrderStatus) string {
 	}
 }
 
+func (c *BybitEnumConverter) FromBYBITTriggerConditionForTriggerType(t int, orderSide string) OrderTriggerType {
+	switch t {
+	case BYBIT_ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN:
+		switch orderSide {
+		case BYBIT_ORDER_SIDE_BUY:
+			//下穿买入 止盈
+			return ORDER_TRIGGER_TYPE_TAKE_PROFIT
+		case BYBIT_ORDER_SIDE_SELL:
+			//下穿卖出 止损
+			return ORDER_TRIGGER_TYPE_STOP_LOSS
+		}
+	case BYBIT_ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP:
+		switch orderSide {
+		case BYBIT_ORDER_SIDE_BUY:
+			//上穿买入 止损
+			return ORDER_TRIGGER_TYPE_STOP_LOSS
+		case BYBIT_ORDER_SIDE_SELL:
+			//上穿卖出 止盈
+			return ORDER_TRIGGER_TYPE_TAKE_PROFIT
+		}
+	}
+	return ORDER_TRIGGER_TYPE_UNKNOWN
+}
+
+// 上穿下穿
+func (c *BybitEnumConverter) FromBYBITTriggerCondition(t int) OrderTriggerConditionType {
+	switch t {
+	case BYBIT_ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN:
+		return ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+	case BYBIT_ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP:
+		return ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+	default:
+		return ORDER_TRIGGER_CONDITION_TYPE_UNKNOWN
+	}
+}
+func (c *BybitEnumConverter) ToBYBITTriggerCondition(t OrderTriggerType, orderSide OrderSide) int {
+
+	switch t {
+	case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+		switch orderSide {
+		case ORDER_SIDE_BUY:
+			//买入止盈  下穿
+			return BYBIT_ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+		case ORDER_SIDE_SELL:
+			//卖出止盈  上穿
+			return BYBIT_ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+		}
+	case ORDER_TRIGGER_TYPE_STOP_LOSS:
+		switch orderSide {
+		case ORDER_SIDE_BUY:
+			//买入止损  上穿
+			return BYBIT_ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+		case ORDER_SIDE_SELL:
+			//卖出止损  下穿
+			return BYBIT_ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+		}
+	}
+	return 0
+}
+
 // 账户模式
 func (c *BybitEnumConverter) FromBYBITAccountMode(t string) AccountMode {
 	switch t {
