@@ -31,6 +31,20 @@ const (
 	OKX_ORDER_TYPE_IOC       = "ioc"
 )
 
+// 订单类型
+// conditional：单向止盈止损
+// oco：双向止盈止损
+// trigger：计划委托
+// move_order_stop：移动止盈止损
+// twap：时间加权委托
+const (
+	OKX_ORDER_ALGO_TYPE_CONDITIONAL     = "conditional"
+	OKX_ORDER_ALGO_TYPE_OCO             = "oco"
+	OKX_ORDER_ALGO_TYPE_TRIGGER         = "trigger"
+	OKX_ORDER_ALGO_TYPE_MOVE_ORDER_STOP = "move_order_stop"
+	OKX_ORDER_ALGO_TYPE_TWAP            = "twap"
+)
+
 const (
 	OKX_ORDER_SIDE_BUY  = "buy"
 	OKX_ORDER_SIDE_SELL = "sell"
@@ -54,6 +68,32 @@ const (
 	OKX_ORDER_STATUS_FILLED           = "filled"
 	OKX_ORDER_STATUS_CANCELED         = "canceled"
 	OKX_ORDER_STATUS_REJECTED         = "mmp_canceled"
+)
+
+// live：待生效
+// pause：暂停生效
+// partially_effective:部分生效
+// effective：已生效
+// canceled：已撤销
+// order_failed：委托失败
+// partially_failed：部分委托失败
+const (
+	OKX_ORDER_ALGO_STATUS_LIVE             = "live"
+	OKX_ORDER_ALGO_STATUS_PAUSE            = "pause"
+	OKX_ORDER_ALGO_STATUS_PARTIALLY_EFFECT = "partially_effective"
+	OKX_ORDER_ALGO_STATUS_EFFECTIVE        = "effective"
+	OKX_ORDER_ALGO_STATUS_CANCELED         = "canceled"
+	OKX_ORDER_ALGO_STATUS_ORDER_FAILED     = "order_failed"
+	OKX_ORDER_ALGO_STATUS_PARTIALLY_FAILED = "partially_failed"
+)
+
+// 实际触发方向
+// tp：止盈
+// sl：止损
+// 仅适用于单向止盈止损委托和双向止盈止损委托
+const (
+	OKX_ORDER_ALGO_ACTUAL_SIDE_TAKE_PROFIT = "tp"
+	OKX_ORDER_ALGO_ACTUAL_SIDE_STOP_LOSS   = "sl"
 )
 
 // 账户层级

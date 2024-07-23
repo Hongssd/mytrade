@@ -205,10 +205,20 @@ func (c *BinanceEnumConverter) ToBNTimeInForce(t TimeInForce) string {
 }
 
 // 订单状态
-func (c *BinanceEnumConverter) FromBNOrderStatus(t string) OrderStatus {
+func (c *BinanceEnumConverter) FromBNOrderStatus(t string, orderType string) OrderStatus {
 	switch t {
 	case BN_ORDER_STATUS_NEW:
-		return ORDER_STATUS_NEW
+		switch orderType {
+		case BN_ORDER_TYPE_SPOT_STOP_LOSS_LIMIT,
+			BN_ORDER_TYPE_SPOT_TAKE_PROFIT_LIMIT,
+			BN_ORDER_TYPE_FUTURE_STOP,
+			BN_ORDER_TYPE_FUTURE_TAKE_PROFIT,
+			BN_ORDER_TYPE_FUTURE_STOP_MARKET,
+			BN_ORDER_TYPE_FUTURE_TAKE_PROFIT_MARKET:
+			return ORDER_STATUS_UN_TRIGGERED
+		default:
+			return ORDER_STATUS_NEW
+		}
 	case BN_ORDER_STATUS_PARTIALLY_FILLED:
 		return ORDER_STATUS_PARTIALLY_FILLED
 	case BN_ORDER_STATUS_FILLED:

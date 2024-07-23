@@ -138,6 +138,56 @@ func (o *OkxTradeEngine) apiOrderCancel(req *OrderParam) *myokxapi.PrivateRestTr
 	return api
 }
 
+// 策略委托订单接口获取
+func (o *OkxTradeEngine) apiOrderAlgoCreate(req *OrderParam) *myokxapi.PrivateRestTradeOrderAlgoPostAPI {
+	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
+
+	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), req.IsIsolated)
+
+	api := client.NewPrivateRestTradeOrderAlgoPost().
+		InstId(req.Symbol).
+		TdMode(tdMode).
+		OrdType("conditional").
+		Side(o.okxConverter.ToOKXOrderSide(req.OrderSide)).
+		Sz(req.Quantity.String())
+
+	if req.TriggerType != ORDER_TRIGGER_TYPE_UNKNOWN && !req.TriggerPrice.IsZero() {
+		switch req.TriggerType {
+		case ORDER_TRIGGER_TYPE_STOP_LOSS:
+			api.ConditionalSlTriggerPx(req.TriggerPrice.String())
+			switch req.OrderType {
+			case ORDER_TYPE_LIMIT:
+				api.ConditionalSlOrdPx(req.Price.String())
+			case ORDER_TYPE_MARKET:
+				api.ConditionalSlOrdPx("-1")
+			}
+		case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+			api.ConditionalTpTriggerPx(req.TriggerPrice.String())
+			switch req.OrderType {
+			case ORDER_TYPE_LIMIT:
+				api.ConditionalTpOrdPx(req.Price.String())
+			case ORDER_TYPE_MARKET:
+				api.ConditionalTpOrdPx("-1")
+			}
+		}
+	}
+
+	if OkxAccountType(req.AccountType) != "SPOT" {
+		api.PosSide(o.okxConverter.ToOKXPositionSide(req.PositionSide))
+	} else {
+		api.TgtCcy("base_ccy")
+	}
+
+	if req.ReduceOnly {
+		api.ConditionalReduceOnly(req.ReduceOnly)
+	}
+	if req.ClientOrderId != "" {
+		api.AlgoClOrdId(req.ClientOrderId)
+	}
+
+	return api
+}
+
 // 批量订单接口获取
 func (o *OkxTradeEngine) apiBatchOrderCreate(reqs []*OrderParam) *myokxapi.PrivateRestTradeBatchOrdersAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()

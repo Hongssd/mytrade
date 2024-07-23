@@ -274,7 +274,6 @@ func (b BinanceTradeAccount) GetFeeRate(accountType, symbol string) (*FeeRate, e
 func (b BinanceTradeAccount) GetPositions(accountType string, symbols ...string) ([]*Position, error) {
 	var positionList []*Position
 	switch BinanceAccountType(accountType) {
-	case BN_AC_SPOT:
 	case BN_AC_FUTURE:
 		res, err := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureAccount().Do()
 		if err != nil {
@@ -413,6 +412,27 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 	var assetList []*Asset
 
 	switch BinanceAccountType(accountType) {
+	case BN_AC_FUNDING:
+		res, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotAssetGetFundingAsset().Do()
+		if err != nil {
+			return nil, err
+		}
+		for _, a := range *res {
+			if len(currencies) == 0 || stringInSlice(a.Asset, currencies) {
+				locked, _ := decimal.NewFromString(a.Locked)           //锁定
+				freeze, _ := decimal.NewFromString(a.Freeze)           //冻结
+				withdrawing, _ := decimal.NewFromString(a.Withdrawing) //提币中
+				assetList = append(assetList, &Asset{
+					Exchange:          b.ExchangeType().String(),                    //交易所
+					AccountType:       accountType,                                  //账户类型
+					Asset:             a.Asset,                                      //资产
+					Free:              a.Free,                                       //可用余额
+					Locked:            locked.Add(freeze).Add(withdrawing).String(), //locked=锁定+冻结+提币中
+					MaxWithdrawAmount: a.Free,
+					UpdateTime:        time.Now().UnixMilli(),
+				})
+			}
+		}
 	case BN_AC_SPOT:
 		res, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotAccount().Do()
 		if err != nil {

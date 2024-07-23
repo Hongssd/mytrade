@@ -25,6 +25,7 @@ const (
 	ORDER_STATUS_FILLED           OrderStatus = "FILLED"           //完全成交
 	ORDER_STATUS_CANCELED         OrderStatus = "CANCELED"         //已撤销
 	ORDER_STATUS_REJECTED         OrderStatus = "REJECTED"         //已拒绝
+	ORDER_STATUS_UN_TRIGGERED     OrderStatus = "UN_TRIGGERED"     //未触发
 )
 
 type OrderType string

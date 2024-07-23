@@ -7,9 +7,10 @@ func (b BinanceAccountType) String() string {
 }
 
 const (
-	BN_AC_SPOT   BinanceAccountType = "SPOT"
-	BN_AC_FUTURE BinanceAccountType = "FUTURE"
-	BN_AC_SWAP   BinanceAccountType = "SWAP"
+	BN_AC_FUNDING BinanceAccountType = "FUNDING"
+	BN_AC_SPOT    BinanceAccountType = "SPOT"
+	BN_AC_FUTURE  BinanceAccountType = "FUTURE"
+	BN_AC_SWAP    BinanceAccountType = "SWAP"
 )
 
 const (

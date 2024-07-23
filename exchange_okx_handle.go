@@ -295,6 +295,67 @@ func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order 
 
 }
 
+// 策略订单推送处理
+func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo) *Order {
+
+	orderType, timeInForce := o.okxConverter.FromOKXOrderType(order.OrdType)
+
+	var px decimal.Decimal
+	var triggerPx decimal.Decimal
+	var triggerType OrderTriggerType
+	var triggerConditionType OrderTriggerConditionType
+	switch order.ActualSide {
+	case OKX_ORDER_ALGO_ACTUAL_SIDE_TAKE_PROFIT:
+		px, _ = decimal.NewFromString(order.TpOrdPx)
+		triggerPx, _ = decimal.NewFromString(order.TpTriggerPx)
+		triggerType = ORDER_TRIGGER_TYPE_TAKE_PROFIT
+
+		if order.Side == OKX_ORDER_SIDE_BUY {
+			//止盈买入 价格下穿触发
+			triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+		} else {
+			//止盈卖出 价格上穿触发
+			triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+		}
+	case OKX_ORDER_ALGO_ACTUAL_SIDE_STOP_LOSS:
+		px, _ = decimal.NewFromString(order.SlOrdPx)
+		triggerPx, _ = decimal.NewFromString(order.SlTriggerPx)
+		triggerType = ORDER_TRIGGER_TYPE_STOP_LOSS
+
+		if order.Side == OKX_ORDER_SIDE_BUY {
+			//止损买入 价格上穿触发
+			triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+		} else {
+			//止损卖出 价格下穿触发
+			triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+		}
+	}
+
+	return &Order{
+		Exchange:      OKX_NAME.String(),
+		Symbol:        order.OrdersAlgo.InstId,
+		OrderId:       order.AlgoId,
+		ClientOrderId: order.AlgoClOrdId,
+		Price:         px.String(),
+		Quantity:      order.Sz,
+		ExecutedQty:   decimal.Zero.String(),
+		AvgPrice:      decimal.Zero.String(),
+		Status:        o.okxConverter.FromOKXOrderStatus(order.State),
+		Type:          orderType,
+		Side:          o.okxConverter.FromOKXOrderSide(order.Side),
+		PositionSide:  o.okxConverter.FromOKXPositionSide(order.PosSide),
+		TimeInForce:   timeInForce,
+		ReduceOnly:    stringToBool(order.ReduceOnly),
+		CreateTime:    stringToInt64(order.CTime),
+		UpdateTime:    stringToInt64(order.UTime),
+		RealizedPnl:   decimal.Zero.String(),
+
+		TriggerPrice:         triggerPx.String(),
+		TriggerType:          triggerType,
+		TriggerConditionType: triggerConditionType,
+	}
+}
+
 // ws单订单请求相关
 func (o *OkxTradeEngine) handleWsOrderCreateFromOrderParam(req *OrderParam) myokxapi.WsOrderArgData {
 	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), req.IsIsolated)

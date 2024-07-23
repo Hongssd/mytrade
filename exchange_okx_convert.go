@@ -66,6 +66,8 @@ func (c *OkxEnumConverter) ToOKXOrderType(t OrderType, t2 TimeInForce) string {
 	}
 }
 
+// 策略订单类型
+
 // 仓位方向
 func (c *OkxEnumConverter) FromOKXPositionSide(t string) PositionSide {
 	switch t {

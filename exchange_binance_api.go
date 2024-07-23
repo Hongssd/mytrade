@@ -211,6 +211,7 @@ func (b *BinanceTradeEngine) apiFutureOrderAmend(req *OrderParam) *mybinanceapi.
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		Quantity(req.Quantity)
+
 	if !req.Price.IsZero() {
 		api = api.Price(req.Price)
 	}
