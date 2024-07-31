@@ -323,3 +323,19 @@ func (c *BinanceEnumConverter) ToBNPositionMode(t PositionMode) string {
 		return ""
 	}
 }
+
+// 划转类型转换
+func (c *BinanceEnumConverter) ToBNAssetType(t AssetType) string {
+	switch t {
+	case ASSET_TYPE_FUND:
+		return BN_ASSET_TYPE_FUND
+	case ASSET_TYPE_UNIFIED:
+		return BN_ASSET_TYPE_UNIFIED
+	case ASSET_TYPE_UMFUTURE:
+		return BN_ASSET_TYPE_UMFUTURE
+	case ASSET_TYPE_CMFUTURE:
+		return BN_ASSET_TYPE_CMFUTURE
+	default:
+		return ""
+	}
+}

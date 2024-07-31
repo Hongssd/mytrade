@@ -144,3 +144,10 @@ func bybitGetMillisecondFromInterval(interval string) int64 {
 func bybitGetKlineCloseTime(ts int64, interval string) int64 {
 	return ts + bybitGetMillisecondFromInterval(interval) - 1
 }
+
+// 资金划转类型 1. 资金账户 FUND 2. 统一账户 UNIFIED 3. 反向合约账户 CONTRACT
+const (
+	BYBIT_ASSET_TYPE_FUND     = "FUND"
+	BYBIT_ASSET_TYPE_UNIFIED  = "UNIFIED"
+	BYBIT_ASSET_TYPE_CONTRACT = "CONTRACT"
+)

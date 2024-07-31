@@ -212,3 +212,9 @@ func okxGetMillisecondFromInterval(interval string) int64 {
 func okxGetKlineCloseTime(ts int64, interval string) int64 {
 	return ts + okxGetMillisecondFromInterval(interval) - 1
 }
+
+// 账户类型
+const (
+	OKX_ASSET_TYPE_FUND    = "6"
+	OKX_ASSET_TYPE_UNIFIED = "18"
+)

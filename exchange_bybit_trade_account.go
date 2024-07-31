@@ -2,6 +2,7 @@ package mytrade
 
 import (
 	"github.com/Hongssd/mybybitapi"
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
@@ -305,4 +306,39 @@ func (b BybitTradeAccount) GetAssets(accountType string, currencies ...string) (
 	}
 
 	return assets, nil
+}
+
+// 资金划转
+func (b BybitTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTransfer, error) {
+	api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().NewAssetTransferInterTransfer()
+
+	transferId, err := uuid.NewUUID()
+	if err != nil {
+		return nil, err
+	}
+	api.TransferId(transferId.String())
+
+	From := b.bybitConverter.ToBYBITAssetType(AssetType(req.From))
+	To := b.bybitConverter.ToBYBITAssetType(AssetType(req.To))
+	if From == "" || To == "" {
+		return nil, err
+	}
+	api.FromAccountType(From).ToAccountType(To)
+
+	api.Coin(req.Asset).Amount(req.Amount.String())
+
+	res, err := api.Do()
+	if err != nil {
+		return nil, err
+	}
+
+	var assetTransfers []*AssetTransfer
+	d := res.Result
+	assetTransfers = append(assetTransfers, &AssetTransfer{
+		Exchange: b.ExchangeType().String(),
+		TranId:   d.TransferId,
+		Status:   d.Status,
+	})
+
+	return assetTransfers, nil
 }

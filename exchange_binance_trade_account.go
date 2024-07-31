@@ -3,6 +3,7 @@ package mytrade
 import (
 	"github.com/Hongssd/mybinanceapi"
 	"github.com/shopspring/decimal"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -510,4 +511,37 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 		return nil, ErrorAccountType
 	}
 	return assetList, nil
+}
+
+func (b BinanceTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTransfer, error) {
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotAssetTransferPost()
+
+	FromAsset := b.bnConverter.ToBNAssetType(AssetType(req.From))
+	ToAsset := b.bnConverter.ToBNAssetType(AssetType(req.To))
+	BNTransferType := FromAsset + "_" + ToAsset
+	api.Type(mybinanceapi.AssetTransferType(BNTransferType))
+
+	api.Asset(req.Asset).Amount(req.Amount)
+
+	if req.FromSymbol != "" {
+		api.FromSymbol(req.From)
+	}
+	if req.ToSymbol != "" {
+		api.ToSymbol(req.To)
+	}
+
+	res, err := api.Do()
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	var assetTransfers []*AssetTransfer
+	tranId := strconv.FormatInt(res.TranId, 10)
+	assetTransfers = append(assetTransfers, &AssetTransfer{
+		Exchange: b.ExchangeType().String(),
+		TranId:   tranId,
+	})
+
+	return assetTransfers, nil
 }

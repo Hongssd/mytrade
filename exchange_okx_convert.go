@@ -222,3 +222,15 @@ func (c *OkxEnumConverter) ToOKXPositionMode(t PositionMode) string {
 		return ""
 	}
 }
+
+// 资金划转类型 1. 资金账户 6   2. 交易账户 18
+func (c *OkxEnumConverter) ToOKXAssetTransferType(t AssetType) string {
+	switch t {
+	case ASSET_TYPE_FUND:
+		return OKX_ASSET_TYPE_FUND
+	case ASSET_TYPE_UNIFIED:
+		return OKX_ASSET_TYPE_UNIFIED
+	default:
+		return ""
+	}
+}

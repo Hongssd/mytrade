@@ -224,3 +224,46 @@ func (o OkxTradeAccount) GetAssets(accountType string, currencies ...string) ([]
 
 	return assets, nil
 }
+
+// 资金划转（账户内）
+func (o OkxTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTransfer, error) {
+	api := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().
+		NewPrivateRestAssetTransfer()
+
+	// required
+	api.Type("0").Ccy(req.Asset).Amt(req.Amount.String())
+	api.From(o.okxConverter.ToOKXAssetTransferType(AssetType(req.From)))
+	api.To(o.okxConverter.ToOKXAssetTransferType(AssetType(req.To)))
+
+	// optional
+	if req.SubAcct != "" {
+		api.SubAcct(req.SubAcct)
+	}
+	api.LoanTrans(req.LoanTrans)
+	if req.OmitPosRisk != "" { // bool 类型
+		api.OmitPosRisk(req.OmitPosRisk)
+	}
+	if req.ClientId != "" {
+		api.ClientId(req.ClientId)
+	}
+
+	res, err := api.Do()
+	if err != nil {
+		return nil, err
+	}
+	log.Info(res)
+	var assetTransfers []*AssetTransfer
+	for _, d := range res.Data {
+		assetTransfers = append(assetTransfers, &AssetTransfer{
+			Exchange: o.ExchangeType().String(),
+			TranId:   d.TransId,
+			Asset:    d.Ccy,
+			From:     d.From,
+			To:       d.To,
+			Amount:   d.Amt,
+			ClientId: d.ClientId,
+		})
+	}
+
+	return assetTransfers, nil
+}

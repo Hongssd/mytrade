@@ -145,3 +145,18 @@ const (
 	ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP   OrderTriggerConditionType = "THROUGH_UP"   //上穿
 	ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN OrderTriggerConditionType = "THROUGH_DOWN" //下穿
 )
+
+// 资金划转类型
+type AssetType string
+
+func (p AssetType) String() string {
+	return string(p)
+}
+
+const (
+	ASSET_TYPE_FUND     AssetType = "FUND"     //资金账户
+	ASSET_TYPE_UNIFIED  AssetType = "UNIFIED"  // 统一账户
+	ASSET_TYPE_CONTRACT AssetType = "CONTRACT" // 合约账户
+	ASSET_TYPE_UMFUTURE AssetType = "UMFUTURE" // U本位合约账户
+	ASSET_TYPE_CMFUTURE AssetType = "CMFUTURE" // 币本位合约账户
+)
