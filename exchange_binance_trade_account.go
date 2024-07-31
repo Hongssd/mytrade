@@ -539,6 +539,7 @@ func (b BinanceTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTr
 		To:       req.To,
 		Amount:   req.Amount.String(),
 		Status:   "",
+		ClientId: "",
 	})
 
 	return assetTransfers, nil

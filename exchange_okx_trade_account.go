@@ -1,6 +1,7 @@
 package mytrade
 
 import (
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
@@ -234,6 +235,9 @@ func (o OkxTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTransf
 	api.Type("0").Ccy(req.Asset).Amt(req.Amount.String())
 	api.From(o.okxConverter.ToOKXAssetType(req.From))
 	api.To(o.okxConverter.ToOKXAssetType(req.To))
+
+	// 生成自定义id，以便查询账单时使用
+	clientId := uuid.NewUUID().String()
 
 	res, err := api.Do()
 	if err != nil {

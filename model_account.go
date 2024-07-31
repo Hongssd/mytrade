@@ -62,4 +62,5 @@ type AssetTransfer struct {
 	To       AssetType `json:"to"`       // 转入账号 OKX required
 	Amount   string    `json:"amount"`   // 划转量 OKX required
 	Status   string    `json:"status"`   // 划转状态 ByBit required
+	ClientId string    `json:"clientId"` // 客户自定义ID OKX optional
 }

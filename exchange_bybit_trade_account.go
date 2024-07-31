@@ -342,6 +342,7 @@ func (b BybitTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTran
 		To:       req.To,
 		Amount:   req.Amount.String(),
 		Status:   d.Status,
+		ClientId: "",
 	})
 
 	return assetTransfers, nil
