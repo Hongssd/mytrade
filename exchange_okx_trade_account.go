@@ -1,7 +1,6 @@
 package mytrade
 
 import (
-	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
@@ -236,14 +235,15 @@ func (o OkxTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTransf
 	api.From(o.okxConverter.ToOKXAssetType(req.From))
 	api.To(o.okxConverter.ToOKXAssetType(req.To))
 
-	// 生成自定义id，以便查询账单时使用
-	clientId := uuid.NewUUID().String()
+	// 生成自定义id，以便查询账单（查询划转历史）时使用
+	clientId := GetInstanceId("OKX")
+	api.ClientId(clientId)
 
 	res, err := api.Do()
 	if err != nil {
 		return nil, err
 	}
-	log.Info(res)
+
 	var assetTransfers []*AssetTransfer
 	for _, d := range res.Data {
 		assetTransfers = append(assetTransfers, &AssetTransfer{
@@ -254,6 +254,7 @@ func (o OkxTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTransf
 			To:       o.okxConverter.FromOKXAssetType(d.To),
 			Amount:   d.Amt,
 			Status:   "",
+			ClientId: d.ClientId,
 		})
 	}
 
