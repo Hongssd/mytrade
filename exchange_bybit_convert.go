@@ -269,6 +269,18 @@ func (c *BybitEnumConverter) ToBYBITPositionMode(t PositionMode) int {
 }
 
 // 资金划转类型 1. 资金账户FUND 2. 统一账户UNIFIED 3. 合约账户CONTRACT
+func (c *BybitEnumConverter) FromBYBITAssetType(t string) AssetType {
+	switch t {
+	case BYBIT_ASSET_TYPE_FUND:
+		return ASSET_TYPE_FUND
+	case BYBIT_ASSET_TYPE_UNIFIED:
+		return ASSET_TYPE_UNIFIED
+	case BYBIT_ASSET_TYPE_CONTRACT:
+		return ASSET_TYPE_CONTRACT
+	default:
+		return ""
+	}
+}
 func (c *BybitEnumConverter) ToBYBITAssetType(t AssetType) string {
 	switch t {
 	case ASSET_TYPE_FUND:

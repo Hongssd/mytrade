@@ -232,20 +232,8 @@ func (o OkxTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTransf
 
 	// required
 	api.Type("0").Ccy(req.Asset).Amt(req.Amount.String())
-	api.From(o.okxConverter.ToOKXAssetTransferType(AssetType(req.From)))
-	api.To(o.okxConverter.ToOKXAssetTransferType(AssetType(req.To)))
-
-	// optional
-	if req.SubAcct != "" {
-		api.SubAcct(req.SubAcct)
-	}
-	api.LoanTrans(req.LoanTrans)
-	if req.OmitPosRisk != "" { // bool 类型
-		api.OmitPosRisk(req.OmitPosRisk)
-	}
-	if req.ClientId != "" {
-		api.ClientId(req.ClientId)
-	}
+	api.From(o.okxConverter.ToOKXAssetType(req.From))
+	api.To(o.okxConverter.ToOKXAssetType(req.To))
 
 	res, err := api.Do()
 	if err != nil {
@@ -258,10 +246,10 @@ func (o OkxTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTransf
 			Exchange: o.ExchangeType().String(),
 			TranId:   d.TransId,
 			Asset:    d.Ccy,
-			From:     d.From,
-			To:       d.To,
+			From:     o.okxConverter.FromOKXAssetType(d.From),
+			To:       o.okxConverter.FromOKXAssetType(d.To),
 			Amount:   d.Amt,
-			ClientId: d.ClientId,
+			Status:   "",
 		})
 	}
 

@@ -318,8 +318,8 @@ func (b BybitTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTran
 	}
 	api.TransferId(transferId.String())
 
-	From := b.bybitConverter.ToBYBITAssetType(AssetType(req.From))
-	To := b.bybitConverter.ToBYBITAssetType(AssetType(req.To))
+	From := b.bybitConverter.ToBYBITAssetType(req.From)
+	To := b.bybitConverter.ToBYBITAssetType(req.To)
 	if From == "" || To == "" {
 		return nil, err
 	}
@@ -337,6 +337,10 @@ func (b BybitTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTran
 	assetTransfers = append(assetTransfers, &AssetTransfer{
 		Exchange: b.ExchangeType().String(),
 		TranId:   d.TransferId,
+		Asset:    req.Asset,
+		From:     req.From,
+		To:       req.To,
+		Amount:   req.Amount.String(),
 		Status:   d.Status,
 	})
 

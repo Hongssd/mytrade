@@ -516,19 +516,12 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 func (b BinanceTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTransfer, error) {
 	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotAssetTransferPost()
 
-	FromAsset := b.bnConverter.ToBNAssetType(AssetType(req.From))
-	ToAsset := b.bnConverter.ToBNAssetType(AssetType(req.To))
+	FromAsset := b.bnConverter.ToBNAssetType(req.From)
+	ToAsset := b.bnConverter.ToBNAssetType(req.To)
 	BNTransferType := FromAsset + "_" + ToAsset
 	api.Type(mybinanceapi.AssetTransferType(BNTransferType))
 
 	api.Asset(req.Asset).Amount(req.Amount)
-
-	if req.FromSymbol != "" {
-		api.FromSymbol(req.From)
-	}
-	if req.ToSymbol != "" {
-		api.ToSymbol(req.To)
-	}
 
 	res, err := api.Do()
 	if err != nil {
@@ -541,6 +534,11 @@ func (b BinanceTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTr
 	assetTransfers = append(assetTransfers, &AssetTransfer{
 		Exchange: b.ExchangeType().String(),
 		TranId:   tranId,
+		Asset:    req.Asset,
+		From:     req.From,
+		To:       req.To,
+		Amount:   req.Amount.String(),
+		Status:   "",
 	})
 
 	return assetTransfers, nil

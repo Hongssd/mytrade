@@ -146,7 +146,7 @@ const (
 	ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN OrderTriggerConditionType = "THROUGH_DOWN" //下穿
 )
 
-// 资金划转类型
+// 账户类型
 type AssetType string
 
 func (p AssetType) String() string {
