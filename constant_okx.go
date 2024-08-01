@@ -218,3 +218,10 @@ const (
 	OKX_ASSET_TYPE_FUND    = "6"
 	OKX_ASSET_TYPE_UNIFIED = "18"
 )
+
+// 资金划转类型
+const (
+	OKX_TRANSFER_STATUS_TYPE_SUCCESS = "success"
+	OKX_TRANSFER_STATUS_TYPE_PENDING = "pending"
+	OKX_TRANSFER_STATUS_TYPE_FAILED  = "failed"
+)

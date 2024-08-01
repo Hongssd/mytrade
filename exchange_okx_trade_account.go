@@ -260,3 +260,63 @@ func (o OkxTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTransf
 
 	return assetTransfers, nil
 }
+
+func (o OkxTradeAccount) QueryAssetTransfer(req *QueryAssetTransferParams) ([]*QueryAssetTransfer, error) {
+	api := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
+
+	// 从资金流水获取划转记录
+	var bills = []*OKXAssetBill{}
+	// 130：从交易账户转入账单
+	if o.okxConverter.ToOKXAssetType(req.From) == OKX_ASSET_TYPE_UNIFIED && o.okxConverter.ToOKXAssetType(req.To) == OKX_ASSET_TYPE_FUND {
+		res, err := api.NewPrivateRestAssetBills().Type("130").
+			Before(strconv.FormatInt(req.StartTime, 10)).
+			After(strconv.FormatInt(req.EndTime, 10)).
+			Do()
+		if err != nil {
+			log.Error(err)
+			return nil, err
+		}
+		for _, d := range res.Data {
+			bills = append(bills, &OKXAssetBill{
+				BillId: d.BillId,
+				Ccy:    d.Ccy,
+				BalChg: d.BalChg,
+				Bal:    d.Bal,
+			})
+		}
+	} else if o.okxConverter.ToOKXAssetType(req.From) == OKX_ASSET_TYPE_FUND && o.okxConverter.ToOKXAssetType(req.To) == OKX_ASSET_TYPE_UNIFIED {
+		// 131：转出至交易账户账单
+		res, err := api.NewPrivateRestAssetBills().Type("131").
+			Before(strconv.FormatInt(req.StartTime, 10)).
+			After(strconv.FormatInt(req.EndTime, 10)).
+			Do()
+		if err != nil {
+			log.Error(err)
+			return nil, err
+		}
+		for _, d := range res.Data {
+			bills = append(bills, &OKXAssetBill{
+				BillId: d.BillId,
+				Ccy:    d.Ccy,
+				BalChg: d.BalChg,
+				Bal:    d.Bal,
+			})
+		}
+	}
+
+	var QueryAssetTransfers []*QueryAssetTransfer
+	for _, bill := range bills {
+		if req.Asset != "" && bill.Ccy != req.Asset {
+			continue
+		}
+		QueryAssetTransfers = append(QueryAssetTransfers, &QueryAssetTransfer{
+			TranId: bill.BillId,
+			Asset:  bill.Ccy,
+			Amount: stringToDecimal(bill.BalChg).Abs(),
+			From:   req.From,
+			To:     req.To,
+			Status: o.okxConverter.FromOKXTransferStatus(OKX_TRANSFER_STATUS_TYPE_SUCCESS),
+		})
+	}
+	return QueryAssetTransfers, nil
+}

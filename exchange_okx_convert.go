@@ -244,3 +244,17 @@ func (c *OkxEnumConverter) ToOKXAssetType(t AssetType) string {
 		return ""
 	}
 }
+
+// 划转状态 1. success 2. failed 3. pending
+func (c *OkxEnumConverter) FromOKXTransferStatus(t string) TransferStatusType {
+	switch t {
+	case OKX_TRANSFER_STATUS_TYPE_SUCCESS:
+		return TRANSFER_STATUS_TYPE_SUCCESS
+	case OKX_TRANSFER_STATUS_TYPE_PENDING:
+		return TRANSFER_STATUS_TYPE_PENDING
+	case OKX_TRANSFER_STATUS_TYPE_FAILED:
+		return TRANSFER_STATUS_TYPE_FAILED
+	default:
+		return TRANSFER_STATUS_TYPE_UNKNOWN
+	}
+}

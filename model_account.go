@@ -64,3 +64,20 @@ type AssetTransfer struct {
 	Status   string    `json:"status"`   // 划转状态 ByBit required
 	ClientId string    `json:"clientId"` // 客户自定义ID OKX optional
 }
+
+// 查询资金划转历史
+type QueryAssetTransfer struct {
+	TranId string             `json:"tranId"` // 划转ID  注意：okx 的 TranId 为账单的 BillId
+	Asset  string             `json:"asset"`  // 币种
+	Amount decimal.Decimal    `json:"amount"` // 数量
+	From   AssetType          `json:"from"`   // 转出账号
+	To     AssetType          `json:"to"`     // 转入账号
+	Status TransferStatusType `json:"status"` // 状态
+}
+
+type OKXAssetBill struct {
+	BillId string `json:"billId"` // 账单ID
+	Ccy    string `json:"ccy"`    // 账户余额币种
+	BalChg string `json:"balChg"` // 账户层面的余额变动金额
+	Bal    string `json:"bal"`    // 账户层面的余额
+}

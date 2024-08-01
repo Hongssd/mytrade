@@ -160,3 +160,17 @@ const (
 	ASSET_TYPE_UMFUTURE AssetType = "UMFUTURE" // U本位合约账户
 	ASSET_TYPE_CMFUTURE AssetType = "CMFUTURE" // 币本位合约账户
 )
+
+// 划转状态类型
+type TransferStatusType string
+
+func (p TransferStatusType) String() string {
+	return string(p)
+}
+
+const (
+	TRANSFER_STATUS_TYPE_UNKNOWN TransferStatusType = "UNKNOWN"
+	TRANSFER_STATUS_TYPE_PENDING TransferStatusType = "PENDING"
+	TRANSFER_STATUS_TYPE_SUCCESS TransferStatusType = "SUCCESS"
+	TRANSFER_STATUS_TYPE_FAILED  TransferStatusType = "FAILED"
+)

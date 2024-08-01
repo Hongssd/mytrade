@@ -293,3 +293,16 @@ func (c *BybitEnumConverter) ToBYBITAssetType(t AssetType) string {
 		return ""
 	}
 }
+
+func (c *BybitEnumConverter) FromBYBITTransferStatus(t string) TransferStatusType {
+	switch t {
+	case BYBIT_TRANSFER_STATUS_TYPE_SUCCESS:
+		return TRANSFER_STATUS_TYPE_SUCCESS
+	case BYBIT_TRANSFER_STATUS_TYPE_PENDING:
+		return TRANSFER_STATUS_TYPE_PENDING
+	case BYBIT_TRANSFER_STATUS_TYPE_FAILED:
+		return TRANSFER_STATUS_TYPE_FAILED
+	default:
+		return TRANSFER_STATUS_TYPE_UNKNOWN
+	}
+}

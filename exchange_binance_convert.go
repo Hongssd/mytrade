@@ -353,3 +353,17 @@ func (c *BinanceEnumConverter) ToBNAssetType(t AssetType) string {
 		return ""
 	}
 }
+
+// 划转状态类型
+func (c *BinanceEnumConverter) FromBinanceTransferStatus(t string) TransferStatusType {
+	switch t {
+	case BN_TRANSFER_STATUS_TYPE_SUCCESS:
+		return TRANSFER_STATUS_TYPE_SUCCESS
+	case BN_TRANSFER_STATUS_TYPE_PENDING:
+		return TRANSFER_STATUS_TYPE_PENDING
+	case BN_TRANSFER_STATUS_TYPE_FAILED:
+		return TRANSFER_STATUS_TYPE_FAILED
+	default:
+		return TRANSFER_STATUS_TYPE_UNKNOWN
+	}
+}

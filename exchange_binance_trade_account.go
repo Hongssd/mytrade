@@ -544,3 +544,31 @@ func (b BinanceTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTr
 
 	return assetTransfers, nil
 }
+
+func (b BinanceTradeAccount) QueryAssetTransfer(req *QueryAssetTransferParams) ([]*QueryAssetTransfer, error) {
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotAssetTransferGet()
+	Type := b.bnConverter.ToBNAssetType(req.From) + "_" + b.bnConverter.ToBNAssetType(req.To)
+	api.Type(mybinanceapi.AssetTransferType(Type))
+	api.StartTime(req.StartTime).EndTime(req.EndTime)
+	res, err := api.Do()
+	if err != nil {
+		return nil, err
+	}
+
+	var QueryAssetTransfers []*QueryAssetTransfer
+	for _, r := range res.Rows {
+		if req.Asset != "" && r.Asset != req.Asset {
+			continue
+		}
+		QueryAssetTransfers = append(QueryAssetTransfers, &QueryAssetTransfer{
+			TranId: strconv.FormatInt(r.TranId, 10),
+			Asset:  r.Asset,
+			Amount: stringToDecimal(r.Amount),
+			From:   b.bnConverter.FromBNAssetType(strings.Split(r.Type, "_")[0]),
+			To:     b.bnConverter.FromBNAssetType(strings.Split(r.Type, "_")[1]),
+			Status: b.bnConverter.FromBinanceTransferStatus(r.Status),
+		})
+	}
+
+	return QueryAssetTransfers, nil
+}
