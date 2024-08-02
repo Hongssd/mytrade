@@ -275,6 +275,24 @@ func (e *ExchangeManager) SetLeverage(api ExchangeApiParam, accountType, symbol 
 	return tradeAccount.SetLeverage(accountType, symbol, marginMode, positionSide, leverage)
 }
 
+// 资金划转（账户内）
+func (e *ExchangeManager) AssetTransfer(api ExchangeApiParam, req *AssetTransferParams) ([]*AssetTransfer, error) {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return nil, err
+	}
+	return tradeAccount.AssetTransfer(req)
+}
+
+// 资金划转历史记录
+func (e *ExchangeManager) QueryAssetTransfer(api ExchangeApiParam, req *QueryAssetTransferParams) ([]*QueryAssetTransfer, error) {
+	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
+	if err != nil {
+		return nil, err
+	}
+	return tradeAccount.QueryAssetTransfer(req)
+}
+
 // 查询单个订单
 func (e *ExchangeManager) QueryOrder(api ExchangeApiParam, req *QueryOrderParam) (*Order, error) {
 	tradeEngine, err := e.getTradeEngine(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)

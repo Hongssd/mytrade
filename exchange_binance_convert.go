@@ -323,3 +323,47 @@ func (c *BinanceEnumConverter) ToBNPositionMode(t PositionMode) string {
 		return ""
 	}
 }
+
+// 划转类型转换
+func (c *BinanceEnumConverter) FromBNAssetType(t string) AssetType {
+	switch t {
+	case BN_ASSET_TYPE_FUND:
+		return ASSET_TYPE_FUND
+	case BN_ASSET_TYPE_UNIFIED:
+		return ASSET_TYPE_UNIFIED
+	case BN_ASSET_TYPE_UMFUTURE:
+		return ASSET_TYPE_UMFUTURE
+	case BN_ASSET_TYPE_CMFUTURE:
+		return ASSET_TYPE_CMFUTURE
+	default:
+		return ""
+	}
+}
+func (c *BinanceEnumConverter) ToBNAssetType(t AssetType) string {
+	switch t {
+	case ASSET_TYPE_FUND:
+		return BN_ASSET_TYPE_FUND
+	case ASSET_TYPE_UNIFIED:
+		return BN_ASSET_TYPE_UNIFIED
+	case ASSET_TYPE_UMFUTURE:
+		return BN_ASSET_TYPE_UMFUTURE
+	case ASSET_TYPE_CMFUTURE:
+		return BN_ASSET_TYPE_CMFUTURE
+	default:
+		return ""
+	}
+}
+
+// 划转状态类型
+func (c *BinanceEnumConverter) FromBinanceTransferStatus(t string) TransferStatusType {
+	switch t {
+	case BN_TRANSFER_STATUS_TYPE_SUCCESS:
+		return TRANSFER_STATUS_TYPE_SUCCESS
+	case BN_TRANSFER_STATUS_TYPE_PENDING:
+		return TRANSFER_STATUS_TYPE_PENDING
+	case BN_TRANSFER_STATUS_TYPE_FAILED:
+		return TRANSFER_STATUS_TYPE_FAILED
+	default:
+		return TRANSFER_STATUS_TYPE_UNKNOWN
+	}
+}

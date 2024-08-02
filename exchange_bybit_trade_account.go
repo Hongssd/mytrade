@@ -2,6 +2,7 @@ package mytrade
 
 import (
 	"github.com/Hongssd/mybybitapi"
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
@@ -305,4 +306,88 @@ func (b BybitTradeAccount) GetAssets(accountType string, currencies ...string) (
 	}
 
 	return assets, nil
+}
+
+// 资金划转
+func (b BybitTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTransfer, error) {
+	api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().NewAssetTransferInterTransfer()
+
+	transferId, err := uuid.NewUUID()
+	if err != nil {
+		return nil, err
+	}
+	api.TransferId(transferId.String())
+
+	From := b.bybitConverter.ToBYBITAssetType(req.From)
+	To := b.bybitConverter.ToBYBITAssetType(req.To)
+	if From == "" || To == "" {
+		return nil, err
+	}
+	api.FromAccountType(From).ToAccountType(To)
+
+	api.Coin(req.Asset).Amount(req.Amount.String())
+
+	res, err := api.Do()
+	if err != nil {
+		return nil, err
+	}
+
+	var assetTransfers []*AssetTransfer
+	d := res.Result
+	assetTransfers = append(assetTransfers, &AssetTransfer{
+		Exchange: b.ExchangeType().String(),
+		TranId:   d.TransferId,
+		Asset:    req.Asset,
+		From:     req.From,
+		To:       req.To,
+		Amount:   req.Amount.String(),
+		Status:   d.Status,
+		ClientId: "",
+	})
+
+	return assetTransfers, nil
+}
+
+func (b BybitTradeAccount) QueryAssetTransfer(req *QueryAssetTransferParams) ([]*QueryAssetTransfer, error) {
+	api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().NewAssetTransferQueryInterTransferList()
+	api.StartTime(req.StartTime).EndTime(req.EndTime)
+	api.Limit(1000)
+
+	// api.Coin 接口有问题 弃用
+	//if req.Asset != "" {
+	//	fmt.Println(req.Asset)
+	//	api.Coin(req.Asset)
+	//}
+
+	res, err := api.Do()
+	if err != nil {
+		return nil, err
+	}
+
+	var assetTransfers []*QueryAssetTransfer
+	for res.Result.NextPageCursor != "" {
+		for _, d := range res.Result.List {
+			if b.bybitConverter.FromBYBITAssetType(d.FromAccountType) != req.From ||
+				b.bybitConverter.FromBYBITAssetType(d.ToAccountType) != req.To {
+				continue
+			}
+			if req.Asset != "" && d.Coin != req.Asset {
+				continue
+			}
+			assetTransfers = append(assetTransfers, &QueryAssetTransfer{
+				TranId: d.TransferId,
+				Asset:  d.Coin,
+				Amount: stringToDecimal(d.Amount),
+				From:   b.bybitConverter.FromBYBITAssetType(d.FromAccountType),
+				To:     b.bybitConverter.FromBYBITAssetType(d.ToAccountType),
+				Status: b.bybitConverter.FromBYBITTransferStatus(d.Status),
+			})
+		}
+		res, err = api.Cursor(res.Result.NextPageCursor).Do()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return assetTransfers, nil
 }

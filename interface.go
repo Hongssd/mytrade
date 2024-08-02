@@ -168,6 +168,8 @@ type TradeAccount interface {
 		marginMode MarginMode, positionSide PositionSide,
 		leverage decimal.Decimal) error //设置杠杆
 
+	AssetTransfer(AssetTransferParams *AssetTransferParams) ([]*AssetTransfer, error) //资金划转
+	QueryAssetTransfer(req *QueryAssetTransferParams) ([]*QueryAssetTransfer, error)  //查询资金划转历史
 }
 
 type TradeSubscribe[T any] interface {
