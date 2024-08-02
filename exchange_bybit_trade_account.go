@@ -351,6 +351,7 @@ func (b BybitTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTran
 func (b BybitTradeAccount) QueryAssetTransfer(req *QueryAssetTransferParams) ([]*QueryAssetTransfer, error) {
 	api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().NewAssetTransferQueryInterTransferList()
 	api.StartTime(req.StartTime).EndTime(req.EndTime)
+	api.Limit(1000)
 
 	// api.Coin 接口有问题 弃用
 	//if req.Asset != "" {
@@ -364,22 +365,29 @@ func (b BybitTradeAccount) QueryAssetTransfer(req *QueryAssetTransferParams) ([]
 	}
 
 	var assetTransfers []*QueryAssetTransfer
-	for _, d := range res.Result.List {
-		if b.bybitConverter.FromBYBITAssetType(d.FromAccountType) != req.From ||
-			b.bybitConverter.FromBYBITAssetType(d.ToAccountType) != req.To {
-			continue
+	for res.Result.NextPageCursor != "" {
+		for _, d := range res.Result.List {
+			if b.bybitConverter.FromBYBITAssetType(d.FromAccountType) != req.From ||
+				b.bybitConverter.FromBYBITAssetType(d.ToAccountType) != req.To {
+				continue
+			}
+			if req.Asset != "" && d.Coin != req.Asset {
+				continue
+			}
+			assetTransfers = append(assetTransfers, &QueryAssetTransfer{
+				TranId: d.TransferId,
+				Asset:  d.Coin,
+				Amount: stringToDecimal(d.Amount),
+				From:   b.bybitConverter.FromBYBITAssetType(d.FromAccountType),
+				To:     b.bybitConverter.FromBYBITAssetType(d.ToAccountType),
+				Status: b.bybitConverter.FromBYBITTransferStatus(d.Status),
+			})
 		}
-		if req.Asset != "" && d.Coin != req.Asset {
-			continue
+		res, err = api.Cursor(res.Result.NextPageCursor).Do()
+		if err != nil {
+			return nil, err
 		}
-		assetTransfers = append(assetTransfers, &QueryAssetTransfer{
-			TranId: d.TransferId,
-			Asset:  d.Coin,
-			Amount: stringToDecimal(d.Amount),
-			From:   b.bybitConverter.FromBYBITAssetType(d.FromAccountType),
-			To:     b.bybitConverter.FromBYBITAssetType(d.ToAccountType),
-			Status: b.bybitConverter.FromBYBITTransferStatus(d.Status),
-		})
 	}
+
 	return assetTransfers, nil
 }
