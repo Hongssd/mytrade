@@ -365,7 +365,8 @@ func (b BybitTradeAccount) QueryAssetTransfer(req *QueryAssetTransferParams) ([]
 	}
 
 	var assetTransfers []*QueryAssetTransfer
-	for res.Result.NextPageCursor != "" {
+	var previousCursor string
+	for res.Result.NextPageCursor != previousCursor {
 		for _, d := range res.Result.List {
 			if b.bybitConverter.FromBYBITAssetType(d.FromAccountType) != req.From ||
 				b.bybitConverter.FromBYBITAssetType(d.ToAccountType) != req.To {
@@ -387,6 +388,8 @@ func (b BybitTradeAccount) QueryAssetTransfer(req *QueryAssetTransferParams) ([]
 		if err != nil {
 			return nil, err
 		}
+
+		previousCursor = res.Result.NextPageCursor
 	}
 
 	return assetTransfers, nil
