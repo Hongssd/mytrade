@@ -385,10 +385,11 @@ func (b BybitTradeAccount) QueryAssetTransfer(req *QueryAssetTransferParams) ([]
 			})
 		}
 		res, err = api.Cursor(res.Result.NextPageCursor).Do()
-		previousCursor = res.Result.NextPageCursor
 		if err != nil {
 			return nil, err
 		}
+
+		previousCursor = res.Result.NextPageCursor
 	}
 
 	return assetTransfers, nil
