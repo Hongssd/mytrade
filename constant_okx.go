@@ -7,6 +7,7 @@ func (b OkxAccountType) String() string {
 }
 
 const (
+	OKX_AC_FUNDING OkxAccountType = "FUNDING" //资金账户
 	OKX_AC_SPOT    OkxAccountType = "SPOT"    //现货
 	OKX_AC_MARGIN  OkxAccountType = "MARGIN"  //币币
 	OKX_AC_SWAP    OkxAccountType = "SWAP"    //永续合约
