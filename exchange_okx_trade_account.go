@@ -4,6 +4,7 @@ import (
 	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type OkxTradeAccount struct {
@@ -178,47 +179,79 @@ func (o OkxTradeAccount) GetPositions(accountType string, symbols ...string) ([]
 }
 
 func (o OkxTradeAccount) GetAssets(accountType string, currencies ...string) ([]*Asset, error) {
-	api := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().
-		NewPrivateRestAccountBalance()
-	if len(currencies) == 1 {
-		api = api.Ccy(currencies[0])
-	} else if len(currencies) > 1 && len(currencies) < 20 {
-		ccys := strings.Join(currencies, ",")
-		api = api.Ccy(ccys)
-	}
-	res, err := api.Do()
-	if err != nil {
-		return nil, err
-	}
-
 	var assets []*Asset
-	for _, d := range res.Data[0].Details {
-		if len(currencies) == 0 || stringInSlice(d.Ccy, currencies) {
-			updateTime, _ := strconv.ParseInt(d.UTime, 10, 64)
-			ordFronzen, _ := decimal.NewFromString(d.OrdFrozen) //挂单冻结保证金
-			frozenBal, _ := decimal.NewFromString(d.FrozenBal)  //仓位占用保证金+挂单冻结保证金
-			//仓位维持保证金= d.FrozenBal - d.OrdFrozen
-			MaintMargin := frozenBal.Sub(ordFronzen)
+	// 获取资金账户余额
+	if accountType == OKX_AC_FUNDING.String() {
+		assetBalanceApi := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().NewPrivateRestAssetBalances()
+		res, err := assetBalanceApi.Do()
+		if err != nil {
+			return nil, err
+		}
+		for _, d := range res.Data {
+			updateTime := time.Now().Unix()
 			assets = append(assets, &Asset{
 				Exchange:               o.ExchangeType().String(),
 				AccountType:            accountType,
 				Asset:                  d.Ccy,
 				Free:                   d.AvailBal,
-				Locked:                 d.OrdFrozen,
-				WalletBalance:          d.CashBal,            //钱包余额=币种余额
-				UnrealizedProfit:       d.Upl,                //未实现盈亏
-				MarginBalance:          d.Eq,                 //保证金余额=钱包余额+未实现盈亏
-				MaintMargin:            MaintMargin.String(), //维持保证金=仓位占用保证金
-				InitialMargin:          d.FrozenBal,          //当前所需起始保证金=仓位占用保证金+挂单冻结保证金
-				PositionInitialMargin:  MaintMargin.String(), //持仓所需起始保证金=仓位占用保证金
-				OpenOrderInitialMargin: d.OrdFrozen,          //挂单所需起始保证金
-				CrossWalletBalance:     d.CashBal,            //全仓账户余额
-				CrossUnPnl:             d.Upl,                //全仓持仓未实现盈亏
-				AvailableBalance:       d.AvailEq,            //可用余额=钱包余额
-				MaxWithdrawAmount:      d.AvailBal,           //最大可转出余额=币种余额
+				Locked:                 d.FrozenBal,
+				WalletBalance:          d.AvailBal, //钱包余额=币种余额
+				UnrealizedProfit:       "0",        //未实现盈亏
+				MarginBalance:          "0",        //保证金余额=钱包余额+未实现盈亏
+				MaintMargin:            "0",        //维持保证金=仓位占用保证金
+				InitialMargin:          "0",        //当前所需起始保证金=仓位占用保证金+挂单冻结保证金
+				PositionInitialMargin:  "0",        //持仓所需起始保证金=仓位占用保证金
+				OpenOrderInitialMargin: "0",        //挂单所需起始保证金
+				CrossWalletBalance:     "0",        //全仓账户余额
+				CrossUnPnl:             "0",        //全仓持仓未实现盈亏
+				AvailableBalance:       "0",        //可用余额=钱包余额
+				MaxWithdrawAmount:      "",         //最大可转出余额=币种余额
 				MarginAvailable:        true,
 				UpdateTime:             updateTime,
 			})
+		}
+	} else {
+		api := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().
+			NewPrivateRestAccountBalance()
+		if len(currencies) == 1 {
+			api = api.Ccy(currencies[0])
+		} else if len(currencies) > 1 && len(currencies) < 20 {
+			ccys := strings.Join(currencies, ",")
+			api = api.Ccy(ccys)
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, d := range res.Data[0].Details {
+			if len(currencies) == 0 || stringInSlice(d.Ccy, currencies) {
+				updateTime, _ := strconv.ParseInt(d.UTime, 10, 64)
+				ordFronzen, _ := decimal.NewFromString(d.OrdFrozen) //挂单冻结保证金
+				frozenBal, _ := decimal.NewFromString(d.FrozenBal)  //仓位占用保证金+挂单冻结保证金
+				//仓位维持保证金= d.FrozenBal - d.OrdFrozen
+				MaintMargin := frozenBal.Sub(ordFronzen)
+				assets = append(assets, &Asset{
+					Exchange:               o.ExchangeType().String(),
+					AccountType:            accountType,
+					Asset:                  d.Ccy,
+					Free:                   d.AvailBal,
+					Locked:                 d.OrdFrozen,
+					WalletBalance:          d.CashBal,            //钱包余额=币种余额
+					UnrealizedProfit:       d.Upl,                //未实现盈亏
+					MarginBalance:          d.Eq,                 //保证金余额=钱包余额+未实现盈亏
+					MaintMargin:            MaintMargin.String(), //维持保证金=仓位占用保证金
+					InitialMargin:          d.FrozenBal,          //当前所需起始保证金=仓位占用保证金+挂单冻结保证金
+					PositionInitialMargin:  MaintMargin.String(), //持仓所需起始保证金=仓位占用保证金
+					OpenOrderInitialMargin: d.OrdFrozen,          //挂单所需起始保证金
+					CrossWalletBalance:     d.CashBal,            //全仓账户余额
+					CrossUnPnl:             d.Upl,                //全仓持仓未实现盈亏
+					AvailableBalance:       d.AvailEq,            //可用余额=钱包余额
+					MaxWithdrawAmount:      d.AvailBal,           //最大可转出余额=币种余额
+					MarginAvailable:        true,
+					UpdateTime:             updateTime,
+				})
+			}
 		}
 	}
 

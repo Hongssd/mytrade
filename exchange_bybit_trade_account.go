@@ -255,54 +255,88 @@ func (b BybitTradeAccount) GetPositions(accountType string, symbols ...string) (
 }
 
 func (b BybitTradeAccount) GetAssets(accountType string, currencies ...string) ([]*Asset, error) {
-	acType := mybybitapi.ACCT_UNIFIED
-	if accountType == BYBIT_AC_INVERSE.String() {
-		acType = mybybitapi.ACCT_CONTRACT
-	}
 
-	api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
-		NewAccountWalletBalance().AccountType(acType.String())
-	if len(currencies) == 1 {
-		api.Coin(currencies[0])
-	} else if len(currencies) > 1 {
-		coins := strings.Join(currencies, ",")
-		api.Coin(coins)
-	}
-	res, err := api.Do()
-	if err != nil {
-		return nil, err
-	}
 	var assets []*Asset
-	for _, a := range res.Result.List[0].Coin {
-
-		tpIm, _ := decimal.NewFromString(a.TotalPositionIM)
-		toIm, _ := decimal.NewFromString(a.TotalOrderIM)
-		im := tpIm.Add(toIm)
-
-		eq, _ := decimal.NewFromString(a.Equity)
-		lock, _ := decimal.NewFromString(a.Locked)
-		avb := eq.Sub(lock)
-		asset := &Asset{
-			Exchange:               b.ExchangeType().String(),
-			AccountType:            accountType,
-			Asset:                  a.Coin,
-			Free:                   avb.String(),
-			Locked:                 a.Locked,
-			WalletBalance:          a.WalletBalance,
-			UnrealizedProfit:       a.UnrealisedPnl,
-			MarginBalance:          a.Equity,
-			MaintMargin:            a.TotalPositionMM,
-			InitialMargin:          im.String(),
-			PositionInitialMargin:  a.TotalPositionIM,
-			OpenOrderInitialMargin: a.TotalOrderIM,
-			CrossWalletBalance:     a.WalletBalance,
-			CrossUnPnl:             a.UnrealisedPnl,
-			AvailableBalance:       avb.String(),
-			MaxWithdrawAmount:      a.AvailableToWithdraw,
-			MarginAvailable:        false,
-			UpdateTime:             res.Time,
+	if accountType == BYBIT_AC_FUNDING.String() {
+		api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
+			NewAssetTransferQueryAccountCoinsBalance()
+		res, err := api.AccountType(accountType).Do()
+		if err != nil {
+			return nil, err
 		}
-		assets = append(assets, asset)
+
+		for _, a := range res.Result.Balance {
+			asset := &Asset{
+				Exchange:               b.ExchangeType().String(),
+				AccountType:            accountType,
+				Asset:                  a.Coin,
+				Free:                   a.WalletBalance,
+				Locked:                 "0",
+				WalletBalance:          a.WalletBalance,
+				UnrealizedProfit:       "0",
+				MarginBalance:          "0",
+				MaintMargin:            "0",
+				InitialMargin:          "0",
+				PositionInitialMargin:  "0",
+				OpenOrderInitialMargin: "0",
+				CrossWalletBalance:     "0",
+				CrossUnPnl:             "0",
+				AvailableBalance:       "0",
+				MaxWithdrawAmount:      "0",
+				MarginAvailable:        false,
+				UpdateTime:             res.Time,
+			}
+			assets = append(assets, asset)
+		}
+	} else {
+		acType := mybybitapi.ACCT_UNIFIED
+		if accountType == BYBIT_AC_INVERSE.String() {
+			acType = mybybitapi.ACCT_CONTRACT
+		}
+
+		api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
+			NewAccountWalletBalance().AccountType(acType.String())
+		if len(currencies) == 1 {
+			api.Coin(currencies[0])
+		} else if len(currencies) > 1 {
+			coins := strings.Join(currencies, ",")
+			api.Coin(coins)
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		for _, a := range res.Result.List[0].Coin {
+
+			tpIm, _ := decimal.NewFromString(a.TotalPositionIM)
+			toIm, _ := decimal.NewFromString(a.TotalOrderIM)
+			im := tpIm.Add(toIm)
+
+			eq, _ := decimal.NewFromString(a.Equity)
+			lock, _ := decimal.NewFromString(a.Locked)
+			avb := eq.Sub(lock)
+			asset := &Asset{
+				Exchange:               b.ExchangeType().String(),
+				AccountType:            accountType,
+				Asset:                  a.Coin,
+				Free:                   avb.String(),
+				Locked:                 a.Locked,
+				WalletBalance:          a.WalletBalance,
+				UnrealizedProfit:       a.UnrealisedPnl,
+				MarginBalance:          a.Equity,
+				MaintMargin:            a.TotalPositionMM,
+				InitialMargin:          im.String(),
+				PositionInitialMargin:  a.TotalPositionIM,
+				OpenOrderInitialMargin: a.TotalOrderIM,
+				CrossWalletBalance:     a.WalletBalance,
+				CrossUnPnl:             a.UnrealisedPnl,
+				AvailableBalance:       avb.String(),
+				MaxWithdrawAmount:      a.AvailableToWithdraw,
+				MarginAvailable:        false,
+				UpdateTime:             res.Time,
+			}
+			assets = append(assets, asset)
+		}
 	}
 
 	return assets, nil
