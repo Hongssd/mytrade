@@ -195,7 +195,7 @@ func (o OkxTradeAccount) GetAssets(accountType string, currencies ...string) ([]
 				Asset:                  d.Ccy,
 				Free:                   d.AvailBal,
 				Locked:                 d.FrozenBal,
-				WalletBalance:          d.AvailBal, //钱包余额=币种余额
+				WalletBalance:          d.Bal,      //钱包余额=币种余额
 				UnrealizedProfit:       "0",        //未实现盈亏
 				MarginBalance:          "0",        //保证金余额=钱包余额+未实现盈亏
 				MaintMargin:            "0",        //维持保证金=仓位占用保证金
@@ -204,8 +204,8 @@ func (o OkxTradeAccount) GetAssets(accountType string, currencies ...string) ([]
 				OpenOrderInitialMargin: "0",        //挂单所需起始保证金
 				CrossWalletBalance:     "0",        //全仓账户余额
 				CrossUnPnl:             "0",        //全仓持仓未实现盈亏
-				AvailableBalance:       "0",        //可用余额=钱包余额
-				MaxWithdrawAmount:      "",         //最大可转出余额=币种余额
+				AvailableBalance:       d.AvailBal, //可用余额=钱包余额
+				MaxWithdrawAmount:      d.AvailBal, //最大可转出余额=币种余额
 				MarginAvailable:        true,
 				UpdateTime:             updateTime,
 			})

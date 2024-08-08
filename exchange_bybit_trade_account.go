@@ -266,12 +266,22 @@ func (b BybitTradeAccount) GetAssets(accountType string, currencies ...string) (
 		}
 
 		for _, a := range res.Result.Balance {
+			walletBalance, err := decimal.NewFromString(a.WalletBalance)
+			if err != nil {
+				return nil, err
+			}
+			free, err := decimal.NewFromString(a.TransferBalance)
+			if err != nil {
+				return nil, err
+			}
+			locked := walletBalance.Sub(free)
+
 			asset := &Asset{
 				Exchange:               b.ExchangeType().String(),
 				AccountType:            accountType,
 				Asset:                  a.Coin,
-				Free:                   a.WalletBalance,
-				Locked:                 "0",
+				Free:                   a.TransferBalance,
+				Locked:                 locked.String(),
 				WalletBalance:          a.WalletBalance,
 				UnrealizedProfit:       "0",
 				MarginBalance:          "0",
@@ -281,8 +291,8 @@ func (b BybitTradeAccount) GetAssets(accountType string, currencies ...string) (
 				OpenOrderInitialMargin: "0",
 				CrossWalletBalance:     "0",
 				CrossUnPnl:             "0",
-				AvailableBalance:       "0",
-				MaxWithdrawAmount:      "0",
+				AvailableBalance:       a.TransferBalance,
+				MaxWithdrawAmount:      a.TransferBalance,
 				MarginAvailable:        false,
 				UpdateTime:             res.Time,
 			}
