@@ -4,6 +4,8 @@ type Order struct {
 	Exchange      string       `json:"exchange"`      //交易所名字
 	AccountType   string       `json:"accountType"`   //账户类型
 	Symbol        string       `json:"symbol"`        //交易对名字
+	IsMargin      bool         `json:"isMargin"`      //是否是杠杆订单
+	IsIsolated    bool         `json:"isIsolated"`    //是否是逐仓symbol交易（杠杆）
 	OrderId       string       `json:"orderId"`       //交易所自动生成的订单ID
 	ClientOrderId string       `json:"clientOrderId"` //用户自己生成的订单ID  不填则自动生成
 	Price         string       `json:"price"`         //下单价格
@@ -26,6 +28,9 @@ type Order struct {
 	TriggerPrice         string                    `json:"triggerPrice"`         //触发价格
 	TriggerType          OrderTriggerType          `json:"triggerType"`          //触发类型
 	TriggerConditionType OrderTriggerConditionType `json:"triggerConditionType"` //触发条件类型
+
+	MarginBuyBorrowAmount string `json:"marginBuyBorrowAmount"` //下单后没有发生借款则不返回该字段（杠杆）
+	MarginBuyBorrowAsset  string `json:"marginBuyBorrowAsset"`  //下单后没有发生借款则不返回该字段（杠杆）
 
 	ErrorCode string `json:"errorCode"` //错误码
 	ErrorMsg  string `json:"errorMsg"`  //错误信息

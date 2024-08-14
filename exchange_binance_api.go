@@ -127,6 +127,98 @@ func (b *BinanceTradeEngine) apiSpotOrderCancel(req *OrderParam) *mybinanceapi.S
 	return api
 }
 
+// 现货杠杆订单API接口
+func (b *BinanceTradeEngine) apiSpotMarginOpenOrders(req *QueryOrderParam) *mybinanceapi.SpotMarginOpenOrdersApi {
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginOpenOrders()
+	if req.Symbol != "" {
+		api.Symbol(req.Symbol)
+	}
+	// 如果isIsolated=“TRUE”，symbol为必填
+	if req.IsIsolated {
+		api.IsIsolated("TRUE")
+	}
+	return api
+}
+func (b *BinanceTradeEngine) apiSpotMarginOrderQuery(req *QueryOrderParam) *mybinanceapi.SpotMarginOrderGetApi {
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginOrderGet().Symbol(req.Symbol)
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api = api.OrderId(orderId)
+	} else {
+		api = api.OrigClientOrderId(req.ClientOrderId)
+	}
+	if req.IsIsolated {
+		api.IsIsolated("TRUE")
+	}
+	return api
+}
+func (b *BinanceTradeEngine) apiSpotMarginOrdersQuery(req *QueryOrderParam) *mybinanceapi.SpotMarginAllOrdersApi {
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginAllOrders()
+	if req.IsIsolated {
+		api = api.IsIsolated("TRUE")
+	}
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api.OrderId(orderId)
+	}
+	if req.StartTime != 0 {
+		api = api.StartTime(req.StartTime)
+	}
+	if req.EndTime != 0 {
+		api = api.EndTime(req.EndTime)
+	}
+	if req.Limit != 0 {
+		api = api.Limit(int64(req.Limit))
+	}
+	return api
+}
+
+func (b *BinanceTradeEngine) apiSpotMarginOrderCreate(req *OrderParam) *mybinanceapi.SpotMarginOrderPostApi {
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginOrderPost().
+		Symbol(req.Symbol).
+		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
+		Quantity(req.Quantity)
+
+	api.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
+
+	// 默认为全仓模式 FALSE
+	if req.IsIsolated {
+		api.IsIsolated("TRUE")
+	}
+
+	if !req.TriggerPrice.IsZero() {
+		api.StopPrice(req.TriggerPrice)
+	}
+
+	log.Info(req)
+
+	if !req.Price.IsZero() {
+		api = api.Price(req.Price)
+	}
+	if req.ClientOrderId != "" {
+		api = api.NewClientOrderId(req.ClientOrderId)
+	}
+	if req.TimeInForce != "" {
+		api = api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
+	}
+
+	return api
+}
+func (b *BinanceTradeEngine) apiSpotMarginOrderCancel(req *OrderParam) *mybinanceapi.SpotMarginOrderDeleteApi {
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginOrderDelete().
+		Symbol(req.Symbol)
+	if req.OrderId != "" {
+		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
+		api = api.OrderId(orderId)
+	} else {
+		api = api.OrigClientOrderId(req.ClientOrderId)
+	}
+	if req.IsIsolated {
+		api.IsIsolated("TRUE")
+	}
+	return api
+}
+
 // U本位合约订单API接口
 func (b *BinanceTradeEngine) apiFutureOpenOrders(req *QueryOrderParam) *mybinanceapi.FutureOpenOrdersApi {
 	api := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewOpenOrders()

@@ -10,10 +10,15 @@ import (
 func (b *BybitTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, res mybybitapi.OrderRealtimeRes) []*Order {
 	var orders []*Order
 	for _, order := range res.List {
+		var isMargin bool
+		if order.IsLeverage == "1" {
+			isMargin = true
+		}
 		orders = append(orders, &Order{
 			Exchange:      BYBIT_NAME.String(),
 			AccountType:   req.AccountType,
 			Symbol:        order.Symbol,
+			IsMargin:      isMargin,
 			OrderId:       order.OrderId,
 			ClientOrderId: order.OrderLinkId,
 			Price:         order.Price,
@@ -48,6 +53,8 @@ func (b *BybitTradeEngine) handleOrdersFromQueryOrders(req *QueryOrderParam, res
 			Exchange:      BYBIT_NAME.String(),
 			AccountType:   req.AccountType,
 			Symbol:        order.Symbol,
+			IsMargin:      req.IsMargin,
+			IsIsolated:    req.IsIsolated,
 			OrderId:       order.OrderId,
 			ClientOrderId: order.OrderLinkId,
 			Price:         order.Price,
@@ -112,6 +119,8 @@ func (b *BybitTradeEngine) handleOrderFromBatchOrderCreate(reqs []*OrderParam, r
 			ClientOrderId: r.OrderLinkId,
 			AccountType:   r.Category,
 			Symbol:        r.Symbol,
+			IsMargin:      reqs[0].IsMargin,
+			IsIsolated:    reqs[0].IsIsolated,
 			CreateTime:    stringToInt64(r.CreateAt),
 		}
 		orders = append(orders, order)
@@ -130,6 +139,8 @@ func (b *BybitTradeEngine) handleOrderFromBatchOrderAmend(reqs []*OrderParam, re
 			ClientOrderId: r.OrderLinkId,
 			AccountType:   r.Category,
 			Symbol:        r.Symbol,
+			IsMargin:      reqs[0].IsMargin,
+			IsIsolated:    reqs[0].IsIsolated,
 		}
 		orders = append(orders, order)
 	}
@@ -147,6 +158,8 @@ func (b *BybitTradeEngine) handleOrderFromBatchOrderCancel(reqs []*OrderParam, r
 			ClientOrderId: r.OrderLinkId,
 			AccountType:   r.Category,
 			Symbol:        r.Symbol,
+			IsMargin:      reqs[0].IsMargin,
+			IsIsolated:    reqs[0].IsIsolated,
 		}
 		orders = append(orders, order)
 	}
@@ -155,9 +168,15 @@ func (b *BybitTradeEngine) handleOrderFromBatchOrderCancel(reqs []*OrderParam, r
 
 // 订单推送处理
 func (b *BybitTradeEngine) handleOrderFromWsOrder(orders mybybitapi.WsOrder) []*Order {
+
 	// 从ws订单信息转换为本地订单信息
 	var res []*Order
 	for _, order := range orders.Data {
+		var isMargin, isIsolated bool
+		if order.IsLeverage == "1" {
+			isMargin = true
+			isIsolated = false
+		}
 		order := &Order{
 			Exchange:      BYBIT_NAME.String(),
 			AccountType:   order.Category,
@@ -184,6 +203,9 @@ func (b *BybitTradeEngine) handleOrderFromWsOrder(orders mybybitapi.WsOrder) []*
 			TriggerPrice:         order.TriggerPrice,
 			TriggerType:          b.bybitConverter.FromBYBITTriggerConditionForTriggerType(order.TriggerDirection, order.Side),
 			TriggerConditionType: b.bybitConverter.FromBYBITTriggerCondition(order.TriggerDirection),
+
+			IsIsolated: isIsolated,
+			IsMargin:   isMargin,
 		}
 		res = append(res, order)
 	}
@@ -195,6 +217,8 @@ func (b *BybitTradeEngine) handleOrderFromInverseBatchErr(req *OrderParam, err e
 		Exchange:      BYBIT_NAME.String(),
 		AccountType:   req.AccountType,
 		Symbol:        req.Symbol,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
 		OrderId:       req.OrderId,
 		ClientOrderId: req.ClientOrderId,
 		Price:         req.Price.String(),

@@ -19,7 +19,11 @@ type OrderParam struct {
 	TimeInForce      TimeInForce  //有效方式
 	ReduceOnly       bool         //是否只减仓
 	NewClientOrderId string       //新的用户自己生成的订单ID 改单时可用
-	IsIsolated       bool         //是否是逐仓模式
+
+	AccountMode string //账户模式（OKX）杠杆订单时必填
+	IsMargin    bool   //是否为杠杆订单
+	IsIsolated  bool   //是否是逐仓模式
+	Ccy         string //杠杆订单保证金币种
 
 	//止盈止损
 	TriggerPrice decimal.Decimal  //止盈止损触发价
@@ -90,6 +94,8 @@ func (o *OrderParam) SetOrderTriggerType(orderTriggerType OrderTriggerType) *Ord
 type QueryOrderParam struct {
 	AccountType   string //账户类型
 	Symbol        string //交易对
+	IsMargin      bool   //是否为杠杆订单
+	IsIsolated    bool   //是否是逐仓模式（杠杆）
 	BaseCoin      string //交易幣種
 	SettleCoin    string //結算幣種
 	OrderId       string //交易所自动生成的订单ID 选填
@@ -97,7 +103,6 @@ type QueryOrderParam struct {
 	StartTime     int64  //开始时间 选填 默认返回7天内订单
 	EndTime       int64  //结束时间 选填 默认返回7天内订单
 	Limit         int    //限制返回的订单数量 选填 默认返回100条 最大100
-
 }
 
 func (q *QueryOrderParam) SetAccountType(accountType string) *QueryOrderParam {
