@@ -411,7 +411,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 
 // ws单订单请求相关
 func (o *OkxTradeEngine) handleWsOrderCreateFromOrderParam(req *OrderParam) myokxapi.WsOrderArgData {
-	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), req.AccountMode, req.IsMargin, req.IsIsolated)
+	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), req.AccountMode, req.IsIsolated)
 	return myokxapi.WsOrderArgData{
 		InstId:     req.Symbol,
 		TdMode:     tdMode,

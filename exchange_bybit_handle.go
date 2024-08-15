@@ -112,15 +112,15 @@ func (b *BybitTradeEngine) handleOrderFromBatchOrderCreate(reqs []*OrderParam, r
 		return nil, errors.New("api return invalid data")
 	}
 	orders := make([]*Order, 0, len(reqs))
-	for _, r := range res.Result.List {
+	for i, r := range res.Result.List {
 		order := &Order{
 			Exchange:      BYBIT_NAME.String(),
 			OrderId:       r.OrderId,
 			ClientOrderId: r.OrderLinkId,
 			AccountType:   r.Category,
 			Symbol:        r.Symbol,
-			IsMargin:      reqs[0].IsMargin,
-			IsIsolated:    reqs[0].IsIsolated,
+			IsMargin:      reqs[i].IsMargin,
+			IsIsolated:    reqs[i].IsIsolated,
 			CreateTime:    stringToInt64(r.CreateAt),
 		}
 		orders = append(orders, order)
@@ -132,15 +132,15 @@ func (b *BybitTradeEngine) handleOrderFromBatchOrderAmend(reqs []*OrderParam, re
 		return nil, errors.New("api return invalid data")
 	}
 	orders := make([]*Order, 0, len(reqs))
-	for _, r := range res.Result.List {
+	for i, r := range res.Result.List {
 		order := &Order{
 			Exchange:      BYBIT_NAME.String(),
 			OrderId:       r.OrderId,
 			ClientOrderId: r.OrderLinkId,
 			AccountType:   r.Category,
 			Symbol:        r.Symbol,
-			IsMargin:      reqs[0].IsMargin,
-			IsIsolated:    reqs[0].IsIsolated,
+			IsMargin:      reqs[i].IsMargin,
+			IsIsolated:    reqs[i].IsIsolated,
 		}
 		orders = append(orders, order)
 	}
@@ -151,15 +151,15 @@ func (b *BybitTradeEngine) handleOrderFromBatchOrderCancel(reqs []*OrderParam, r
 		return nil, errors.New("api return invalid data")
 	}
 	orders := make([]*Order, 0, len(reqs))
-	for _, r := range res.Result.List {
+	for i, r := range res.Result.List {
 		order := &Order{
 			Exchange:      BYBIT_NAME.String(),
 			OrderId:       r.OrderId,
 			ClientOrderId: r.OrderLinkId,
 			AccountType:   r.Category,
 			Symbol:        r.Symbol,
-			IsMargin:      reqs[0].IsMargin,
-			IsIsolated:    reqs[0].IsIsolated,
+			IsMargin:      reqs[i].IsMargin,
+			IsIsolated:    reqs[i].IsIsolated,
 		}
 		orders = append(orders, order)
 	}

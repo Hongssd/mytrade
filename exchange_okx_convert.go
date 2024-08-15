@@ -128,7 +128,7 @@ func (c *OkxEnumConverter) ToOKXOrderStatus(t OrderStatus) string {
 	}
 }
 
-func (c *OkxEnumConverter) getTdModeFromAccountType(accountType OkxAccountType, accountMode string, isMargin bool, isIsolated bool) string {
+func (c *OkxEnumConverter) getTdModeFromAccountType(accountType OkxAccountType, accountMode string, isIsolated bool) string {
 	tdMode := ""
 	switch accountType {
 	case OKX_AC_SPOT:
