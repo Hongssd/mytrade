@@ -20,10 +20,10 @@ type OrderParam struct {
 	ReduceOnly       bool         //是否只减仓
 	NewClientOrderId string       //新的用户自己生成的订单ID 改单时可用
 
-	AccountMode string //账户模式（OKX）杠杆订单时必填
-	IsMargin    bool   //是否为杠杆订单
-	IsIsolated  bool   //是否是逐仓模式
-	Ccy         string //杠杆订单保证金币种
+	AccountMode AccountMode //账户模式（OKX）杠杆订单时必填
+	IsMargin    bool        //是否为杠杆订单
+	IsIsolated  bool        //是否是逐仓模式
+	Ccy         string      //杠杆订单保证金币种
 
 	//止盈止损
 	TriggerPrice decimal.Decimal  //止盈止损触发价
