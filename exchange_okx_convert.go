@@ -128,14 +128,29 @@ func (c *OkxEnumConverter) ToOKXOrderStatus(t OrderStatus) string {
 	}
 }
 
-func (c *OkxEnumConverter) getTdModeFromAccountType(accountType OkxAccountType, isIsolated bool) string {
+func (c *OkxEnumConverter) getTdModeFromAccountType(accountType OkxAccountType, accountMode string, isIsolated bool) string {
 	tdMode := ""
 	switch accountType {
-	case OKX_AC_SPOT, OKX_AC_MARGIN:
-		if !isIsolated {
-			tdMode = "cash"
+	case OKX_AC_SPOT:
+		//if isMargin {
+		//	if !isIsolated {
+		//		tdMode = "cross"
+		//	} else {
+		//		tdMode = "isolated"
+		//	}
+		//} else {
+		if accountMode == OKX_ACCOUNT_MODE_MULTI_CURRENCY_MARGIN ||
+			accountMode == OKX_ACCOUNT_MODE_PORTFOLIO_MARGIN {
+			tdMode = "cross"
 		} else {
-			tdMode = "spot_isolated"
+			tdMode = "cash"
+		}
+		//}
+	case OKX_AC_MARGIN:
+		if !isIsolated {
+			tdMode = "cross"
+		} else {
+			tdMode = "isolated"
 		}
 	case OKX_AC_SWAP, OKX_AC_FUTURES:
 		if !isIsolated {

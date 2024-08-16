@@ -15,6 +15,7 @@ type OkxTradeEngine struct {
 	passphrase   string
 
 	broadcasterSpot   *okxOrderBroadcaster
+	broadcasterMargin *okxOrderBroadcaster
 	broadcasterSwap   *okxOrderBroadcaster
 	broadcasterFuture *okxOrderBroadcaster
 

@@ -9,6 +9,7 @@ func (b BybitAccountType) String() string {
 const (
 	BYBIT_AC_FUNDING BybitAccountType = "FUND"    //资金账户
 	BYBIT_AC_SPOT    BybitAccountType = "spot"    //现货
+	BYBIT_AC_MARGIN  BybitAccountType = "MARGIN"  //杠杆
 	BYBIT_AC_LINEAR  BybitAccountType = "linear"  //永续合约
 	BYBIT_AC_INVERSE BybitAccountType = "inverse" //交割合约
 	BYBIT_AC_OPTION  BybitAccountType = "option"  //期权

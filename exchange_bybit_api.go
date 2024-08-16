@@ -102,6 +102,9 @@ func (b *BybitTradeEngine) apiOrderCreate(req *OrderParam) *mybybitapi.OrderCrea
 	if req.AccountType == BYBIT_AC_SPOT.String() {
 		api.MarketUnit("baseCoin")
 	}
+	if req.IsMargin {
+		api.IsLeverage(1)
+	}
 
 	if req.PositionSide != "" {
 		api.PositionIdx(b.bybitConverter.ToBYBITPositionSide(req.PositionSide))

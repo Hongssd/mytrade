@@ -21,6 +21,8 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, r
 			ClientOrderId: r.ClOrdId,
 			AccountType:   r.InstType,
 			Symbol:        r.InstId,
+			IsMargin:      req.IsMargin,
+			IsIsolated:    req.IsIsolated,
 			Price:         r.Px,
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,
@@ -49,13 +51,21 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 	r := res.Data[0]
 
 	orderType, timeInForce := o.okxConverter.FromOKXOrderType(r.OrdType)
-
+	var isMargin, isIsolated bool
+	if r.InstType == OKX_AC_MARGIN.String() {
+		isMargin = true
+		if r.TdMode == OKX_MARGIN_MODE_ISOLATED {
+			isIsolated = true
+		}
+	}
 	order := &Order{
 		Exchange:      OKX_NAME.String(),
 		OrderId:       r.OrdId,
 		ClientOrderId: r.ClOrdId,
 		AccountType:   req.AccountType,
 		Symbol:        req.Symbol,
+		IsMargin:      isMargin,
+		IsIsolated:    isIsolated,
 		Price:         r.Px,
 		Quantity:      r.Sz,
 		ExecutedQty:   r.FillSz,
@@ -86,6 +96,8 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderGet(req *QueryOrderParam, res
 			ClientOrderId: r.ClOrdId,
 			AccountType:   r.InstType,
 			Symbol:        r.InstId,
+			IsMargin:      req.IsMargin,
+			IsIsolated:    req.IsIsolated,
 			Price:         r.Px,
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,
@@ -151,6 +163,8 @@ func (o *OkxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *myokxa
 		ClientOrderId: r.ClOrdId,
 		AccountType:   req.AccountType,
 		Symbol:        req.Symbol,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
 	}
 	return order, nil
 }
@@ -169,6 +183,8 @@ func (o *OkxTradeEngine) handleOrderFromOrderAmend(req *OrderParam, res *myokxap
 		ClientOrderId: r.ClOrdId,
 		AccountType:   req.AccountType,
 		Symbol:        req.Symbol,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
 	}
 	return order, nil
 }
@@ -187,6 +203,8 @@ func (o *OkxTradeEngine) handleOrderFromOrderCancel(req *OrderParam, res *myokxa
 		ClientOrderId: r.ClOrdId,
 		AccountType:   req.AccountType,
 		Symbol:        req.Symbol,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
 	}
 	return order, nil
 }
@@ -208,6 +226,8 @@ func (o *OkxTradeEngine) handleOrderFromBatchOrderCreate(reqs []*OrderParam, res
 			ClientOrderId: r.ClOrdId,
 			AccountType:   reqs[i].AccountType,
 			Symbol:        reqs[i].Symbol,
+			IsMargin:      reqs[i].IsMargin,
+			IsIsolated:    reqs[i].IsIsolated,
 		}
 		orders = append(orders, order)
 	}
@@ -232,6 +252,8 @@ func (o *OkxTradeEngine) handleOrderFromBatchOrderAmend(reqs []*OrderParam, res 
 			ClientOrderId: r.ClOrdId,
 			AccountType:   reqs[i].AccountType,
 			Symbol:        reqs[i].Symbol,
+			IsMargin:      reqs[i].IsMargin,
+			IsIsolated:    reqs[i].IsIsolated,
 		}
 		orders = append(orders, order)
 	}
@@ -256,6 +278,8 @@ func (o *OkxTradeEngine) handleOrderFromBatchOrderCancel(reqs []*OrderParam, res
 			ClientOrderId: r.ClOrdId,
 			AccountType:   reqs[i].AccountType,
 			Symbol:        reqs[i].Symbol,
+			IsMargin:      reqs[i].IsMargin,
+			IsIsolated:    reqs[i].IsIsolated,
 		}
 		orders = append(orders, order)
 	}
@@ -267,12 +291,25 @@ func (o *OkxTradeEngine) handleOrderFromBatchOrderCancel(reqs []*OrderParam, res
 
 // 订单推送处理
 func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order {
-
 	orderType, timeInForce := o.okxConverter.FromOKXOrderType(order.OrdType)
+	var IsMargin, IsIsolated bool
+
+	//accountType := order.Orders.InstType
+
+	if order.Orders.InstType == OKX_AC_MARGIN.String() {
+		//accountType = OKX_AC_SPOT.String()
+		IsMargin = true
+		if order.Orders.TdMode == OKX_MARGIN_MODE_ISOLATED {
+			IsIsolated = true
+		}
+	}
 
 	return &Order{
-		Exchange:      OKX_NAME.String(),
+		Exchange: OKX_NAME.String(),
+		//AccountType:   order.Orders.InstType,
 		Symbol:        order.Orders.InstId,
+		IsMargin:      IsMargin,
+		IsIsolated:    IsIsolated,
 		OrderId:       order.OrdId,
 		ClientOrderId: order.ClOrdId,
 		Price:         order.Px,
@@ -331,9 +368,25 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 		}
 	}
 
+	var IsMargin, IsIsolated bool
+	if order.TdMode != "cash" {
+		IsMargin = true
+		switch order.TdMode {
+		case "cross":
+			IsIsolated = false
+		case "isolated":
+			IsIsolated = true
+		}
+	} else {
+		IsMargin = false
+		IsIsolated = false
+	}
+
 	return &Order{
 		Exchange:      OKX_NAME.String(),
 		Symbol:        order.OrdersAlgo.InstId,
+		IsMargin:      IsMargin,
+		IsIsolated:    IsIsolated,
 		OrderId:       order.AlgoId,
 		ClientOrderId: order.AlgoClOrdId,
 		Price:         px.String(),
@@ -358,7 +411,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 
 // ws单订单请求相关
 func (o *OkxTradeEngine) handleWsOrderCreateFromOrderParam(req *OrderParam) myokxapi.WsOrderArgData {
-	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), req.IsIsolated)
+	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), o.okxConverter.ToOKXAccountMode(req.AccountMode), req.IsIsolated)
 	return myokxapi.WsOrderArgData{
 		InstId:     req.Symbol,
 		TdMode:     tdMode,
@@ -427,6 +480,8 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderResult(req *OrderParam, res *myok
 		ClientOrderId: r.ClOrdId,
 		AccountType:   req.AccountType,
 		Symbol:        req.Symbol,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
 	}
 	return order, nil
 }
@@ -448,6 +503,8 @@ func (o *OkxTradeEngine) handleOrdersFromWsBatchOrderResult(reqs []*OrderParam, 
 			ClientOrderId: r.ClOrdId,
 			AccountType:   reqs[i].AccountType,
 			Symbol:        reqs[i].Symbol,
+			IsMargin:      reqs[i].IsMargin,
+			IsIsolated:    reqs[i].IsIsolated,
 		}
 		orders = append(orders, order)
 	}

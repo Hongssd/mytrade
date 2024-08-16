@@ -62,9 +62,7 @@ func (o *OkxTradeEngine) apiQueryTrades(req *QueryTradeParam) *myokxapi.PrivateR
 // 单订单接口获取
 func (o *OkxTradeEngine) apiOrderCreate(req *OrderParam) *myokxapi.PrivateRestTradeOrderPostAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-
-	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), req.IsIsolated)
-
+	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), o.okxConverter.ToOKXAccountMode(req.AccountMode), req.IsIsolated)
 	api := client.NewPrivateRestTradeOrderPost().
 		InstId(req.Symbol).TdMode(tdMode).
 		Side(o.okxConverter.ToOKXOrderSide(req.OrderSide)).
@@ -88,7 +86,13 @@ func (o *OkxTradeEngine) apiOrderCreate(req *OrderParam) *myokxapi.PrivateRestTr
 	//		})
 	//	}
 	//}
-
+	if req.IsMargin && !req.IsIsolated {
+		if req.Ccy == "" {
+			api.Ccy("USDT")
+		} else {
+			api.Ccy(req.Ccy)
+		}
+	}
 	if OkxAccountType(req.AccountType) != "SPOT" {
 		api.PosSide(o.okxConverter.ToOKXPositionSide(req.PositionSide))
 	} else {
@@ -142,7 +146,7 @@ func (o *OkxTradeEngine) apiOrderCancel(req *OrderParam) *myokxapi.PrivateRestTr
 func (o *OkxTradeEngine) apiOrderAlgoCreate(req *OrderParam) *myokxapi.PrivateRestTradeOrderAlgoPostAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
 
-	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), req.IsIsolated)
+	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), o.okxConverter.ToOKXAccountMode(req.AccountMode), req.IsIsolated)
 
 	api := client.NewPrivateRestTradeOrderAlgoPost().
 		InstId(req.Symbol).
@@ -254,7 +258,7 @@ func (o *OkxTradeEngine) restBatchPreCheck(reqs []*OrderParam) error {
 
 func (o *OkxTradeEngine) accountTypePreCheck(accountType string) error {
 	switch OkxAccountType(accountType) {
-	case OKX_AC_SPOT, OKX_AC_SWAP, OKX_AC_FUTURES:
+	case OKX_AC_SPOT, OKX_AC_MARGIN, OKX_AC_SWAP, OKX_AC_FUTURES:
 	default:
 		return ErrorAccountType
 	}

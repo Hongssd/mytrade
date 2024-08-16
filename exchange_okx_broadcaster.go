@@ -142,6 +142,8 @@ func (o *OkxTradeEngine) getBroadcastFromAccountType(accountType string) **okxOr
 	switch OkxAccountType(accountType) {
 	case OKX_AC_SPOT:
 		return &o.broadcasterSpot
+	case OKX_AC_MARGIN:
+		return &o.broadcasterMargin
 	case OKX_AC_SWAP:
 		return &o.broadcasterSwap
 	case OKX_AC_FUTURES:

@@ -36,12 +36,21 @@ func (b *BinanceTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, er
 	var orders []*Order
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		api := b.apiSpotOpenOrders(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if req.IsMargin {
+			api := b.apiSpotMarginOpenOrders(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handleOrdersFromSpotMarginOpenOrders(req, res)
+		} else {
+			api := b.apiSpotOpenOrders(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handleOrdersFromSpotOpenOrders(req, res)
 		}
-		orders = b.handleOrdersFromSpotOpenOrders(req, res)
 	case BN_AC_FUTURE:
 		api := b.apiFutureOpenOrders(req)
 		res, err := api.Do()
@@ -66,12 +75,21 @@ func (b *BinanceTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		api := b.apiSpotOrderQuery(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if req.IsMargin {
+			api := b.apiSpotMarginOrderQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromSpotMarginOrderQuery(req, res)
+		} else {
+			api := b.apiSpotOrderQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromSpotOrderQuery(req, res)
 		}
-		order = b.handleOrderFromSpotOrderQuery(req, res)
 	case BN_AC_FUTURE:
 		api := b.apiFutureOrderQuery(req)
 		res, err := api.Do()
@@ -97,12 +115,21 @@ func (b *BinanceTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error)
 
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		api := b.apiSpotOrdersQuery(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if req.IsMargin {
+			api := b.apiSpotMarginOrdersQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handleOrderFromSpotMarginOrdersQuery(req, res)
+		} else {
+			api := b.apiSpotOrdersQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handleOrderFromSpotOrdersQuery(req, res)
 		}
-		orders = b.handleOrderFromSpotOrdersQuery(req, res)
 	case BN_AC_FUTURE:
 		api := b.apiFutureOrdersQuery(req)
 		res, err := api.Do()
@@ -159,13 +186,21 @@ func (b *BinanceTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 	var order *Order
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		api := b.apiSpotOrderCreate(req)
-		res, err := api.Do()
-		log.Error(err)
-		if err != nil {
-			return nil, err
+		if req.IsMargin {
+			api := b.apiSpotMarginOrderCreate(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromSpotMarginOrderCreate(req, res)
+		} else {
+			api := b.apiSpotOrderCreate(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromSpotOrderCreate(req, res)
 		}
-		order = b.handleOrderFromSpotOrderCreate(req, res)
 	case BN_AC_FUTURE:
 		api := b.apiFutureOrderCreate(req)
 		res, err := api.Do()
@@ -226,12 +261,21 @@ func (b *BinanceTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	var order *Order
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		api := b.apiSpotOrderCancel(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if req.IsMargin {
+			api := b.apiSpotMarginOrderCancel(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromSpotMarginOrderCancel(req, res)
+		} else {
+			api := b.apiSpotOrderCancel(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromSpotOrderCancel(req, res)
 		}
-		order = b.handleOrderFromSpotOrderCancel(req, res)
 	case BN_AC_FUTURE:
 		api := b.apiFutureOrderCancel(req)
 		res, err := api.Do()
