@@ -98,6 +98,10 @@ func (o *OkxTradeEngine) newOrderBroadcaster(accountType string) (*okxOrderBroad
 		return nil, err
 	}
 
+	if accountType == "SPOT" {
+		accountType = "ANY"
+	}
+
 	sub, err := broadcaster.okxWsAccount.SubscribeOrders(accountType, "", "")
 	if err != nil {
 		return nil, err
