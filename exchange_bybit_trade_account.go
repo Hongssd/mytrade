@@ -131,6 +131,22 @@ func (b BybitTradeAccount) SetLeverage(accountType, symbol string,
 	marginMode MarginMode,
 	positionSide PositionSide, leverage decimal.Decimal) error {
 
+	// spot cross leverage
+	if accountType == BYBIT_AC_SPOT.String() {
+		if marginMode == MARGIN_MODE_CROSSED {
+			api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
+				NewSpotMarginTradeSetLeverage().Leverage(leverage.String())
+			_, err := api.Do()
+			if err != nil {
+				return err
+			}
+		} else {
+			// set spot isolated leverage is not supported
+			return ErrorNotSupport
+		}
+		return nil
+	}
+
 	positionMode, err := b.GetPositionMode(accountType, symbol)
 	if err != nil {
 		return err
