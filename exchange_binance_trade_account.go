@@ -223,11 +223,16 @@ func (b BinanceTradeAccount) SetLeverage(accountType, symbol string,
 	leverage decimal.Decimal) error {
 	switch BinanceAccountType(accountType) {
 	case BN_AC_SPOT:
-		// tips: maxleverage only 3， 5， 10 are supported
-		_, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).
-			NewSpotMarginMaxLeverage().MaxLeverage(leverage.IntPart()).Do()
-		if err != nil {
-			return err
+		if marginMode == MARGIN_MODE_CROSSED {
+			// tips: maxleverage only 3x， 5x， 10x are supported
+			_, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).
+				NewSpotMarginMaxLeverage().MaxLeverage(leverage.IntPart()).Do()
+			if err != nil {
+				return err
+			}
+		} else {
+			// set spot isolated leverage is not supported
+			return ErrorNotSupport
 		}
 	case BN_AC_FUTURE:
 		_, err := binance.NewFutureRestClient(b.apiKey, b.secretKey).
