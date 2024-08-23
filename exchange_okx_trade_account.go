@@ -80,6 +80,11 @@ func (o OkxTradeAccount) SetMarginMode(accountType, symbol string, mode MarginMo
 }
 
 func (o OkxTradeAccount) SetPositionMode(accountType, symbol string, mode PositionMode) error {
+
+	if accountType == OKX_AC_SPOT.String() {
+		return nil
+	}
+
 	nowPositionMode, err := o.GetPositionMode(accountType, symbol)
 	if err != nil {
 		return err
