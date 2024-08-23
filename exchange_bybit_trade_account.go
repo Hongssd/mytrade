@@ -56,17 +56,27 @@ func (b BybitTradeAccount) GetPositionMode(accountType, symbol string) (Position
 
 func (b BybitTradeAccount) GetLeverage(accountType, symbol string,
 	marginMode MarginMode, positionSide PositionSide) (decimal.Decimal, error) {
-	res, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
-		NewPositionList().Category(accountType).Symbol(symbol).Do()
-	if err != nil {
-		return decimal.Zero, err
-	}
-	for _, p := range res.Result.List {
-		if p.Symbol == symbol &&
-			b.bybitConverter.FromBYBITPositionSide(p.PositionIdx) == positionSide &&
-			b.bybitConverter.FromBYBITMarginMode(p.TradeMode) == marginMode {
-			leverage, _ := decimal.NewFromString(p.Leverage)
-			return leverage, nil
+	if accountType == BYBIT_AC_SPOT.String() {
+		res, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
+			NewSpotMarginTradeState().Do()
+		if err != nil {
+			return decimal.Zero, err
+		}
+		leverage, _ := decimal.NewFromString(res.Result.SpotLeverage)
+		return leverage, nil
+	} else {
+		res, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
+			NewPositionList().Category(accountType).Symbol(symbol).Do()
+		if err != nil {
+			return decimal.Zero, err
+		}
+		for _, p := range res.Result.List {
+			if p.Symbol == symbol &&
+				b.bybitConverter.FromBYBITPositionSide(p.PositionIdx) == positionSide &&
+				b.bybitConverter.FromBYBITMarginMode(p.TradeMode) == marginMode {
+				leverage, _ := decimal.NewFromString(p.Leverage)
+				return leverage, nil
+			}
 		}
 	}
 	return decimal.Zero, ErrorPositionNotFound

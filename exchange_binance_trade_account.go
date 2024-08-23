@@ -55,6 +55,8 @@ func (b BinanceTradeAccount) GetMarginMode(accountType, symbol string, positionS
 
 func (b BinanceTradeAccount) GetPositionMode(accountType, symbol string) (PositionMode, error) {
 	switch BinanceAccountType(accountType) {
+	case BN_AC_SPOT:
+		return POSITION_MODE_ONEWAY, nil
 	case BN_AC_FUTURE:
 		res, err := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFuturePositionSideDualGet().Do()
 		if err != nil {
