@@ -25,8 +25,9 @@ func (b BinanceTradeAccount) GetAccountMode() (AccountMode, error) {
 }
 
 func (b BinanceTradeAccount) GetMarginMode(accountType, symbol string, positionSide PositionSide) (MarginMode, error) {
-
 	switch BinanceAccountType(accountType) {
+	case BN_AC_SPOT:
+		return MARGIN_MODE_CROSSED, nil
 	case BN_AC_FUTURE:
 		res, err := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureAccount().Do()
 		if err != nil {
@@ -175,6 +176,10 @@ func (b BinanceTradeAccount) SetAccountMode(mode AccountMode) error {
 }
 
 func (b BinanceTradeAccount) SetMarginMode(accountType, symbol string, mode MarginMode) error {
+	if accountType == BN_AC_SPOT.String() {
+		return nil
+	}
+
 	positionMode, err := b.GetPositionMode(accountType, symbol)
 	if err != nil {
 		return err
@@ -212,6 +217,7 @@ func (b BinanceTradeAccount) SetMarginMode(accountType, symbol string, mode Marg
 }
 
 func (b BinanceTradeAccount) SetPositionMode(accountType, symbol string, mode PositionMode) error {
+
 	nowPositionMode, err := b.GetPositionMode(accountType, symbol)
 	if err != nil {
 		return err
@@ -222,6 +228,8 @@ func (b BinanceTradeAccount) SetPositionMode(accountType, symbol string, mode Po
 	}
 
 	switch BinanceAccountType(accountType) {
+	case BN_AC_SPOT:
+		return ErrorNotSupport
 	case BN_AC_FUTURE:
 		_, err := binance.NewFutureRestClient(b.apiKey, b.secretKey).
 			NewFuturePositionSideDualPost().DualSidePosition(b.bnConverter.ToBNPositionMode(mode)).Do()
@@ -309,6 +317,8 @@ func (b BinanceTradeAccount) GetFeeRate(accountType, symbol string) (*FeeRate, e
 func (b BinanceTradeAccount) GetPositions(accountType string, symbols ...string) ([]*Position, error) {
 	var positionList []*Position
 	switch BinanceAccountType(accountType) {
+	case BN_AC_SPOT:
+		return positionList, nil
 	case BN_AC_FUTURE:
 		res, err := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureAccount().Do()
 		if err != nil {

@@ -14,6 +14,7 @@ type Position struct {
 	Exchange               string       `json:"exchange"`               //交易所
 	AccountType            string       `json:"accountType"`            //账户类型
 	Symbol                 string       `json:"symbol"`                 //交易对
+	MarginCcy              string       `json:"marginCcy"`              //保证金币种
 	InitialMargin          string       `json:"initialMargin"`          //当前所需起始保证金(基于最新标记价格)
 	MaintMargin            string       `json:"maintMargin"`            //维持保证金
 	UnrealizedProfit       string       `json:"unrealizedProfit"`       //持仓未实现盈亏

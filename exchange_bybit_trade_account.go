@@ -25,6 +25,10 @@ func (b BybitTradeAccount) GetAccountMode() (AccountMode, error) {
 }
 
 func (b BybitTradeAccount) GetMarginMode(accountType, symbol string, positionSide PositionSide) (MarginMode, error) {
+	if accountType == BYBIT_AC_SPOT.String() {
+		return MARGIN_MODE_CROSSED, nil
+	}
+
 	res, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
 		NewPositionList().Category(accountType).Symbol(symbol).Do()
 	if err != nil {
@@ -39,6 +43,10 @@ func (b BybitTradeAccount) GetMarginMode(accountType, symbol string, positionSid
 }
 
 func (b BybitTradeAccount) GetPositionMode(accountType, symbol string) (PositionMode, error) {
+	if accountType == BYBIT_AC_SPOT.String() {
+		return POSITION_MODE_ONEWAY, nil
+	}
+
 	res, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
 		NewPositionList().Category(accountType).Symbol(symbol).Do()
 	if err != nil {
@@ -102,11 +110,15 @@ func (b BybitTradeAccount) SetAccountMode(mode AccountMode) error {
 }
 
 func (b BybitTradeAccount) SetMarginMode(accountType, symbol string, mode MarginMode) error {
+	if accountType == BYBIT_AC_SPOT.String() {
+		return ErrorNotSupport
+	}
+
 	res, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().NewAccountInfo().Do()
 	if err != nil {
 		return err
 	}
-	if res.Result.UnifiedMarginStatus == 1 {
+	if res.Result.UnifiedMarginStatus == 1 || accountType == BYBIT_AC_INVERSE.String() {
 		//经典账号
 		_, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
 			NewPositionSwitchIsolated().Category(accountType).
@@ -130,6 +142,9 @@ func (b BybitTradeAccount) SetMarginMode(accountType, symbol string, mode Margin
 }
 
 func (b BybitTradeAccount) SetPositionMode(accountType, symbol string, mode PositionMode) error {
+	if accountType == BYBIT_AC_SPOT.String() {
+		return ErrorNotSupport
+	}
 	currentMode, err := b.GetPositionMode(accountType, symbol)
 	if err != nil {
 		return err
@@ -153,63 +168,58 @@ func (b BybitTradeAccount) SetLeverage(accountType, symbol string,
 
 	// spot cross leverage
 	if accountType == BYBIT_AC_SPOT.String() {
-		if marginMode == MARGIN_MODE_CROSSED {
-			api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
-				NewSpotMarginTradeSetLeverage().Leverage(leverage.String())
-			_, err := api.Do()
-			if err != nil {
-				return err
-			}
-		} else {
-			// set spot isolated leverage is not supported
+		if marginMode != MARGIN_MODE_CROSSED {
 			return ErrorNotSupport
 		}
-		return nil
-	}
 
-	positionMode, err := b.GetPositionMode(accountType, symbol)
-	if err != nil {
-		return err
-	}
-
-	nowLeverage, err := b.GetLeverage(accountType, symbol, marginMode, positionSide)
-	if err != nil {
-		return err
-	}
-
-	if nowLeverage.Equal(leverage) {
-		return nil
-	}
-
-	api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
-		NewPositionSetLeverage().Category(accountType).Symbol(symbol)
-	//單倉模式: 經典帳戶和統一帳戶的buyLeverage 必須等於sellLeverage
-	//雙倉模式:
-	//經典帳戶和統一帳戶(逐倉模式)buyLeverage可以與sellLeverage不想等;
-	//統一帳戶(全倉模式)的buyLeverage 必須等於sellLeverage
-
-	accountMode, err := b.GetAccountMode()
-	if err != nil {
-		return err
-	}
-
-	if positionMode == POSITION_MODE_ONEWAY {
-		api.BuyLeverage(leverage.String()).SellLeverage(leverage.String())
+		api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
+			NewSpotMarginTradeSetLeverage().Leverage(leverage.String())
+		_, err := api.Do()
+		if err != nil {
+			return err
+		}
 	} else {
-		if accountMode == ACCOUNT_MODE_SINGLE_MARGIN {
+		positionMode, err := b.GetPositionMode(accountType, symbol)
+		if err != nil {
+			return err
+		}
+
+		nowLeverage, err := b.GetLeverage(accountType, symbol, marginMode, positionSide)
+		if err != nil {
+			return err
+		}
+
+		if nowLeverage.Equal(leverage) {
+			return nil
+		}
+
+		api := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
+			NewPositionSetLeverage().Category(accountType).Symbol(symbol)
+
+		//單倉模式: 經典帳戶和統一帳戶的buyLeverage 必須等於sellLeverage
+		//雙倉模式:
+		//經典帳戶和統一帳戶(逐倉模式)buyLeverage可以與sellLeverage不想等;
+		//統一帳戶(全倉模式)的buyLeverage 必須等於sellLeverage
+		accountMode, err := b.GetAccountMode()
+		if err != nil {
+			return err
+		}
+
+		if positionMode == POSITION_MODE_ONEWAY || accountMode != ACCOUNT_MODE_SINGLE_MARGIN {
+			api.BuyLeverage(leverage.String()).SellLeverage(leverage.String())
+		} else {
 			if positionSide == POSITION_SIDE_LONG {
 				api.BuyLeverage(leverage.String())
 			} else if positionSide == POSITION_SIDE_SHORT {
 				api.SellLeverage(leverage.String())
 			}
-		} else {
-			api.BuyLeverage(leverage.String()).SellLeverage(leverage.String())
+		}
+		_, err = api.Do()
+		if err != nil {
+			return err
 		}
 	}
-	_, err = api.Do()
-	if err != nil {
-		return err
-	}
+
 	return nil
 }
 

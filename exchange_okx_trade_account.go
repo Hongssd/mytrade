@@ -30,6 +30,9 @@ func (o OkxTradeAccount) GetMarginMode(accountType, symbol string, positionSide 
 }
 
 func (o OkxTradeAccount) GetPositionMode(accountType, symbol string) (PositionMode, error) {
+	if accountType == OKX_AC_SPOT.String() {
+		return POSITION_MODE_ONEWAY, nil
+	}
 	res, err := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).
 		PrivateRestClient().NewPrivateRestAccountConfig().Do()
 	if err != nil {
@@ -46,10 +49,38 @@ func (o OkxTradeAccount) GetLeverage(accountType, symbol string, marginMode Marg
 		return decimal.Zero, err
 	}
 	var leverage decimal.Decimal
+
 	for _, d := range res.Data {
-		if d.InstId == symbol && o.okxConverter.FromOKXPositionSide(d.PosSide) == positionSide {
-			leverage, _ = decimal.NewFromString(d.Lever)
-			break
+		if accountType != OKX_AC_SPOT.String() {
+			if d.InstId == symbol && o.okxConverter.FromOKXPositionSide(d.PosSide) == positionSide {
+				leverage, _ = decimal.NewFromString(d.Lever)
+				break
+			}
+		} else {
+			if marginMode == MARGIN_MODE_ISOLATED || len(res.Data) == 1 {
+				if d.InstId == symbol {
+					leverage, _ = decimal.NewFromString(d.Lever)
+					break
+				}
+			} else {
+				spilit := strings.Split(symbol, "-")
+				if len(spilit) != 2 {
+					return decimal.Zero, ErrorPositionNotFound
+				}
+				switch positionSide {
+				case POSITION_SIDE_LONG, POSITION_SIDE_BOTH:
+					if d.InstId == spilit[1] {
+						leverage, _ = decimal.NewFromString(d.Lever)
+						break
+					}
+				case POSITION_SIDE_SHORT:
+					if d.InstId == spilit[0] {
+						leverage, _ = decimal.NewFromString(d.Lever)
+						break
+					}
+				default:
+				}
+			}
 		}
 	}
 	if leverage.IsZero() {
@@ -82,7 +113,7 @@ func (o OkxTradeAccount) SetMarginMode(accountType, symbol string, mode MarginMo
 func (o OkxTradeAccount) SetPositionMode(accountType, symbol string, mode PositionMode) error {
 
 	if accountType == OKX_AC_SPOT.String() {
-		return nil
+		return ErrorNotSupport
 	}
 
 	nowPositionMode, err := o.GetPositionMode(accountType, symbol)
@@ -101,10 +132,27 @@ func (o OkxTradeAccount) SetPositionMode(accountType, symbol string, mode Positi
 }
 
 func (o OkxTradeAccount) SetLeverage(accountType, symbol string, marginMode MarginMode, positionSide PositionSide, leverage decimal.Decimal) error {
-	_, err := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().
+
+	api := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().
 		NewPrivateRestAccountSetLeverage().InstId(symbol).
-		Lever(leverage.String()).MgnMode(o.okxConverter.ToOKXMarginMode(marginMode)).
-		PosSide(o.okxConverter.ToOKXPositionSide(positionSide)).Do()
+		Lever(leverage.String()).MgnMode(o.okxConverter.ToOKXMarginMode(marginMode))
+
+	if accountType == OKX_AC_SPOT.String() && marginMode == MARGIN_MODE_CROSSED {
+		spilit := strings.Split(symbol, "-")
+		if len(spilit) != 2 {
+			return ErrorPositionNotFound
+		}
+		switch positionSide {
+		case POSITION_SIDE_LONG, POSITION_SIDE_BOTH:
+			api.Ccy(spilit[1])
+		case POSITION_SIDE_SHORT:
+			api.Ccy(spilit[0])
+		}
+	} else {
+		api.PosSide(o.okxConverter.ToOKXPositionSide(positionSide))
+	}
+
+	_, err := api.Do()
 	if err != nil {
 		return err
 	}
@@ -136,14 +184,17 @@ func (o OkxTradeAccount) GetPositions(accountType string, symbols ...string) ([]
 
 	var positions []*Position
 
-	if OkxAccountType(accountType) == OKX_AC_SPOT {
-		return positions, nil
+	api := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().
+		NewPrivateRestAccountPosition()
+
+	if accountType == OKX_AC_SPOT.String() {
+		api.InstType(OKX_AC_MARGIN.String())
+	} else {
+		api.InstType(accountType)
 	}
 
-	api := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().
-		NewPrivateRestAccountPosition().InstType(accountType)
 	if len(symbols) == 1 {
-		api = api.InstId(symbols[1])
+		api = api.InstId(symbols[0])
 	} else if len(symbols) > 1 && len(symbols) < 10 {
 		instIds := strings.Join(symbols, ",")
 		api = api.InstId(instIds)
@@ -162,6 +213,7 @@ func (o OkxTradeAccount) GetPositions(accountType string, symbols ...string) ([]
 				Exchange:               o.ExchangeType().String(),
 				AccountType:            d.InstType,
 				Symbol:                 d.InstId,
+				MarginCcy:              d.Ccy,
 				InitialMargin:          d.Imr,
 				MaintMargin:            d.Mmr,
 				UnrealizedProfit:       d.Upl,
