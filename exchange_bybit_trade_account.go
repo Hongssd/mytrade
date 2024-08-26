@@ -71,13 +71,23 @@ func (b BybitTradeAccount) GetLeverage(accountType, symbol string,
 			return decimal.Zero, err
 		}
 		for _, p := range res.Result.List {
-			if p.Symbol == symbol &&
-				b.bybitConverter.FromBYBITPositionSide(p.PositionIdx) == positionSide &&
-				b.bybitConverter.FromBYBITMarginMode(p.TradeMode) == marginMode {
-				leverage, _ := decimal.NewFromString(p.Leverage)
-				return leverage, nil
+			// 如果为统一账户的反向合约
+			if accountType == BYBIT_AC_INVERSE.String() {
+				if p.Symbol == symbol &&
+					b.bybitConverter.FromBYBITPositionSide(p.PositionIdx) == positionSide &&
+					b.bybitConverter.FromBYBITMarginMode(p.TradeMode) == marginMode {
+					leverage, _ := decimal.NewFromString(p.Leverage)
+					return leverage, nil
+				}
+			} else {
+				if p.Symbol == symbol &&
+					b.bybitConverter.FromBYBITPositionSide(p.PositionIdx) == positionSide {
+					leverage, _ := decimal.NewFromString(p.Leverage)
+					return leverage, nil
+				}
 			}
 		}
+
 	}
 	return decimal.Zero, ErrorPositionNotFound
 }

@@ -78,6 +78,26 @@ func (b BinanceTradeAccount) GetLeverage(accountType, symbol string,
 	marginMode MarginMode, positionSide PositionSide) (decimal.Decimal, error) {
 	leverage := decimal.NewFromInt(0)
 
+	if accountType == BN_AC_SPOT.String() {
+		// tips: maxleverage only 3x， 5x，10x are supported
+		res, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginTradeCoeff().Do()
+		if err != nil {
+			log.Error(err)
+			return leverage, err
+		}
+		// 通过初始风险率反推杠杆倍数
+		normalBar := res.NormalBar
+		switch normalBar {
+		case "1.5":
+			leverage = decimal.NewFromInt(3)
+		case "1.25":
+			leverage = decimal.NewFromInt(5)
+		case "2":
+			leverage = decimal.NewFromInt(10)
+		}
+		return leverage, nil
+	}
+
 	positionMode, err := b.GetPositionMode(accountType, symbol)
 	if err != nil {
 		return leverage, err
