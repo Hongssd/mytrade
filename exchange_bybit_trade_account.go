@@ -25,21 +25,33 @@ func (b BybitTradeAccount) GetAccountMode() (AccountMode, error) {
 }
 
 func (b BybitTradeAccount) GetMarginMode(accountType, symbol string, positionSide PositionSide) (MarginMode, error) {
-	if accountType == BYBIT_AC_SPOT.String() {
-		return MARGIN_MODE_CROSSED, nil
-	}
-
-	res, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
-		NewPositionList().Category(accountType).Symbol(symbol).Do()
+	res, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().NewAccountInfo().Do()
 	if err != nil {
 		return MARGIN_MODE_UNKNOWN, err
 	}
-	for _, p := range res.Result.List {
-		if p.Symbol == symbol && b.bybitConverter.FromBYBITPositionSide(p.PositionIdx) == positionSide {
-			return b.bybitConverter.FromBYBITMarginMode(p.TradeMode), nil
+	if res.Result.UnifiedMarginStatus == 1 || accountType == BYBIT_AC_INVERSE.String() {
+		res, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().
+			NewPositionList().Category(accountType).Symbol(symbol).Do()
+		if err != nil {
+			return MARGIN_MODE_UNKNOWN, err
+		}
+		for _, p := range res.Result.List {
+			if p.Symbol == symbol && b.bybitConverter.FromBYBITPositionSide(p.PositionIdx) == positionSide {
+				return b.bybitConverter.FromBYBITMarginMode(p.TradeMode), nil
+			}
+		}
+		return MARGIN_MODE_UNKNOWN, ErrorPositionNotFound
+	} else {
+		accountMode, err := b.GetAccountMode()
+		if err != nil {
+			return MARGIN_MODE_UNKNOWN, err
+		}
+		if accountMode == ACCOUNT_MODE_SINGLE_MARGIN {
+			return MARGIN_MODE_ISOLATED, nil
+		} else {
+			return MARGIN_MODE_CROSSED, nil
 		}
 	}
-	return MARGIN_MODE_UNKNOWN, ErrorPositionNotFound
 }
 
 func (b BybitTradeAccount) GetPositionMode(accountType, symbol string) (PositionMode, error) {
@@ -110,9 +122,9 @@ func (b BybitTradeAccount) SetAccountMode(mode AccountMode) error {
 }
 
 func (b BybitTradeAccount) SetMarginMode(accountType, symbol string, mode MarginMode) error {
-	if accountType == BYBIT_AC_SPOT.String() {
-		return ErrorNotSupport
-	}
+	//if accountType == BYBIT_AC_SPOT.String() {
+	//	return ErrorNotSupport
+	//}
 
 	res, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().NewAccountInfo().Do()
 	if err != nil {
