@@ -80,23 +80,28 @@ func (b BinanceTradeAccount) GetLeverage(accountType, symbol string,
 	leverage := decimal.NewFromInt(0)
 
 	if accountType == BN_AC_SPOT.String() {
-		// tips: maxleverage only 3x， 5x，10x are supported
-		res, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginTradeCoeff().Do()
-		if err != nil {
-			log.Error(err)
-			return leverage, err
+		if marginMode == MARGIN_MODE_CROSSED {
+			// tips: maxleverage only 3x， 5x，10x are supported
+			res, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginTradeCoeff().Do()
+			if err != nil {
+				log.Error(err)
+				return leverage, err
+			}
+			// 通过初始风险率反推杠杆倍数
+			normalBar := res.NormalBar
+			switch normalBar {
+			case "1.5":
+				leverage = decimal.NewFromInt(3)
+			case "1.25":
+				leverage = decimal.NewFromInt(5)
+			case "2":
+				leverage = decimal.NewFromInt(10)
+			}
+			return leverage, nil
+		} else {
+			// get spot isolated leverage is not supported （现货逐仓杠杆没有设置和查询接口）
+			return leverage, ErrorNotSupport
 		}
-		// 通过初始风险率反推杠杆倍数
-		normalBar := res.NormalBar
-		switch normalBar {
-		case "1.5":
-			leverage = decimal.NewFromInt(3)
-		case "1.25":
-			leverage = decimal.NewFromInt(5)
-		case "2":
-			leverage = decimal.NewFromInt(10)
-		}
-		return leverage, nil
 	}
 
 	positionMode, err := b.GetPositionMode(accountType, symbol)
