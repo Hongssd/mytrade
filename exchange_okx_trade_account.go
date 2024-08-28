@@ -50,6 +50,7 @@ func (o OkxTradeAccount) GetLeverage(accountType, symbol string, marginMode Marg
 	}
 	var leverage decimal.Decimal
 
+	log.Warn("GetLeverage", res.Data)
 	for _, d := range res.Data {
 		if accountType == OKX_AC_SPOT.String() { // 现货
 			if d.InstId == symbol && o.okxConverter.FromOKXPositionSide(d.PosSide) == positionSide {
@@ -69,6 +70,7 @@ func (o OkxTradeAccount) GetLeverage(accountType, symbol string, marginMode Marg
 					return decimal.Zero, ErrorPositionNotFound
 				}
 
+				// need to fix
 				switch o.okxConverter.FromOKXPositionSide(d.PosSide).String() {
 				case POSITION_SIDE_LONG.String(), POSITION_SIDE_BOTH.String():
 					//if d.InstId == split[1] {
