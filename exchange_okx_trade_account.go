@@ -49,39 +49,45 @@ func (o OkxTradeAccount) GetLeverage(accountType, symbol string, marginMode Marg
 		return decimal.Zero, err
 	}
 	var leverage decimal.Decimal
+
 	for _, d := range res.Data {
-		if accountType == OKX_AC_SPOT.String() {
+		if accountType == OKX_AC_SPOT.String() { // 现货
 			if d.InstId == symbol && o.okxConverter.FromOKXPositionSide(d.PosSide) == positionSide {
 				leverage, _ = decimal.NewFromString(d.Lever)
 				break
 			}
 		} else {
-			if marginMode == MARGIN_MODE_ISOLATED || len(res.Data) == 1 {
+			if marginMode == MARGIN_MODE_ISOLATED || len(res.Data) == 1 { // 合约单向持仓
 				if d.InstId == symbol {
 					leverage, _ = decimal.NewFromString(d.Lever)
 					break
 				}
-			} else {
-				spilit := strings.Split(symbol, "-")
-				if len(spilit) != 2 {
+			} else { // 合约双向持仓
+
+				split := strings.Split(symbol, "-")
+				if len(split) != 3 {
 					return decimal.Zero, ErrorPositionNotFound
 				}
-				switch positionSide {
-				case POSITION_SIDE_LONG, POSITION_SIDE_BOTH:
-					if d.InstId == spilit[1] {
-						leverage, _ = decimal.NewFromString(d.Lever)
-						break
-					}
-				case POSITION_SIDE_SHORT:
-					if d.InstId == spilit[0] {
-						leverage, _ = decimal.NewFromString(d.Lever)
-						break
-					}
+
+				switch o.okxConverter.FromOKXPositionSide(d.PosSide).String() {
+				case POSITION_SIDE_LONG.String(), POSITION_SIDE_BOTH.String():
+					//if d.InstId == split[1] {
+					//	log.Warn("long", d.InstId, split[1])
+					leverage, _ = decimal.NewFromString(d.Lever)
+					break
+					//}
+				case POSITION_SIDE_SHORT.String():
+					//log.Warn("short", d.InstId, split[0])
+					//if d.InstId == split[0] {
+					leverage, _ = decimal.NewFromString(d.Lever)
+					break
+					//}
 				default:
 				}
 			}
 		}
 	}
+
 	if leverage.IsZero() {
 		return decimal.Zero, ErrorPositionNotFound
 	}
