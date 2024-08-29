@@ -50,7 +50,7 @@ func (o OkxTradeAccount) GetLeverage(accountType, symbol string, marginMode Marg
 	}
 	var leverage decimal.Decimal
 	for _, d := range res.Data {
-		if accountType == OKX_AC_SPOT.String() {
+		if accountType != OKX_AC_SPOT.String() {
 			if d.InstId == symbol && o.okxConverter.FromOKXPositionSide(d.PosSide) == positionSide {
 				leverage, _ = decimal.NewFromString(d.Lever)
 				break
