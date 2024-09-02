@@ -71,8 +71,8 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 		Exchange:      OKX_NAME.String(),
 		OrderId:       r.OrdId,
 		ClientOrderId: r.ClOrdId,
-		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		AccountType:   r.InstType,
+		Symbol:        r.InstId,
 		IsMargin:      isMargin,
 		IsIsolated:    isIsolated,
 		Price:         r.Px,
@@ -142,6 +142,9 @@ func (o *OkxTradeEngine) handleTradesFromQueryTrades(req *QueryTradeParam, res *
 	for _, r := range res.Data {
 		quoteQty := decimal.RequireFromString(r.FillPx).Mul(decimal.RequireFromString(r.FillSz))
 		isMaker := r.ExecType == "M"
+		if r.InstType == OKX_AC_MARGIN.String() {
+			r.InstType = OKX_AC_SPOT.String()
+		}
 		trade := &Trade{
 			Exchange:     OKX_NAME.String(),
 			AccountType:  r.InstType,
