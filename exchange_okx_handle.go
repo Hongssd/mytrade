@@ -15,14 +15,22 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, r
 	orders := make([]*Order, 0, len(res.Data))
 	for _, r := range res.Data {
 		orderType, timeInForce := o.okxConverter.FromOKXOrderType(r.OrdType)
+		var isMargin, isIsolated bool
+		if r.InstType == OKX_AC_MARGIN.String() {
+			r.InstType = OKX_AC_SPOT.String()
+			isMargin = true
+			if r.TdMode == OKX_MARGIN_MODE_ISOLATED {
+				isIsolated = true
+			}
+		}
 		order := &Order{
 			Exchange:      OKX_NAME.String(),
 			OrderId:       r.OrdId,
 			ClientOrderId: r.ClOrdId,
 			AccountType:   r.InstType,
 			Symbol:        r.InstId,
-			IsMargin:      req.IsMargin,
-			IsIsolated:    req.IsIsolated,
+			IsMargin:      isMargin,
+			IsIsolated:    isIsolated,
 			Price:         r.Px,
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,
@@ -53,6 +61,7 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 	orderType, timeInForce := o.okxConverter.FromOKXOrderType(r.OrdType)
 	var isMargin, isIsolated bool
 	if r.InstType == OKX_AC_MARGIN.String() {
+		r.InstType = OKX_AC_SPOT.String()
 		isMargin = true
 		if r.TdMode == OKX_MARGIN_MODE_ISOLATED {
 			isIsolated = true
@@ -90,14 +99,22 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderGet(req *QueryOrderParam, res
 	var orders []*Order
 	for _, r := range res.Data {
 		orderType, timeInForce := o.okxConverter.FromOKXOrderType(r.OrdType)
+		var isMargin, isIsolated bool
+		if r.InstType == OKX_AC_MARGIN.String() {
+			r.InstType = OKX_AC_SPOT.String()
+			isMargin = true
+			if r.TdMode == OKX_MARGIN_MODE_ISOLATED {
+				isIsolated = true
+			}
+		}
 		order := &Order{
 			Exchange:      OKX_NAME.String(),
 			OrderId:       r.OrdId,
 			ClientOrderId: r.ClOrdId,
 			AccountType:   r.InstType,
 			Symbol:        r.InstId,
-			IsMargin:      req.IsMargin,
-			IsIsolated:    req.IsIsolated,
+			IsMargin:      isMargin,
+			IsIsolated:    isIsolated,
 			Price:         r.Px,
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,

@@ -153,7 +153,7 @@ func (b *BinanceTradeEngine) apiSpotMarginOrderQuery(req *QueryOrderParam) *mybi
 	return api
 }
 func (b *BinanceTradeEngine) apiSpotMarginOrdersQuery(req *QueryOrderParam) *mybinanceapi.SpotMarginAllOrdersApi {
-	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginAllOrders()
+	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginAllOrders().Symbol(req.Symbol)
 	if req.IsIsolated {
 		api = api.IsIsolated("TRUE")
 	}
