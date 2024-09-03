@@ -50,12 +50,7 @@ type Asset struct {
 	AvailableBalance       string `json:"availableBalance"`       //可用余额
 	MaxWithdrawAmount      string `json:"maxWithdrawAmount"`      //最大可转出余额
 	MarginAvailable        bool   `json:"marginAvailable"`        //否可用作联合保证金
-	//SpotMarginIsolatedBaseAssetBalance   string `json:"spot_margin_isolated_balance"`   // 现货逐仓账户Base币种余额，如BTC
-	//SpotMarginIsolatedBaseAssetAvailable string `json:"spot_margin_isolated_available"` // 现货逐仓账户Base可用余额，如BTC
-	//SpotMarginIsolatedBaseSymbol
-	//SpotMarginIsolatedQuoteSymbolBalance   string `json:"spot_margin_isolated_quote_balance"`   // 现货逐仓账户Quote币种余额，如USDT
-	//SpotMarginIsolatedQuoteSymbolAvailable string `json:"spot_margin_isolated_quote_available"` // 现货逐仓账户Quote可用余额，如USDT
-	UpdateTime int64 `json:"updateTime"` //更新时间
+	UpdateTime             int64  `json:"updateTime"`             //更新时间
 }
 
 // 资金划转（账户内）
