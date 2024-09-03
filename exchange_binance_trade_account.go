@@ -504,49 +504,73 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 				})
 			}
 		}
-		crossedMarginRes, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginAccount().Do()
+	case BN_AC_MARGIN_CROSSED:
+		res, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginAccount().Do()
 		if err != nil {
 			return nil, err
 		}
 
-		for _, a := range crossedMarginRes.UserAssets {
+		for _, a := range res.UserAssets {
 			if len(currencies) == 0 || stringInSlice(a.Asset, currencies) {
-				found := false
-				for k, v := range assetList {
-					if a.Asset == v.Asset {
-						assetList[k].SpotMarginCrossedBalance = a.NetAsset
-						assetList[k].SpotMarginCrossedAvailable = a.Free
-						found = true
-						break
-					}
-				}
-				if !found {
-					assetList = append(assetList, &Asset{
-						Exchange:                   b.ExchangeType().String(), //交易所
-						AccountType:                accountType,               //账户类型
-						Asset:                      a.Asset,                   //资产
-						SpotMarginCrossedBalance:   a.NetAsset,                // 现货杠杆账户余额
-						SpotMarginCrossedAvailable: a.Free,                    // 现货杠杆账户可用余额
-						UpdateTime:                 time.Now().UnixMilli(),
-					})
-				}
+				free, _ := decimal.NewFromString(a.Free)
+				lock, _ := decimal.NewFromString(a.Locked)
+				walletBalance := free.Add(lock)
+				assetList = append(assetList, &Asset{
+					Exchange:      b.ExchangeType().String(), //交易所
+					AccountType:   accountType,               //账户类型
+					Asset:         a.Asset,                   //资产
+					Free:          a.Free,                    //可用余额
+					Locked:        a.Locked,                  //冻结余额
+					WalletBalance: walletBalance.String(),    //钱包余额
+					UpdateTime:    time.Now().UnixMilli(),
+				})
 			}
 		}
-
-		isolatedMarginRes, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginIsolatedAccount().Do()
+	case BN_AC_MARGIN_ISOLATED:
+		var symbolList []string
+		for _, c := range currencies {
+			// example: c = btcusdt-btc
+			split := strings.Split(c, "-")
+			symbol := split[0]
+			symbolList = append(symbolList, symbol)
+		}
+		symbols := strings.Join(symbolList, ",")
+		res, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginIsolatedAccount().
+			Symbols(symbols).
+			Do()
 		if err != nil {
 			return nil, err
 		}
-		for _, a := range isolatedMarginRes.Assets {
-			if len(currencies) == 0 || stringInSlice(a.BaseAsset.Asset, currencies) || stringInSlice(a.QuoteAsset.Asset, currencies) {
+		for _, a := range res.Assets {
+			asset := a.Symbol + "-" + a.BaseAsset.Asset
+			if len(currencies) == 0 || stringInSlice(asset, currencies) {
+				free, _ := decimal.NewFromString(a.BaseAsset.Free)    // 最大可用资产
+				net, _ := decimal.NewFromString(a.BaseAsset.NetAsset) // 净资产
+				lock := net.Sub(free)
 				assetList = append(assetList, &Asset{
-					Exchange:                               b.ExchangeType().String(), //交易所
-					AccountType:                            accountType,               //账户类型
-					Asset:                                  a.Symbol,                  //资产
-					SpotMarginIsolatedBaseSymbolBalance:    a.BaseAsset.NetAsset,      // 现货逐仓账户Base余额
-					SpotMarginIsolatedBaseSymbolAvailable:  a.BaseAsset.Free,          // 现货逐仓账户Base可用余额
-					SpotMarginIsolatedQuoteSymbolBalance:   a.QuoteAsset.NetAsset,     // 现货逐仓账户Quote余额
-					SpotMarginIsolatedQuoteSymbolAvailable: a.QuoteAsset.Free,         // 现货逐仓账户Quote可用余额
+					Exchange:      b.ExchangeType().String(), //交易所
+					AccountType:   accountType,               //账户类型
+					Asset:         asset,                     //资产
+					Free:          free.String(),             //可用余额
+					Locked:        lock.String(),             //冻结余额
+					WalletBalance: net.String(),              //钱包余额
+					UpdateTime:    time.Now().UnixMilli(),
+				})
+			}
+
+			asset = a.Symbol + "-" + a.QuoteAsset.Asset
+			if len(currencies) == 0 || stringInSlice(asset, currencies) {
+				free, _ := decimal.NewFromString(a.QuoteAsset.Free)    // 最大可用资产
+				net, _ := decimal.NewFromString(a.QuoteAsset.NetAsset) // 净资产
+				lock := net.Sub(free)
+				assetList = append(assetList, &Asset{
+					Exchange:      b.ExchangeType().String(), //交易所
+					AccountType:   accountType,               //账户类型
+					Asset:         asset,                     //资产
+					Free:          free.String(),             //可用余额
+					Locked:        lock.String(),             //冻结余额
+					WalletBalance: net.String(),              //钱包余额
+					UpdateTime:    time.Now().UnixMilli(),
 				})
 			}
 		}

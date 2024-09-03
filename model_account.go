@@ -33,30 +33,29 @@ type Position struct {
 }
 
 type Asset struct {
-	Exchange                               string `json:"exchange"`                             //交易所
-	AccountType                            string `json:"accountType"`                          //账户类型
-	Asset                                  string `json:"asset"`                                //资产
-	Free                                   string `json:"free"`                                 //可用余额
-	Locked                                 string `json:"locked"`                               //冻结余额
-	WalletBalance                          string `json:"walletBalance"`                        //余额
-	UnrealizedProfit                       string `json:"unrealizedProfit"`                     //未实现盈亏
-	MarginBalance                          string `json:"marginBalance"`                        //保证金余额
-	MaintMargin                            string `json:"maintMargin"`                          //维持保证金
-	InitialMargin                          string `json:"initialMargin"`                        //当前所需起始保证金
-	PositionInitialMargin                  string `json:"positionInitialMargin"`                //持仓所需起始保证金(基于最新标记价格)
-	OpenOrderInitialMargin                 string `json:"openOrderInitialMargin"`               //当前挂单所需起始保证金(基于最新标记价格)
-	CrossWalletBalance                     string `json:"crossWalletBalance"`                   //全仓账户余额
-	CrossUnPnl                             string `json:"crossUnPnl"`                           //全仓持仓未实现盈亏
-	AvailableBalance                       string `json:"availableBalance"`                     //可用余额
-	MaxWithdrawAmount                      string `json:"maxWithdrawAmount"`                    //最大可转出余额
-	MarginAvailable                        bool   `json:"marginAvailable"`                      //否可用作联合保证金
-	SpotMarginCrossedBalance               string `json:"spot_margin_crossed_balance"`          // 现货杠杆账户余额
-	SpotMarginCrossedAvailable             string `json:"spot_margin_crossed_available"`        // 现货杠杆账户可用余额
-	SpotMarginIsolatedBaseSymbolBalance    string `json:"spot_margin_isolated_balance"`         // 现货逐仓账户Base币种余额，如BTC
-	SpotMarginIsolatedBaseSymbolAvailable  string `json:"spot_margin_isolated_available"`       // 现货逐仓账户Base可用余额，如BTC
-	SpotMarginIsolatedQuoteSymbolBalance   string `json:"spot_margin_isolated_quote_balance"`   // 现货逐仓账户Quote币种余额，如USDT
-	SpotMarginIsolatedQuoteSymbolAvailable string `json:"spot_margin_isolated_quote_available"` // 现货逐仓账户Quote可用余额，如USDT
-	UpdateTime                             int64  `json:"updateTime"`                           //更新时间
+	Exchange               string `json:"exchange"`               //交易所
+	AccountType            string `json:"accountType"`            //账户类型
+	Asset                  string `json:"asset"`                  //资产
+	Free                   string `json:"free"`                   //可用余额
+	Locked                 string `json:"locked"`                 //冻结余额
+	WalletBalance          string `json:"walletBalance"`          //余额
+	UnrealizedProfit       string `json:"unrealizedProfit"`       //未实现盈亏
+	MarginBalance          string `json:"marginBalance"`          //保证金余额
+	MaintMargin            string `json:"maintMargin"`            //维持保证金
+	InitialMargin          string `json:"initialMargin"`          //当前所需起始保证金
+	PositionInitialMargin  string `json:"positionInitialMargin"`  //持仓所需起始保证金(基于最新标记价格)
+	OpenOrderInitialMargin string `json:"openOrderInitialMargin"` //当前挂单所需起始保证金(基于最新标记价格)
+	CrossWalletBalance     string `json:"crossWalletBalance"`     //全仓账户余额
+	CrossUnPnl             string `json:"crossUnPnl"`             //全仓持仓未实现盈亏
+	AvailableBalance       string `json:"availableBalance"`       //可用余额
+	MaxWithdrawAmount      string `json:"maxWithdrawAmount"`      //最大可转出余额
+	MarginAvailable        bool   `json:"marginAvailable"`        //否可用作联合保证金
+	//SpotMarginIsolatedBaseAssetBalance   string `json:"spot_margin_isolated_balance"`   // 现货逐仓账户Base币种余额，如BTC
+	//SpotMarginIsolatedBaseAssetAvailable string `json:"spot_margin_isolated_available"` // 现货逐仓账户Base可用余额，如BTC
+	//SpotMarginIsolatedBaseSymbol
+	//SpotMarginIsolatedQuoteSymbolBalance   string `json:"spot_margin_isolated_quote_balance"`   // 现货逐仓账户Quote币种余额，如USDT
+	//SpotMarginIsolatedQuoteSymbolAvailable string `json:"spot_margin_isolated_quote_available"` // 现货逐仓账户Quote可用余额，如USDT
+	UpdateTime int64 `json:"updateTime"` //更新时间
 }
 
 // 资金划转（账户内）
