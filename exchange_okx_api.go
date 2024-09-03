@@ -9,9 +9,9 @@ import (
 func (o *OkxTradeEngine) apiQueryOpenOrders(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrdersPendingAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
 	api := client.NewPrivateRestTradeOrdersPending()
-	if req.AccountType != "" {
-		api.InstType(req.AccountType)
-	}
+	//if req.AccountType != "" {
+	//	api.InstType(req.AccountType)
+	//}
 	if req.Symbol != "" {
 		api.InstId(req.Symbol)
 	}
@@ -30,7 +30,13 @@ func (o *OkxTradeEngine) apiQueryOrder(req *QueryOrderParam) *myokxapi.PrivateRe
 }
 func (o *OkxTradeEngine) apiQueryOrders(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderHistoryAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-	api := client.NewPrivateRestTradeOrderHistory().InstType(req.AccountType)
+	api := client.NewPrivateRestTradeOrderHistory()
+	if req.AccountType == OKX_AC_SPOT.String() && req.IsMargin {
+		api.InstType(OKX_AC_MARGIN.String())
+	} else {
+		api.InstType(req.AccountType)
+	}
+
 	if req.Symbol != "" {
 		api.InstId(req.Symbol)
 	}

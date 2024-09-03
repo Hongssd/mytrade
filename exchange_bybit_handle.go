@@ -11,6 +11,7 @@ func (b *BybitTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam,
 	var orders []*Order
 	for _, order := range res.List {
 		var isMargin bool
+
 		if order.IsLeverage == "1" {
 			isMargin = true
 		}
@@ -49,12 +50,16 @@ func (b *BybitTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam,
 func (b *BybitTradeEngine) handleOrdersFromQueryOrders(req *QueryOrderParam, res mybybitapi.OrderHistoryRes) []*Order {
 	var orders []*Order
 	for _, order := range res.List {
+		var isMargin bool
+		if order.IsLeverage == "1" {
+			isMargin = true
+		}
 		orders = append(orders, &Order{
 			Exchange:      BYBIT_NAME.String(),
 			AccountType:   req.AccountType,
 			Symbol:        order.Symbol,
-			IsMargin:      req.IsMargin,
-			IsIsolated:    req.IsIsolated,
+			IsMargin:      isMargin,
+			IsIsolated:    false,
 			OrderId:       order.OrderId,
 			ClientOrderId: order.OrderLinkId,
 			Price:         order.Price,

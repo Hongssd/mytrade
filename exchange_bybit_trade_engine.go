@@ -66,7 +66,8 @@ func (b *BybitTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	d, _ := json.Marshal(res)
+	log.Warn(string(d))
 	orders := b.handleOrdersFromQueryOpenOrders(req, res.Result)
 	if len(orders) != 1 {
 		return nil, ErrorOrderNotFound
