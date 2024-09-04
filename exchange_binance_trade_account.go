@@ -533,6 +533,7 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 					AccountType:       accountType,               //账户类型
 					Asset:             a.Asset,                   //资产
 					Borrowed:          borrowed.String(),         //已借
+					Interest:          a.Interest,                //利息
 					Free:              a.Free,                    //可用余额
 					Locked:            a.Locked,                  //冻结余额
 					WalletBalance:     walletBalance.String(),    //钱包余额
@@ -586,6 +587,7 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 					AccountType:       accountType,               //账户类型
 					Asset:             asset,                     //资产
 					Borrowed:          borrowed.String(),         //已借
+					Interest:          interest.String(),         //利息
 					Free:              free.String(),             //可用余额
 					Locked:            lock.String(),             //冻结余额
 					WalletBalance:     net.String(),              //钱包余额
@@ -621,6 +623,7 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 					AccountType:       accountType,               //账户类型
 					Asset:             asset,                     //资产
 					Borrowed:          borrowed.String(),         //已借
+					Interest:          interest.String(),         //利息
 					Free:              free.String(),             //可用余额
 					Locked:            lock.String(),             //冻结余额
 					WalletBalance:     net.String(),              //钱包余额
