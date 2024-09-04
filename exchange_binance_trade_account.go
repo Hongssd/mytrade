@@ -504,6 +504,134 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 				})
 			}
 		}
+	case BN_AC_MARGIN_CROSSED:
+		res, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginAccount().Do()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, a := range res.UserAssets {
+			if len(currencies) == 0 || stringInSlice(a.Asset, currencies) {
+				free, _ := decimal.NewFromString(a.Free)
+				lock, _ := decimal.NewFromString(a.Locked)
+				borrowed, _ := decimal.NewFromString(a.Borrowed)
+				risk := decimal.RequireFromString(res.TotalNetAssetOfBtc).Div(decimal.RequireFromString(res.TotalLiabilityOfBtc))
+
+				var maxTransferable decimal.Decimal
+				if risk.LessThan(decimal.NewFromFloat(2)) {
+					maxTransferable = decimal.Zero
+				} else {
+					maxTransferable = decimal.RequireFromString(a.NetAsset).Sub(decimal.RequireFromString(a.Borrowed).Add(decimal.RequireFromString(a.Interest)))
+					if maxTransferable.LessThan(decimal.Zero) {
+						maxTransferable = decimal.Zero
+					}
+				}
+
+				walletBalance := free.Add(lock)
+				assetList = append(assetList, &Asset{
+					Exchange:          b.ExchangeType().String(), //交易所
+					AccountType:       accountType,               //账户类型
+					Asset:             a.Asset,                   //资产
+					Borrowed:          borrowed.String(),         //已借
+					Interest:          a.Interest,                //利息
+					Free:              a.Free,                    //可用余额
+					Locked:            a.Locked,                  //冻结余额
+					WalletBalance:     walletBalance.String(),    //钱包余额
+					MaxWithdrawAmount: maxTransferable.String(),  //最大可转
+					UpdateTime:        time.Now().UnixMilli(),
+				})
+			}
+		}
+	case BN_AC_MARGIN_ISOLATED:
+		var symbolList []string
+		for _, c := range currencies {
+			// example: c = btcusdt-btc
+			split := strings.Split(c, "/")
+			symbol := split[0]
+			symbolList = append(symbolList, symbol)
+		}
+		symbols := strings.Join(symbolList, ",")
+		res, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginIsolatedAccount().
+			Symbols(symbols).
+			Do()
+		if err != nil {
+			return nil, err
+		}
+		for _, a := range res.Assets {
+			asset := a.Symbol + "/" + a.BaseAsset.Asset
+			indexPrice, _ := decimal.NewFromString(a.IndexPrice)
+			// BaseAsset
+			if len(currencies) == 0 || stringInSlice(asset, currencies) {
+				free, _ := decimal.NewFromString(a.BaseAsset.Free)         // 最大可用资产
+				net, _ := decimal.NewFromString(a.BaseAsset.NetAsset)      // 净资产
+				borrowed, _ := decimal.NewFromString(a.BaseAsset.Borrowed) // 已借
+				interest, _ := decimal.NewFromString(a.BaseAsset.Interest) // 利息
+				lock := net.Sub(free)                                      // 冻结
+
+				// 质押率 = 抵押价值 / (负债 + 未归还利息)
+				// 质押率 >= 2时能转出，因此 最大可转出 = 可用余额 - 质押率小于2的部分
+
+				quoteBorrowed, quoteInterest := decimal.RequireFromString(a.QuoteAsset.Borrowed), decimal.RequireFromString(a.QuoteAsset.Interest)
+				totalQuoteBorrowedAndInterest := quoteBorrowed.Add(quoteInterest).Mul(indexPrice)
+				minCollateralValue := decimal.NewFromFloat(2).Mul(borrowed.Add(interest).Add(totalQuoteBorrowedAndInterest)) // 最小抵押价值(质押率<2的部分)
+				QuoteAssetFree, _ := decimal.NewFromString(a.QuoteAsset.Free)                                                // 计算抵押价值
+				QuoteCollateralValue := indexPrice.Mul(QuoteAssetFree)                                                       // 根据市价计算抵押价值
+				var maxTransferable decimal.Decimal
+				if QuoteCollateralValue.GreaterThan(minCollateralValue) {
+					maxTransferable = free
+				} else {
+					maxTransferable = free.Sub(minCollateralValue)
+				}
+				assetList = append(assetList, &Asset{
+					Exchange:          b.ExchangeType().String(), //交易所
+					AccountType:       accountType,               //账户类型
+					Asset:             asset,                     //资产
+					Borrowed:          borrowed.String(),         //已借
+					Interest:          interest.String(),         //利息
+					Free:              free.String(),             //可用余额
+					Locked:            lock.String(),             //冻结余额
+					WalletBalance:     net.String(),              //钱包余额
+					MaxWithdrawAmount: maxTransferable.String(),  //最大可转出余额
+					UpdateTime:        time.Now().UnixMilli(),
+				})
+			}
+
+			// QuoteAsset
+			asset = a.Symbol + "/" + a.QuoteAsset.Asset
+			if len(currencies) == 0 || stringInSlice(asset, currencies) {
+				free, _ := decimal.NewFromString(a.QuoteAsset.Free)         // 最大可用资产
+				net, _ := decimal.NewFromString(a.QuoteAsset.NetAsset)      // 净资产
+				borrowed, _ := decimal.NewFromString(a.QuoteAsset.Borrowed) // 已借
+				interest, _ := decimal.NewFromString(a.QuoteAsset.Interest) // 利息
+				lock := net.Sub(free)                                       // 冻结
+
+				// 质押率 = 抵押价值 / (负债 + 未归还利息)
+				// 质押率 >= 2时能转出，因此 最大可转出 = 可用余额 - 质押率小于2的部分
+				baseBorrowed, baseInterest := decimal.RequireFromString(a.BaseAsset.Borrowed), decimal.RequireFromString(a.BaseAsset.Interest)
+				totalBaseBorrowedAndInterest := baseBorrowed.Add(baseInterest).Mul(indexPrice)
+				minCollateralValue := decimal.NewFromFloat(2).Mul(borrowed.Add(interest).Add(totalBaseBorrowedAndInterest)) // 最小抵押价值(质押率<2的部分)
+				QuoteCollateralValue, _ := decimal.NewFromString(a.BaseAsset.Free)                                          // 根据实时市价计算抵押价值
+
+				var maxTransferable decimal.Decimal
+				if QuoteCollateralValue.Div(indexPrice).GreaterThanOrEqual(minCollateralValue) {
+					maxTransferable = free
+				} else {
+					maxTransferable = free.Sub(minCollateralValue)
+				}
+				assetList = append(assetList, &Asset{
+					Exchange:          b.ExchangeType().String(), //交易所
+					AccountType:       accountType,               //账户类型
+					Asset:             asset,                     //资产
+					Borrowed:          borrowed.String(),         //已借
+					Interest:          interest.String(),         //利息
+					Free:              free.String(),             //可用余额
+					Locked:            lock.String(),             //冻结余额
+					WalletBalance:     net.String(),              //钱包余额
+					MaxWithdrawAmount: maxTransferable.String(),  //最大可转出余额
+					UpdateTime:        time.Now().UnixMilli(),
+				})
+			}
+		}
 	case BN_AC_FUTURE:
 		res, err := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureAccount().Do()
 		if err != nil {
