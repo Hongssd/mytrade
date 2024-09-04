@@ -36,6 +36,7 @@ type Asset struct {
 	Exchange               string `json:"exchange"`               //交易所
 	AccountType            string `json:"accountType"`            //账户类型
 	Asset                  string `json:"asset"`                  //资产
+	Borrowed               string `json:"borrowed"`               //已借
 	Free                   string `json:"free"`                   //可用余额
 	Locked                 string `json:"locked"`                 //冻结余额
 	WalletBalance          string `json:"walletBalance"`          //余额
