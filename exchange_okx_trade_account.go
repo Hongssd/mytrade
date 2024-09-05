@@ -293,8 +293,8 @@ func (o OkxTradeAccount) GetAssets(accountType string, currencies ...string) ([]
 					Asset:                  d.Ccy,
 					Free:                   d.AvailBal,
 					Locked:                 d.OrdFrozen,
-					Borrowed:               d.Liab,               //计息，应扣未扣利息 值为正数，如 9.01 适用于跨币种保证金模式/组合保证金模式
-					Interest:               d.Interest,           //币种利息
+					Borrowed:               d.Liab,               //币种负债额 值为正数，如 21625.64 适用于跨币种保证金模式/组合保证金模式
+					Interest:               d.Interest,           //计息，应扣未扣利息 值为正数，如 9.01 适用于跨币种保证金模式/组合保证金模式
 					WalletBalance:          d.CashBal,            //钱包余额=币种余额
 					UnrealizedProfit:       d.Upl,                //未实现盈亏
 					MarginBalance:          d.Eq,                 //保证金余额=钱包余额+未实现盈亏
