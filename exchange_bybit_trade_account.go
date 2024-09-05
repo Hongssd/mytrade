@@ -389,6 +389,8 @@ func (b BybitTradeAccount) GetAssets(accountType string, currencies ...string) (
 				Asset:                  a.Coin,
 				Free:                   avb.String(),
 				Locked:                 a.Locked,
+				Borrowed:               a.BorrowAmount,
+				Interest:               a.AccruedInterest,
 				WalletBalance:          a.WalletBalance,
 				UnrealizedProfit:       a.UnrealisedPnl,
 				MarginBalance:          a.Equity,
