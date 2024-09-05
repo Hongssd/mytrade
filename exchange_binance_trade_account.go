@@ -518,17 +518,13 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 				totalNetAssetOfBtc, _ := decimal.NewFromString(res.TotalNetAssetOfBtc)
 				totalLiabilityOfBtc, _ := decimal.NewFromString(res.TotalLiabilityOfBtc)
 
-				var risk decimal.Decimal
+				risk := decimal.NewFromFloat(999)
 				if !totalLiabilityOfBtc.IsZero() {
-					risk = totalNetAssetOfBtc.Div(totalLiabilityOfBtc)
-				} else {
-					risk = decimal.Zero
+					risk = totalNetAssetOfBtc.Div(totalLiabilityOfBtc).Add(decimal.NewFromFloat(1))
 				}
 
 				var maxTransferable decimal.Decimal
-				if risk.LessThan(decimal.NewFromFloat(2)) {
-					maxTransferable = decimal.Zero
-				} else {
+				if risk.GreaterThanOrEqual(decimal.NewFromFloat(2)) {
 					maxTransferable = decimal.RequireFromString(a.NetAsset).Sub(decimal.RequireFromString(a.Borrowed).Add(decimal.RequireFromString(a.Interest)))
 					if maxTransferable.LessThan(decimal.Zero) {
 						maxTransferable = decimal.Zero
