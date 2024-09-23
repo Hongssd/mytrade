@@ -5,7 +5,7 @@ import (
 )
 
 type BybitExchangeInfo struct {
-	exchangeBase
+	ExchangeBase
 	isLoaded               bool
 	spotSymbolMap          *MySyncMap[string, *mybybitapi.InstrumentsInfoResRow]
 	linearSymbolMap        *MySyncMap[string, *mybybitapi.InstrumentsInfoResRow]

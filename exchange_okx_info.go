@@ -5,7 +5,7 @@ import (
 )
 
 type OkxExchangeInfo struct {
-	exchangeBase
+	ExchangeBase
 	isLoaded               bool
 	spotSymbolMap          *MySyncMap[string, *myokxapi.PublicRestPublicInstrumentsResRow]
 	swapSymbolMap          *MySyncMap[string, *myokxapi.PublicRestPublicInstrumentsResRow]

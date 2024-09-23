@@ -9,7 +9,7 @@ import (
 )
 
 type BybitTradeAccount struct {
-	exchangeBase
+	ExchangeBase
 
 	bybitConverter BybitEnumConverter
 	apiKey         string

@@ -1,30 +1,30 @@
 package mytrade
 
-type exchangeBase struct {
+type ExchangeBase struct {
 	exchangeType ExchangeType
 }
 
-func (e *exchangeBase) ExchangeType() ExchangeType {
+func (e *ExchangeBase) ExchangeType() ExchangeType {
 	return e.exchangeType
 }
 
 func NewBinanceExchange() TradeExchange {
 	return &BinanceExchange{
-		exchangeBase: exchangeBase{
+		ExchangeBase: ExchangeBase{
 			exchangeType: BINANCE_NAME,
 		},
 	}
 }
 func NewOkxExchange() TradeExchange {
 	return &OkxExchange{
-		exchangeBase: exchangeBase{
+		ExchangeBase: ExchangeBase{
 			exchangeType: OKX_NAME,
 		},
 	}
 }
 func NewBybitExchange() TradeExchange {
 	return &BybitExchange{
-		exchangeBase: exchangeBase{
+		ExchangeBase: ExchangeBase{
 			exchangeType: BYBIT_NAME,
 		},
 	}

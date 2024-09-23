@@ -7,7 +7,7 @@ import (
 )
 
 type BybitTradeEngine struct {
-	exchangeBase
+	ExchangeBase
 
 	bybitConverter BybitEnumConverter
 

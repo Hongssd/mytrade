@@ -7,7 +7,7 @@ import (
 )
 
 type OkxTradeEngine struct {
-	exchangeBase
+	ExchangeBase
 
 	okxConverter OkxEnumConverter
 	apiKey       string
