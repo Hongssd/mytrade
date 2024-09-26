@@ -25,6 +25,7 @@ type Order struct {
 	UpdateTime    int64        `json:"updateTime"`    //更新时间
 	RealizedPnl   string       `json:"fillPnl"`       //成交盈亏
 
+	IsAlgo               bool                      `json:"isAlgo"`               //是否是策略订单
 	TriggerPrice         string                    `json:"triggerPrice"`         //触发价格
 	TriggerType          OrderTriggerType          `json:"triggerType"`          //触发类型
 	TriggerConditionType OrderTriggerConditionType `json:"triggerConditionType"` //触发条件类型

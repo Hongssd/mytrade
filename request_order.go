@@ -2,7 +2,7 @@ package mytrade
 
 import "github.com/shopspring/decimal"
 
-type OrderParam struct {
+type Param struct {
 
 	// 以下是必填参数
 	AccountType string          //账户类型
@@ -11,6 +11,7 @@ type OrderParam struct {
 	Quantity    decimal.Decimal //数量
 	OrderType   OrderType       //订单类型
 	OrderSide   OrderSide       //买卖方向
+	IsAlgo      bool            // 是否是策略订单
 
 	// 以下是可选参数
 	OrderId          string       //交易所自动生成的订单ID
@@ -29,6 +30,8 @@ type OrderParam struct {
 	TriggerPrice decimal.Decimal  //止盈止损触发价
 	TriggerType  OrderTriggerType //触发类型
 }
+
+type OrderParam Param
 
 func (o *OrderParam) SetAccountType(accountType string) *OrderParam {
 	o.AccountType = accountType

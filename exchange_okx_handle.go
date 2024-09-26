@@ -352,6 +352,74 @@ func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order 
 
 }
 
+// 策略订单返回结果处理
+func (o *OkxTradeEngine) handleOrderFromOrderAlgoCreate(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderAlgoPostRes]) (*Order, error) {
+	if len(res.Data) != 1 {
+		return nil, errors.New("api return invalid data")
+	}
+	if res.Data[0].SCode != "0" {
+		return nil, fmt.Errorf("[%s]%s: {[%s]:%s}", res.Code, res.Msg, res.Data[0].SCode, res.Data[0].SMsg)
+	}
+	r := res.Data[0]
+
+	order := &Order{
+		Exchange:      OKX_NAME.String(),
+		OrderId:       r.AlgoId,
+		ClientOrderId: r.AlgoClOrdId,
+		AccountType:   req.AccountType,
+		Symbol:        req.Symbol,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
+		IsAlgo:        true,
+	}
+
+	return order, nil
+}
+func (o *OkxTradeEngine) handleOrderFromOrderAlgoAmend(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeAmendOrderAlgoRes]) (*Order, error) {
+	if len(res.Data) != 1 {
+		return nil, errors.New("api return invalid data")
+	}
+	if res.Data[0].SCode != "0" {
+		return nil, fmt.Errorf("[%s]%s: {[%s]:%s}", res.Code, res.Msg, res.Data[0].SCode, res.Data[0].SMsg)
+	}
+	r := res.Data[0]
+
+	order := &Order{
+		Exchange:      OKX_NAME.String(),
+		OrderId:       r.AlgoId,
+		ClientOrderId: r.AlgoClOrdId,
+		AccountType:   req.AccountType,
+		Symbol:        req.Symbol,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
+		IsAlgo:        true,
+	}
+
+	return order, nil
+}
+func (o *OkxTradeEngine) handleOrderFromOrderAlgoCancel(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeCancelOrderAlgoRes]) (*Order, error) {
+	if len(res.Data) != 1 {
+		return nil, errors.New("api return invalid data")
+	}
+	if res.Data[0].SCode != "0" {
+		//return nil, fmt.Errorf("[%s]%s: {[%s]:%s}", res.Code, res.Msg, res.Data[0].SCode, res.Data[0].SMsg)
+		return nil, fmt.Errorf("[%s]%s: {[%s]:}", res.Code, res.Msg, res.Data[0].SCode)
+	}
+	r := res.Data[0]
+
+	order := &Order{
+		Exchange:      OKX_NAME.String(),
+		OrderId:       r.AlgoId,
+		ClientOrderId: r.AlgoClOrdId,
+		AccountType:   req.AccountType,
+		Symbol:        req.Symbol,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
+	}
+
+	return order, nil
+}
+
 // 策略订单推送处理
 func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo) *Order {
 
@@ -423,6 +491,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 		UpdateTime:    stringToInt64(order.UTime),
 		RealizedPnl:   decimal.Zero.String(),
 
+		IsAlgo:               true,
 		TriggerPrice:         triggerPx.String(),
 		TriggerType:          triggerType,
 		TriggerConditionType: triggerConditionType,
