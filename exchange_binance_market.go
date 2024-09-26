@@ -6,7 +6,7 @@ import (
 )
 
 type BinanceMarketData struct {
-	exchangeBase
+	ExchangeBase
 }
 
 func (m *BinanceMarketData) NewKlineReq() *KlineParam {

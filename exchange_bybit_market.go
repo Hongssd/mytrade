@@ -6,7 +6,7 @@ import (
 )
 
 type BybitMarketData struct {
-	exchangeBase
+	ExchangeBase
 }
 
 func (m *BybitMarketData) NewKlineReq() *KlineParam {

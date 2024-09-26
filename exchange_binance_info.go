@@ -6,7 +6,7 @@ import (
 )
 
 type BinanceExchangeInfo struct {
-	exchangeBase
+	ExchangeBase
 	isLoaded              bool
 	spotSymbolMap         *MySyncMap[string, *mybinanceapi.SpotExchangeInfoResSymbol]
 	futureSymbolMap       *MySyncMap[string, *mybinanceapi.FutureExchangeInfoResSymbol]

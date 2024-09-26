@@ -8,7 +8,7 @@ import (
 )
 
 type BinanceTradeEngine struct {
-	exchangeBase
+	ExchangeBase
 
 	bnConverter BinanceEnumConverter
 	apiKey      string

@@ -6,7 +6,7 @@ import (
 )
 
 type OkxMarketData struct {
-	exchangeBase
+	ExchangeBase
 }
 
 func (m *OkxMarketData) NewKlineReq() *KlineParam {

@@ -1,7 +1,7 @@
 package mytrade
 
 type BybitExchange struct {
-	exchangeBase
+	ExchangeBase
 }
 
 func (b *BybitExchange) NewExchangeInfo() TradeExchangeInfo {
@@ -18,7 +18,7 @@ func (b *BybitExchange) NewMarketData() TradeMarketData {
 // 获取交易引擎
 func (b *BybitExchange) NewTradeEngine(apiKey, secretKey, passphrase string) TradeEngine {
 	return &BybitTradeEngine{
-		exchangeBase: b.exchangeBase,
+		ExchangeBase: b.ExchangeBase,
 		apiKey:       apiKey,
 		secretKey:    secretKey,
 	}
@@ -27,7 +27,7 @@ func (b *BybitExchange) NewTradeEngine(apiKey, secretKey, passphrase string) Tra
 // 获取交易账户
 func (b *BybitExchange) NewTradeAccount(apiKey, secretKey, passphrase string) TradeAccount {
 	return &BybitTradeAccount{
-		exchangeBase: b.exchangeBase,
+		ExchangeBase: b.ExchangeBase,
 		apiKey:       apiKey,
 		secretKey:    secretKey,
 	}
