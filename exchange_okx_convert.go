@@ -40,6 +40,7 @@ func (c *OkxEnumConverter) FromOKXOrderType(t string) (OrderType, TimeInForce) {
 		return ORDER_TYPE_LIMIT, TIME_IN_FORCE_POST_ONLY
 	default:
 		return ORDER_TYPE_UNKNOWN, TIME_IN_FORCE_UNKNOWN
+
 	}
 }
 func (c *OkxEnumConverter) ToOKXOrderType(t OrderType, t2 TimeInForce) string {

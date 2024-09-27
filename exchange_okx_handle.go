@@ -430,56 +430,14 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res
 	if len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
-	r := res.Data[0]
-
-	orderType, timeInForce := o.okxConverter.FromOKXOrderType(r.OrdType)
-	var IsMargin, IsIsolated bool
-	if r.TdMode != "cash" {
-		IsMargin = true
-		switch r.TdMode {
-		case "cross":
-			IsIsolated = false
-		case "isolated":
-			IsIsolated = true
-		}
-	} else {
-		IsMargin = false
-		IsIsolated = false
-	}
-	order := &Order{
-		Exchange:      OKX_NAME.String(),
-		OrderId:       r.AlgoId,
-		ClientOrderId: r.AlgoClOrdId,
-		AccountType:   r.InstType,
-		Symbol:        r.InstId,
-		IsMargin:      IsMargin,
-		IsIsolated:    IsIsolated,
-		IsAlgo:        req.IsAlgo,
-		Price:         r.Last,
-		Quantity:      r.Sz,
-		ExecutedQty:   r.ActualSz,
-		AvgPrice:      r.ActualPx,
-		Status:        o.okxConverter.FromOKXOrderStatus(r.State),
-		Type:          orderType,
-		Side:          o.okxConverter.FromOKXOrderSide(r.Side),
-		PositionSide:  o.okxConverter.FromOKXPositionSide(r.PosSide),
-		TimeInForce:   timeInForce,
-		ReduceOnly:    stringToBool(r.ReduceOnly),
-		CreateTime:    stringToInt64(r.CTime),
-		UpdateTime:    stringToInt64(r.UTime),
-	}
-	return order, nil
-}
-
-// 策略订单推送处理
-func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo) *Order {
-
-	orderType, timeInForce := o.okxConverter.FromOKXOrderType(order.OrdType)
-
+	order := res.Data[0]
+	var orderType OrderType
+	timeInForce := TIME_IN_FORCE_GTC
 	var px decimal.Decimal
 	var triggerPx decimal.Decimal
 	var triggerType OrderTriggerType
 	var triggerConditionType OrderTriggerConditionType
+
 	switch order.ActualSide {
 	case OKX_ORDER_ALGO_ACTUAL_SIDE_TAKE_PROFIT:
 		px, _ = decimal.NewFromString(order.TpOrdPx)
@@ -505,6 +463,97 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 			//止损卖出 价格下穿触发
 			triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
 		}
+	}
+
+	if triggerPx.Equal(decimal.NewFromInt(-1)) {
+		orderType = ORDER_TYPE_MARKET
+	} else {
+		orderType = ORDER_TYPE_LIMIT
+	}
+
+	var IsMargin, IsIsolated bool
+	if order.TdMode != "cash" {
+		IsMargin = true
+		switch order.TdMode {
+		case "cross":
+			IsIsolated = false
+		case "isolated":
+			IsIsolated = true
+		}
+	} else {
+		IsMargin = false
+		IsIsolated = false
+	}
+
+	return &Order{
+		Exchange:      OKX_NAME.String(),
+		Symbol:        order.InstId,
+		IsMargin:      IsMargin,
+		IsIsolated:    IsIsolated,
+		OrderId:       order.AlgoId,
+		ClientOrderId: order.AlgoClOrdId,
+		Price:         px.String(),
+		Quantity:      order.Sz,
+		ExecutedQty:   decimal.Zero.String(),
+		AvgPrice:      decimal.Zero.String(),
+		Status:        o.okxConverter.FromOKXOrderStatus(order.State),
+		Type:          orderType,
+		Side:          o.okxConverter.FromOKXOrderSide(order.Side),
+		PositionSide:  o.okxConverter.FromOKXPositionSide(order.PosSide),
+		TimeInForce:   timeInForce,
+		ReduceOnly:    stringToBool(order.ReduceOnly),
+		CreateTime:    stringToInt64(order.CTime),
+		UpdateTime:    stringToInt64(order.UTime),
+		RealizedPnl:   decimal.Zero.String(),
+
+		IsAlgo:               true,
+		TriggerPrice:         triggerPx.String(),
+		TriggerType:          triggerType,
+		TriggerConditionType: triggerConditionType,
+	}, nil
+}
+
+// 策略订单推送处理
+func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo) *Order {
+
+	var orderType OrderType
+	timeInForce := TIME_IN_FORCE_GTC
+	var px decimal.Decimal
+	var triggerPx decimal.Decimal
+	var triggerType OrderTriggerType
+	var triggerConditionType OrderTriggerConditionType
+
+	switch order.ActualSide {
+	case OKX_ORDER_ALGO_ACTUAL_SIDE_TAKE_PROFIT:
+		px, _ = decimal.NewFromString(order.TpOrdPx)
+		triggerPx, _ = decimal.NewFromString(order.TpTriggerPx)
+		triggerType = ORDER_TRIGGER_TYPE_TAKE_PROFIT
+
+		if order.Side == OKX_ORDER_SIDE_BUY {
+			//止盈买入 价格下穿触发
+			triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+		} else {
+			//止盈卖出 价格上穿触发
+			triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+		}
+	case OKX_ORDER_ALGO_ACTUAL_SIDE_STOP_LOSS:
+		px, _ = decimal.NewFromString(order.SlOrdPx)
+		triggerPx, _ = decimal.NewFromString(order.SlTriggerPx)
+		triggerType = ORDER_TRIGGER_TYPE_STOP_LOSS
+
+		if order.Side == OKX_ORDER_SIDE_BUY {
+			//止损买入 价格上穿触发
+			triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+		} else {
+			//止损卖出 价格下穿触发
+			triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+		}
+	}
+
+	if triggerPx.Equal(decimal.NewFromInt(-1)) {
+		orderType = ORDER_TYPE_MARKET
+	} else {
+		orderType = ORDER_TYPE_LIMIT
 	}
 
 	var IsMargin, IsIsolated bool
@@ -553,12 +602,51 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam
 		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
 	}
 	orders := make([]*Order, 0, len(res.Data))
-	for _, r := range res.Data {
-		orderType, timeInForce := o.okxConverter.FromOKXOrderType(r.OrdType)
+	for _, order := range res.Data {
+		var orderType OrderType
+		timeInForce := TIME_IN_FORCE_GTC
+		var px decimal.Decimal
+		var triggerPx decimal.Decimal
+		var triggerType OrderTriggerType
+		var triggerConditionType OrderTriggerConditionType
+
+		switch order.ActualSide {
+		case OKX_ORDER_ALGO_ACTUAL_SIDE_TAKE_PROFIT:
+			px, _ = decimal.NewFromString(order.TpOrdPx)
+			triggerPx, _ = decimal.NewFromString(order.TpTriggerPx)
+			triggerType = ORDER_TRIGGER_TYPE_TAKE_PROFIT
+
+			if order.Side == OKX_ORDER_SIDE_BUY {
+				//止盈买入 价格下穿触发
+				triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+			} else {
+				//止盈卖出 价格上穿触发
+				triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+			}
+		case OKX_ORDER_ALGO_ACTUAL_SIDE_STOP_LOSS:
+			px, _ = decimal.NewFromString(order.SlOrdPx)
+			triggerPx, _ = decimal.NewFromString(order.SlTriggerPx)
+			triggerType = ORDER_TRIGGER_TYPE_STOP_LOSS
+
+			if order.Side == OKX_ORDER_SIDE_BUY {
+				//止损买入 价格上穿触发
+				triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+			} else {
+				//止损卖出 价格下穿触发
+				triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+			}
+		}
+
+		if triggerPx.Equal(decimal.NewFromInt(-1)) {
+			orderType = ORDER_TYPE_MARKET
+		} else {
+			orderType = ORDER_TYPE_LIMIT
+		}
+
 		var IsMargin, IsIsolated bool
-		if r.TdMode != "cash" {
+		if order.TdMode != "cash" {
 			IsMargin = true
-			switch r.TdMode {
+			switch order.TdMode {
 			case "cross":
 				IsIsolated = false
 			case "isolated":
@@ -568,29 +656,34 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam
 			IsMargin = false
 			IsIsolated = false
 		}
-		order := &Order{
+
+		targetOrder := &Order{
 			Exchange:      OKX_NAME.String(),
-			OrderId:       r.AlgoId,
-			ClientOrderId: r.AlgoClOrdId,
-			AccountType:   r.InstType,
-			Symbol:        r.InstId,
+			Symbol:        order.InstId,
 			IsMargin:      IsMargin,
 			IsIsolated:    IsIsolated,
-			IsAlgo:        req.IsAlgo,
-			Price:         r.Last,
-			Quantity:      r.Sz,
+			OrderId:       order.AlgoId,
+			ClientOrderId: order.AlgoClOrdId,
+			Price:         px.String(),
+			Quantity:      order.Sz,
 			ExecutedQty:   decimal.Zero.String(),
 			AvgPrice:      decimal.Zero.String(),
-			Status:        o.okxConverter.FromOKXOrderStatus(r.State),
+			Status:        o.okxConverter.FromOKXOrderStatus(order.State),
 			Type:          orderType,
-			Side:          o.okxConverter.FromOKXOrderSide(r.Side),
-			PositionSide:  o.okxConverter.FromOKXPositionSide(r.PosSide),
+			Side:          o.okxConverter.FromOKXOrderSide(order.Side),
+			PositionSide:  o.okxConverter.FromOKXPositionSide(order.PosSide),
 			TimeInForce:   timeInForce,
-			ReduceOnly:    stringToBool(r.ReduceOnly),
-			CreateTime:    stringToInt64(r.CTime),
-			UpdateTime:    stringToInt64(r.UTime),
+			ReduceOnly:    stringToBool(order.ReduceOnly),
+			CreateTime:    stringToInt64(order.CTime),
+			UpdateTime:    stringToInt64(order.UTime),
+			RealizedPnl:   decimal.Zero.String(),
+
+			IsAlgo:               true,
+			TriggerPrice:         triggerPx.String(),
+			TriggerType:          triggerType,
+			TriggerConditionType: triggerConditionType,
 		}
-		orders = append(orders, order)
+		orders = append(orders, targetOrder)
 	}
 	return orders, nil
 }

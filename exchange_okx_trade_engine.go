@@ -139,11 +139,10 @@ func (o *OkxTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 	if err := o.accountTypePreCheck(req.AccountType); err != nil {
 		return nil, err
 	}
-	//获取API
-	algoApi := o.apiOrderAlgoCreate(req)
-	api := o.apiOrderCreate(req)
 
 	if req.IsAlgo {
+		//获取API
+		algoApi := o.apiOrderAlgoCreate(req)
 		b := o.getOrderAlgoBroadcastFromAccountType(req.AccountType)
 		//创建订阅
 		sub, err := o.newOrderAlgoSubscriber(b, req.ClientOrderId, req.AccountType, req.Symbol)
@@ -164,6 +163,8 @@ func (o *OkxTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 		//异步接收ws结果，1秒超时
 		return o.waitOrderAlgoSubscribeReturn(sub, 1*time.Second)
 	}
+
+	api := o.apiOrderCreate(req)
 
 	b := o.getBroadcastFromAccountType(req.AccountType)
 	//创建订阅

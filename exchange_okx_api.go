@@ -212,6 +212,7 @@ func (o *OkxTradeEngine) apiOrderAlgoCreate(req *OrderParam) *myokxapi.PrivateRe
 func (o *OkxTradeEngine) apiOrderAlgoAmend(req *OrderParam) *myokxapi.PrivateRestTradeAmendOrderAlgoAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
 
+	log.Warn(req)
 	api := client.NewPrivateRestTradeAmendOrderAlgo().
 		InstId(req.Symbol)
 	if req.OrderId != "" {
@@ -224,7 +225,7 @@ func (o *OkxTradeEngine) apiOrderAlgoAmend(req *OrderParam) *myokxapi.PrivateRes
 		api.NewSz(req.Quantity.String())
 	}
 
-	if req.TriggerType != ORDER_TRIGGER_TYPE_UNKNOWN && !req.TriggerPrice.IsZero() {
+	if req.TriggerType != ORDER_TRIGGER_TYPE_UNKNOWN {
 		switch req.TriggerType {
 		case ORDER_TRIGGER_TYPE_STOP_LOSS:
 			api.NewSlTriggerPx(req.TriggerPrice.String())
