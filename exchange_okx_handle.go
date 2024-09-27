@@ -31,6 +31,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, r
 			Symbol:        r.InstId,
 			IsMargin:      isMargin,
 			IsIsolated:    isIsolated,
+			IsAlgo:        req.IsAlgo,
 			Price:         r.Px,
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,
@@ -75,6 +76,7 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 		Symbol:        r.InstId,
 		IsMargin:      isMargin,
 		IsIsolated:    isIsolated,
+		IsAlgo:        req.IsAlgo,
 		Price:         r.Px,
 		Quantity:      r.Sz,
 		ExecutedQty:   r.FillSz,
@@ -87,7 +89,6 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 		ReduceOnly:    stringToBool(r.ReduceOnly),
 		CreateTime:    stringToInt64(r.CTime),
 		UpdateTime:    stringToInt64(r.UTime),
-		RealizedPnl:   r.Pnl,
 	}
 	return order, nil
 }
@@ -115,6 +116,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderGet(req *QueryOrderParam, res
 			Symbol:        r.InstId,
 			IsMargin:      isMargin,
 			IsIsolated:    isIsolated,
+			IsAlgo:        req.IsAlgo,
 			Price:         r.Px,
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,
@@ -420,6 +422,55 @@ func (o *OkxTradeEngine) handleOrderFromOrderAlgoCancel(req *OrderParam, res *my
 	return order, nil
 }
 
+// 查询策略订单返回结果处理
+func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderAlgoHistoryRes]) (*Order, error) {
+	if res.Code != "0" {
+		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
+	}
+	if len(res.Data) != 1 {
+		return nil, errors.New("api return invalid data")
+	}
+	r := res.Data[0]
+
+	orderType, timeInForce := o.okxConverter.FromOKXOrderType(r.OrdType)
+	var IsMargin, IsIsolated bool
+	if r.TdMode != "cash" {
+		IsMargin = true
+		switch r.TdMode {
+		case "cross":
+			IsIsolated = false
+		case "isolated":
+			IsIsolated = true
+		}
+	} else {
+		IsMargin = false
+		IsIsolated = false
+	}
+	order := &Order{
+		Exchange:      OKX_NAME.String(),
+		OrderId:       r.AlgoId,
+		ClientOrderId: r.AlgoClOrdId,
+		AccountType:   r.InstType,
+		Symbol:        r.InstId,
+		IsMargin:      IsMargin,
+		IsIsolated:    IsIsolated,
+		IsAlgo:        req.IsAlgo,
+		Price:         r.Last,
+		Quantity:      r.Sz,
+		ExecutedQty:   r.ActualSz,
+		AvgPrice:      r.ActualPx,
+		Status:        o.okxConverter.FromOKXOrderStatus(r.State),
+		Type:          orderType,
+		Side:          o.okxConverter.FromOKXOrderSide(r.Side),
+		PositionSide:  o.okxConverter.FromOKXPositionSide(r.PosSide),
+		TimeInForce:   timeInForce,
+		ReduceOnly:    stringToBool(r.ReduceOnly),
+		CreateTime:    stringToInt64(r.CTime),
+		UpdateTime:    stringToInt64(r.UTime),
+	}
+	return order, nil
+}
+
 // 策略订单推送处理
 func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo) *Order {
 
@@ -496,6 +547,52 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 		TriggerType:          triggerType,
 		TriggerConditionType: triggerConditionType,
 	}
+}
+func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderAlgoPendingRes]) ([]*Order, error) {
+	if res.Code != "0" {
+		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
+	}
+	orders := make([]*Order, 0, len(res.Data))
+	for _, r := range res.Data {
+		orderType, timeInForce := o.okxConverter.FromOKXOrderType(r.OrdType)
+		var IsMargin, IsIsolated bool
+		if r.TdMode != "cash" {
+			IsMargin = true
+			switch r.TdMode {
+			case "cross":
+				IsIsolated = false
+			case "isolated":
+				IsIsolated = true
+			}
+		} else {
+			IsMargin = false
+			IsIsolated = false
+		}
+		order := &Order{
+			Exchange:      OKX_NAME.String(),
+			OrderId:       r.AlgoId,
+			ClientOrderId: r.AlgoClOrdId,
+			AccountType:   r.InstType,
+			Symbol:        r.InstId,
+			IsMargin:      IsMargin,
+			IsIsolated:    IsIsolated,
+			IsAlgo:        req.IsAlgo,
+			Price:         r.Last,
+			Quantity:      r.Sz,
+			ExecutedQty:   decimal.Zero.String(),
+			AvgPrice:      decimal.Zero.String(),
+			Status:        o.okxConverter.FromOKXOrderStatus(r.State),
+			Type:          orderType,
+			Side:          o.okxConverter.FromOKXOrderSide(r.Side),
+			PositionSide:  o.okxConverter.FromOKXPositionSide(r.PosSide),
+			TimeInForce:   timeInForce,
+			ReduceOnly:    stringToBool(r.ReduceOnly),
+			CreateTime:    stringToInt64(r.CTime),
+			UpdateTime:    stringToInt64(r.UTime),
+		}
+		orders = append(orders, order)
+	}
+	return orders, nil
 }
 
 // ws单订单请求相关

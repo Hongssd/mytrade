@@ -99,6 +99,7 @@ type QueryOrderParam struct {
 	Symbol        string //交易对
 	IsMargin      bool   //是否为杠杆订单
 	IsIsolated    bool   //是否是逐仓模式（杠杆）
+	IsAlgo        bool   //是否是策略订单
 	BaseCoin      string //交易幣種
 	SettleCoin    string //結算幣種
 	OrderId       string //交易所自动生成的订单ID 选填
