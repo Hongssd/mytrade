@@ -255,17 +255,44 @@ func (o *OkxTradeEngine) apiOrderAlgoAmend(req *OrderParam) *myokxapi.PrivateRes
 // 取消策略委托订单接口
 func (o *OkxTradeEngine) apiOrderAlgoCancel(req *OrderParam) *myokxapi.PrivateRestTradeCancelOrderAlgoAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-
 	api := client.NewPrivateRestTradeCancelOrderAlgo()
-	cancelOrderAlgo := client.NewPrivateRestTradeCancelOrderAlgo().NewCancelOrderAlgo().
-		SetInstId(req.Symbol)
-
-	if req.OrderId != "" {
-		cancelOrderAlgo.SetAlgoId(req.OrderId)
-	}
-
+	cancelOrderAlgo := api.NewCancelOrderAlgo()
+	cancelOrderAlgo.SetInstId(req.Symbol).SetAlgoId(req.OrderId)
 	api.AddCancelOrderAlgo(cancelOrderAlgo)
 
+	return api
+}
+
+// 查询策略委托订单接口
+func (o *OkxTradeEngine) apiQueryOpenOrderAlgo(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderAlgoPendingAPI {
+	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
+	api := client.NewPrivateRestTradeOrderAlgoPending().OrdType("conditional") // 暂只支持单向止盈止损 conditional
+	if req.Symbol != "" {
+		api.InstId(req.Symbol)
+	}
+	if req.OrderId != "" {
+		api.AlgoId(req.OrderId)
+	}
+	if req.ClientOrderId != "" {
+		api.AlgoClOrdId(req.ClientOrderId)
+	}
+	if req.StartTime != 0 {
+		api.After(strconv.FormatInt(req.StartTime, 10))
+	}
+	if req.EndTime != 0 {
+		api.Before(strconv.FormatInt(req.EndTime, 10))
+	}
+	if req.Limit != 0 {
+		api.Limit(strconv.Itoa(req.Limit))
+	}
+	return api
+}
+func (o *OkxTradeEngine) apiQueryOrderAlgo(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderAlgoHistoryAPI {
+	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
+	api := client.NewPrivateRestTradeOrderAlgoHistory().OrdType("conditional") // 暂仅支持查询单向止盈止损历史订单
+	if req.OrderId != "" {
+		api.AlgoId(req.OrderId)
+	}
 	return api
 }
 

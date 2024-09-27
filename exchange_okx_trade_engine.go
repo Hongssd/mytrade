@@ -46,6 +46,18 @@ func (o *OkxTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error)
 		return nil, err
 	}
 
+	if req.IsAlgo {
+		algoApi := o.apiQueryOpenOrderAlgo(req)
+		res, err := algoApi.Do()
+		if err != nil {
+			return nil, err
+		}
+		orders, err := o.handleOrdersFromQueryOpenOrderAlgo(req, res)
+		if err != nil {
+			return nil, err
+		}
+		return orders, nil
+	}
 	api := o.apiQueryOpenOrders(req)
 	res, err := api.Do()
 	if err != nil {
@@ -62,6 +74,19 @@ func (o *OkxTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error)
 func (o *OkxTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 	if err := o.accountTypePreCheck(req.AccountType); err != nil {
 		return nil, err
+	}
+
+	if req.IsAlgo {
+		algoApi := o.apiQueryOrderAlgo(req)
+		res, err := algoApi.Do()
+		if err != nil {
+			return nil, err
+		}
+		order, err := o.handleOrderFromQueryOrderAlgo(req, res)
+		if err != nil {
+			return nil, err
+		}
+		return order, nil
 	}
 	api := o.apiQueryOrder(req)
 	res, err := api.Do()
@@ -165,10 +190,10 @@ func (o *OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 	if err := o.accountTypePreCheck(req.AccountType); err != nil {
 		return nil, err
 	}
-	//获取API
-	algoApi := o.apiOrderAlgoAmend(req)
-	api := o.apiOrderAmend(req)
+
 	if req.IsAlgo {
+		//获取API
+		algoApi := o.apiOrderAlgoAmend(req)
 		b := o.getOrderAlgoBroadcastFromAccountType(req.AccountType)
 		//创建订阅
 		sub, err := o.newOrderAlgoSubscriber(b, req.ClientOrderId, req.AccountType, req.Symbol)
@@ -190,6 +215,8 @@ func (o *OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 		return o.waitOrderAlgoSubscribeReturn(sub, 1*time.Second)
 	}
 
+	//获取API
+	api := o.apiOrderAmend(req)
 	b := o.getBroadcastFromAccountType(req.AccountType)
 	//创建订阅
 	sub, err := o.newOrderSubscriber(b, req.ClientOrderId, req.AccountType, req.Symbol)
@@ -214,11 +241,10 @@ func (o *OkxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	if err := o.accountTypePreCheck(req.AccountType); err != nil {
 		return nil, err
 	}
-	//获取API
-	algoApi := o.apiOrderAlgoCancel(req)
-	api := o.apiOrderCancel(req)
 
 	if req.IsAlgo {
+		//获取API
+		algoApi := o.apiOrderAlgoCancel(req)
 		b := o.getOrderAlgoBroadcastFromAccountType(req.AccountType)
 		//创建订阅
 		sub, err := o.newOrderAlgoSubscriber(b, req.ClientOrderId, req.AccountType, req.Symbol)
@@ -239,6 +265,8 @@ func (o *OkxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 		//异步接收ws结果，1秒超时
 		return o.waitOrderAlgoSubscribeReturn(sub, 1*time.Second)
 	}
+	//获取API
+	api := o.apiOrderCancel(req)
 	b := o.getBroadcastFromAccountType(req.AccountType)
 
 	//创建订阅
