@@ -69,29 +69,13 @@ func (o *OkxTradeEngine) apiQueryTrades(req *QueryTradeParam) *myokxapi.PrivateR
 func (o *OkxTradeEngine) apiOrderCreate(req *OrderParam) *myokxapi.PrivateRestTradeOrderPostAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
 	tdMode := o.okxConverter.getTdModeFromAccountType(OkxAccountType(req.AccountType), o.okxConverter.ToOKXAccountMode(req.AccountMode), req.IsIsolated, req.IsMargin)
+
 	api := client.NewPrivateRestTradeOrderPost().
 		InstId(req.Symbol).TdMode(tdMode).
 		Side(o.okxConverter.ToOKXOrderSide(req.OrderSide)).
 		OrdType(o.okxConverter.ToOKXOrderType(req.OrderType, req.TimeInForce)).
 		Px(req.Price.String()).
 		Sz(req.Quantity.String())
-
-	//if !req.TriggerPrice.IsZero() && req.TriggerType != ORDER_TRIGGER_TYPE_UNKNOWN {
-	//	switch req.TriggerType {
-	//	case ORDER_TRIGGER_TYPE_STOP_LOSS:
-	//		api.AttachAlgoOrds([]myokxapi.PrivateRestTradeOrderPostReqAttachAlgoOrd{
-	//			*(api.NewAttachAlgoOrd().
-	//				SetSlTriggerPx(req.TriggerPrice.String()).
-	//				SetSlOrdPx(req.Price.String())),
-	//		})
-	//	case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
-	//		api.AttachAlgoOrds([]myokxapi.PrivateRestTradeOrderPostReqAttachAlgoOrd{
-	//			*(api.NewAttachAlgoOrd().
-	//				SetTpTriggerPx(req.TriggerPrice.String()).
-	//				SetTpOrdPx(req.Price.String())),
-	//		})
-	//	}
-	//}
 	if req.IsMargin && !req.IsIsolated {
 		if req.Ccy == "" {
 			api.Ccy("USDT")
@@ -148,6 +132,32 @@ func (o *OkxTradeEngine) apiOrderCancel(req *OrderParam) *myokxapi.PrivateRestTr
 	return api
 }
 
+// 批量订单接口获取
+func (o *OkxTradeEngine) apiBatchOrderCreate(reqs []*OrderParam) *myokxapi.PrivateRestTradeBatchOrdersAPI {
+	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
+	api := client.NewPrivateRestTradeBatchOrders()
+	for _, req := range reqs {
+		api.AddNewOrderReq(o.apiOrderCreate(req))
+	}
+	return api
+}
+func (o *OkxTradeEngine) apiBatchOrderAmend(reqs []*OrderParam) *myokxapi.PrivateRestTradeAmendBatchOrdersAPI {
+	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
+	api := client.NewPrivateRestTradeAmendBatchOrders()
+	for _, req := range reqs {
+		api.AddNewOrderReq(o.apiOrderAmend(req))
+	}
+	return api
+}
+func (o *OkxTradeEngine) apiBatchOrderCancel(reqs []*OrderParam) *myokxapi.PrivateRestTradeCancelBatchOrdersAPI {
+	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
+	api := client.NewPrivateRestTradeCancelBatchOrders()
+	for _, req := range reqs {
+		api.AddNewOrderReq(o.apiOrderCancel(req))
+	}
+	return api
+}
+
 // 策略委托订单接口获取
 func (o *OkxTradeEngine) apiOrderAlgoCreate(req *OrderParam) *myokxapi.PrivateRestTradeOrderAlgoPostAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
@@ -198,29 +208,64 @@ func (o *OkxTradeEngine) apiOrderAlgoCreate(req *OrderParam) *myokxapi.PrivateRe
 	return api
 }
 
-// 批量订单接口获取
-func (o *OkxTradeEngine) apiBatchOrderCreate(reqs []*OrderParam) *myokxapi.PrivateRestTradeBatchOrdersAPI {
+// 修改策略委托订单接口
+func (o *OkxTradeEngine) apiOrderAlgoAmend(req *OrderParam) *myokxapi.PrivateRestTradeAmendOrderAlgoAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-	api := client.NewPrivateRestTradeBatchOrders()
-	for _, req := range reqs {
-		api.AddNewOrderReq(o.apiOrderCreate(req))
+
+	api := client.NewPrivateRestTradeAmendOrderAlgo().
+		InstId(req.Symbol)
+	if req.OrderId != "" {
+		api.AlgoId(req.OrderId)
 	}
+	if req.ClientOrderId != "" {
+		api.AlgoClOrdId(req.ClientOrderId)
+	}
+	if !req.Quantity.IsZero() {
+		api.NewSz(req.Quantity.String())
+	}
+
+	if req.TriggerType != ORDER_TRIGGER_TYPE_UNKNOWN && !req.TriggerPrice.IsZero() {
+		switch req.TriggerType {
+		case ORDER_TRIGGER_TYPE_STOP_LOSS:
+			api.NewSlTriggerPx(req.TriggerPrice.String())
+			switch req.OrderType {
+			case ORDER_TYPE_LIMIT:
+				api.NewSlOrdPx(req.Price.String())
+			case ORDER_TYPE_MARKET:
+				api.NewSlOrdPx("-1")
+			}
+		case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+			api.NewTpTriggerPx(req.TriggerPrice.String())
+			switch req.OrderType {
+			case ORDER_TYPE_LIMIT:
+				api.NewTpOrdPx(req.Price.String())
+			case ORDER_TYPE_MARKET:
+				api.NewTpOrdPx("-1")
+			}
+		}
+	}
+
+	if req.ClientOrderId != "" {
+		api.AlgoClOrdId(req.ClientOrderId)
+	}
+
 	return api
 }
-func (o *OkxTradeEngine) apiBatchOrderAmend(reqs []*OrderParam) *myokxapi.PrivateRestTradeAmendBatchOrdersAPI {
+
+// 取消策略委托订单接口
+func (o *OkxTradeEngine) apiOrderAlgoCancel(req *OrderParam) *myokxapi.PrivateRestTradeCancelOrderAlgoAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-	api := client.NewPrivateRestTradeAmendBatchOrders()
-	for _, req := range reqs {
-		api.AddNewOrderReq(o.apiOrderAmend(req))
+
+	api := client.NewPrivateRestTradeCancelOrderAlgo()
+	cancelOrderAlgo := client.NewPrivateRestTradeCancelOrderAlgo().NewCancelOrderAlgo().
+		SetInstId(req.Symbol)
+
+	if req.OrderId != "" {
+		cancelOrderAlgo.SetAlgoId(req.OrderId)
 	}
-	return api
-}
-func (o *OkxTradeEngine) apiBatchOrderCancel(reqs []*OrderParam) *myokxapi.PrivateRestTradeCancelBatchOrdersAPI {
-	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-	api := client.NewPrivateRestTradeCancelBatchOrders()
-	for _, req := range reqs {
-		api.AddNewOrderReq(o.apiOrderCancel(req))
-	}
+
+	api.AddCancelOrderAlgo(cancelOrderAlgo)
+
 	return api
 }
 
