@@ -36,7 +36,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, r
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,
 			AvgPrice:      r.AvgPx,
-			Status:        o.okxConverter.FromOKXOrderStatus(r.State),
+			Status:        o.okxConverter.FromOKXOrderStatus(r.State, false),
 			Type:          orderType,
 			Side:          o.okxConverter.FromOKXOrderSide(r.Side),
 			PositionSide:  o.okxConverter.FromOKXPositionSide(r.PosSide),
@@ -81,7 +81,7 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 		Quantity:      r.Sz,
 		ExecutedQty:   r.FillSz,
 		AvgPrice:      r.AvgPx,
-		Status:        o.okxConverter.FromOKXOrderStatus(r.State),
+		Status:        o.okxConverter.FromOKXOrderStatus(r.State, false),
 		Type:          orderType,
 		Side:          o.okxConverter.FromOKXOrderSide(r.Side),
 		PositionSide:  o.okxConverter.FromOKXPositionSide(r.PosSide),
@@ -121,7 +121,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderGet(req *QueryOrderParam, res
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,
 			AvgPrice:      r.AvgPx,
-			Status:        o.okxConverter.FromOKXOrderStatus(r.State),
+			Status:        o.okxConverter.FromOKXOrderStatus(r.State, false),
 			Type:          orderType,
 			Side:          o.okxConverter.FromOKXOrderSide(r.Side),
 			PositionSide:  o.okxConverter.FromOKXPositionSide(r.PosSide),
@@ -338,7 +338,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order 
 		Quantity:      order.Sz,
 		ExecutedQty:   order.FillSz,
 		AvgPrice:      order.AvgPx,
-		Status:        o.okxConverter.FromOKXOrderStatus(order.State),
+		Status:        o.okxConverter.FromOKXOrderStatus(order.State, false),
 		Type:          orderType,
 		Side:          o.okxConverter.FromOKXOrderSide(order.Side),
 		PositionSide:  o.okxConverter.FromOKXPositionSide(order.PosSide),
@@ -423,7 +423,7 @@ func (o *OkxTradeEngine) handleOrderFromOrderAlgoCancel(req *OrderParam, res *my
 }
 
 // 查询策略订单返回结果处理
-func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderAlgoHistoryRes]) (*Order, error) {
+func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderAlgoGetRes]) (*Order, error) {
 	if res.Code != "0" {
 		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
 	}
@@ -438,8 +438,7 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res
 	var triggerType OrderTriggerType
 	var triggerConditionType OrderTriggerConditionType
 
-	switch order.ActualSide {
-	case OKX_ORDER_ALGO_ACTUAL_SIDE_TAKE_PROFIT:
+	if order.TpTriggerPx != "" {
 		px, _ = decimal.NewFromString(order.TpOrdPx)
 		triggerPx, _ = decimal.NewFromString(order.TpTriggerPx)
 		triggerType = ORDER_TRIGGER_TYPE_TAKE_PROFIT
@@ -451,7 +450,7 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res
 			//止盈卖出 价格上穿触发
 			triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
 		}
-	case OKX_ORDER_ALGO_ACTUAL_SIDE_STOP_LOSS:
+	} else if order.SlTriggerPx != "" {
 		px, _ = decimal.NewFromString(order.SlOrdPx)
 		triggerPx, _ = decimal.NewFromString(order.SlTriggerPx)
 		triggerType = ORDER_TRIGGER_TYPE_STOP_LOSS
@@ -485,8 +484,13 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res
 		IsIsolated = false
 	}
 
+	if req.AccountType != OKX_AC_SPOT.String() {
+		IsMargin = false
+	}
+
 	return &Order{
 		Exchange:      OKX_NAME.String(),
+		AccountType:   req.AccountType,
 		Symbol:        order.InstId,
 		IsMargin:      IsMargin,
 		IsIsolated:    IsIsolated,
@@ -496,7 +500,7 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res
 		Quantity:      order.Sz,
 		ExecutedQty:   decimal.Zero.String(),
 		AvgPrice:      decimal.Zero.String(),
-		Status:        o.okxConverter.FromOKXOrderStatus(order.State),
+		Status:        o.okxConverter.FromOKXOrderStatus(order.State, true),
 		Type:          orderType,
 		Side:          o.okxConverter.FromOKXOrderSide(order.Side),
 		PositionSide:  o.okxConverter.FromOKXPositionSide(order.PosSide),
@@ -523,8 +527,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 	var triggerType OrderTriggerType
 	var triggerConditionType OrderTriggerConditionType
 
-	switch order.ActualSide {
-	case OKX_ORDER_ALGO_ACTUAL_SIDE_TAKE_PROFIT:
+	if order.TpTriggerPx != "" {
 		px, _ = decimal.NewFromString(order.TpOrdPx)
 		triggerPx, _ = decimal.NewFromString(order.TpTriggerPx)
 		triggerType = ORDER_TRIGGER_TYPE_TAKE_PROFIT
@@ -536,7 +539,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 			//止盈卖出 价格上穿触发
 			triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
 		}
-	case OKX_ORDER_ALGO_ACTUAL_SIDE_STOP_LOSS:
+	} else if order.SlTriggerPx != "" {
 		px, _ = decimal.NewFromString(order.SlOrdPx)
 		triggerPx, _ = decimal.NewFromString(order.SlTriggerPx)
 		triggerType = ORDER_TRIGGER_TYPE_STOP_LOSS
@@ -581,7 +584,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 		Quantity:      order.Sz,
 		ExecutedQty:   decimal.Zero.String(),
 		AvgPrice:      decimal.Zero.String(),
-		Status:        o.okxConverter.FromOKXOrderStatus(order.State),
+		Status:        o.okxConverter.FromOKXOrderStatus(order.State, true),
 		Type:          orderType,
 		Side:          o.okxConverter.FromOKXOrderSide(order.Side),
 		PositionSide:  o.okxConverter.FromOKXPositionSide(order.PosSide),
@@ -610,8 +613,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam
 		var triggerType OrderTriggerType
 		var triggerConditionType OrderTriggerConditionType
 
-		switch order.ActualSide {
-		case OKX_ORDER_ALGO_ACTUAL_SIDE_TAKE_PROFIT:
+		if order.TpTriggerPx != "" {
 			px, _ = decimal.NewFromString(order.TpOrdPx)
 			triggerPx, _ = decimal.NewFromString(order.TpTriggerPx)
 			triggerType = ORDER_TRIGGER_TYPE_TAKE_PROFIT
@@ -623,7 +625,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam
 				//止盈卖出 价格上穿触发
 				triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
 			}
-		case OKX_ORDER_ALGO_ACTUAL_SIDE_STOP_LOSS:
+		} else if order.SlTriggerPx != "" {
 			px, _ = decimal.NewFromString(order.SlOrdPx)
 			triggerPx, _ = decimal.NewFromString(order.SlTriggerPx)
 			triggerType = ORDER_TRIGGER_TYPE_STOP_LOSS
@@ -657,8 +659,13 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam
 			IsIsolated = false
 		}
 
+		if req.AccountType != OKX_AC_SPOT.String() {
+			IsMargin = false
+		}
+
 		targetOrder := &Order{
 			Exchange:      OKX_NAME.String(),
+			AccountType:   req.AccountType,
 			Symbol:        order.InstId,
 			IsMargin:      IsMargin,
 			IsIsolated:    IsIsolated,
@@ -668,7 +675,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam
 			Quantity:      order.Sz,
 			ExecutedQty:   decimal.Zero.String(),
 			AvgPrice:      decimal.Zero.String(),
-			Status:        o.okxConverter.FromOKXOrderStatus(order.State),
+			Status:        o.okxConverter.FromOKXOrderStatus(order.State, true),
 			Type:          orderType,
 			Side:          o.okxConverter.FromOKXOrderSide(order.Side),
 			PositionSide:  o.okxConverter.FromOKXPositionSide(order.PosSide),

@@ -105,6 +105,7 @@ func (o *OkxTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
 	if err := o.accountTypePreCheck(req.AccountType); err != nil {
 		return nil, err
 	}
+
 	api := o.apiQueryOrders(req)
 	res, err := api.Do()
 	if err != nil {

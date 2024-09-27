@@ -209,6 +209,9 @@ func (o *OkxTradeEngine) newOrderAlgoBroadcaster(accountType string) (*okxOrderA
 				//log.Infof("订单频道订阅接收到消息：%s", result)
 				order := o.handleOrderFromWsOrderAlgo(result)
 				order.AccountType = broadcaster.accountType
+				if order.AccountType != OKX_AC_SPOT.String() {
+					order.IsMargin = false
+				}
 				broadcaster.subscribers.Range(func(key string, value *okxOrderAlgoSubscriber) bool {
 					if value.clientOrderId == "" || order.ClientOrderId == value.clientOrderId {
 						value.ch.ResultChan() <- *order

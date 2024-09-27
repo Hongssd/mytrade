@@ -288,11 +288,15 @@ func (o *OkxTradeEngine) apiQueryOpenOrderAlgo(req *QueryOrderParam) *myokxapi.P
 	}
 	return api
 }
-func (o *OkxTradeEngine) apiQueryOrderAlgo(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderAlgoHistoryAPI {
+func (o *OkxTradeEngine) apiQueryOrderAlgo(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderAlgoGetAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-	api := client.NewPrivateRestTradeOrderAlgoHistory().OrdType("conditional") // 暂仅支持查询单向止盈止损历史订单
+	api := client.NewPrivateRestTradeOrderAlgoGet() // 暂仅支持查询单向止盈止损历史订单
 	if req.OrderId != "" {
 		api.AlgoId(req.OrderId)
+	}
+	if req.ClientOrderId != "" {
+		api.AlgoClOrdId(req.ClientOrderId)
+
 	}
 	return api
 }

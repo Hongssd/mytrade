@@ -96,10 +96,15 @@ func (c *OkxEnumConverter) ToOKXPositionSide(t PositionSide) string {
 }
 
 // 订单状态
-func (c *OkxEnumConverter) FromOKXOrderStatus(t string) OrderStatus {
+func (c *OkxEnumConverter) FromOKXOrderStatus(t string, isAlgo bool) OrderStatus {
 	switch t {
 	case OKX_ORDER_STATUS_NEW:
-		return ORDER_STATUS_NEW
+
+		if isAlgo {
+			return ORDER_STATUS_UN_TRIGGERED
+		} else {
+			return ORDER_STATUS_NEW
+		}
 	case OKX_ORDER_STATUS_PARTIALLY_FILLED:
 		return ORDER_STATUS_PARTIALLY_FILLED
 	case OKX_ORDER_STATUS_FILLED:
