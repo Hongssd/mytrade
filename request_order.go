@@ -95,18 +95,19 @@ func (o *OrderParam) SetOrderTriggerType(orderTriggerType OrderTriggerType) *Ord
 }
 
 type QueryOrderParam struct {
-	AccountType   string //账户类型
-	Symbol        string //交易对
-	IsMargin      bool   //是否为杠杆订单
-	IsIsolated    bool   //是否是逐仓模式（杠杆）
-	IsAlgo        bool   //是否是策略订单
-	BaseCoin      string //交易幣種
-	SettleCoin    string //結算幣種
-	OrderId       string //交易所自动生成的订单ID 选填
-	ClientOrderId string //用户自己生成的订单ID 选填
-	StartTime     int64  //开始时间 选填 默认返回7天内订单
-	EndTime       int64  //结束时间 选填 默认返回7天内订单
-	Limit         int    //限制返回的订单数量 选填 默认返回100条 最大100
+	AccountType   string      //账户类型
+	Symbol        string      //交易对
+	IsMargin      bool        //是否为杠杆订单
+	IsIsolated    bool        //是否是逐仓模式（杠杆）
+	IsAlgo        bool        //是否是策略订单
+	AlgoState     OrderStatus //策略订单状态
+	BaseCoin      string      //交易幣種
+	SettleCoin    string      //結算幣種
+	OrderId       string      //交易所自动生成的订单ID 选填
+	ClientOrderId string      //用户自己生成的订单ID 选填
+	StartTime     int64       //开始时间 选填 默认返回7天内订单
+	EndTime       int64       //结束时间 选填 默认返回7天内订单
+	Limit         int         //限制返回的订单数量 选填 默认返回100条 最大100
 }
 
 func (q *QueryOrderParam) SetAccountType(accountType string) *QueryOrderParam {

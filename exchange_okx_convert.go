@@ -99,12 +99,13 @@ func (c *OkxEnumConverter) ToOKXPositionSide(t PositionSide) string {
 func (c *OkxEnumConverter) FromOKXOrderStatus(t string, isAlgo bool) OrderStatus {
 	switch t {
 	case OKX_ORDER_STATUS_NEW:
-
 		if isAlgo {
 			return ORDER_STATUS_UN_TRIGGERED
 		} else {
 			return ORDER_STATUS_NEW
 		}
+	case OKX_ORDER_ALGO_STATUS_EFFECTIVE:
+		return ORDER_STATUS_TRIGGERED
 	case OKX_ORDER_STATUS_PARTIALLY_FILLED:
 		return ORDER_STATUS_PARTIALLY_FILLED
 	case OKX_ORDER_STATUS_FILLED:
@@ -117,10 +118,16 @@ func (c *OkxEnumConverter) FromOKXOrderStatus(t string, isAlgo bool) OrderStatus
 		return ORDER_STATUS_UNKNOWN
 	}
 }
-func (c *OkxEnumConverter) ToOKXOrderStatus(t OrderStatus) string {
+func (c *OkxEnumConverter) ToOKXOrderStatus(t OrderStatus, isAlgo bool) string {
 	switch t {
-	case ORDER_STATUS_NEW:
-		return OKX_ORDER_STATUS_NEW
+	case ORDER_STATUS_NEW, ORDER_STATUS_TRIGGERED:
+		if isAlgo {
+			return OKX_ORDER_ALGO_STATUS_EFFECTIVE
+		} else {
+			return OKX_ORDER_STATUS_NEW
+		}
+	case ORDER_STATUS_UN_TRIGGERED:
+		return OKX_ORDER_ALGO_STATUS_LIVE
 	case ORDER_STATUS_PARTIALLY_FILLED:
 		return OKX_ORDER_STATUS_PARTIALLY_FILLED
 	case ORDER_STATUS_FILLED:

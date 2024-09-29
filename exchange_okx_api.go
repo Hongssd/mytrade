@@ -301,6 +301,8 @@ func (o *OkxTradeEngine) apiQueryOrderAlgo(req *QueryOrderParam) *myokxapi.Priva
 func (o *OkxTradeEngine) apiQueryOrdersAlgo(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderAlgoHistoryAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
 	api := client.NewPrivateRestTradeOrderAlgoHistory().OrdType("conditional") // 暂只支持单向止盈止损 conditional
+	api.State(o.okxConverter.ToOKXOrderStatus(req.AlgoState, true))
+
 	if req.Symbol != "" {
 		api.InstId(req.Symbol)
 	}
