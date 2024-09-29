@@ -106,6 +106,19 @@ func (o *OkxTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
 		return nil, err
 	}
 
+	if req.IsAlgo {
+		api := o.apiQueryOrdersAlgo(req)
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		orders, err := o.handleOrdersFromQueryOrderAlgo(req, res)
+		if err != nil {
+			return nil, err
+		}
+		return orders, nil
+	}
+
 	api := o.apiQueryOrders(req)
 	res, err := api.Do()
 	if err != nil {
@@ -256,7 +269,7 @@ func (o *OkxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 		defer o.closeSubscribeAlgo(b, sub)
 		//执行API
 		res, err := algoApi.Do()
-		if err != nil && res == nil {
+		if err != nil {
 			return nil, err
 		}
 		//处理API返回值

@@ -207,6 +207,7 @@ func (o *OkxTradeEngine) newOrderAlgoBroadcaster(accountType string) (*okxOrderA
 				})
 			case result := <-sub.ResultChan():
 				//log.Infof("订单频道订阅接收到消息：%s", result)
+
 				order := o.handleOrderFromWsOrderAlgo(result)
 				order.AccountType = broadcaster.accountType
 				if order.AccountType != OKX_AC_SPOT.String() {

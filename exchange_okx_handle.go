@@ -400,7 +400,7 @@ func (o *OkxTradeEngine) handleOrderFromOrderAlgoAmend(req *OrderParam, res *myo
 	return order, nil
 }
 func (o *OkxTradeEngine) handleOrderFromOrderAlgoCancel(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeCancelOrderAlgoRes]) (*Order, error) {
-	if len(res.Data) != 1 {
+	if res == nil || len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
@@ -464,7 +464,7 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res
 		}
 	}
 
-	if triggerPx.Equal(decimal.NewFromInt(-1)) {
+	if px.Equal(decimal.NewFromInt(-1)) {
 		orderType = ORDER_TYPE_MARKET
 	} else {
 		orderType = ORDER_TYPE_LIMIT
@@ -516,6 +516,97 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res
 		TriggerConditionType: triggerConditionType,
 	}, nil
 }
+func (o *OkxTradeEngine) handleOrdersFromQueryOrderAlgo(req *QueryOrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderAlgoHistoryRes]) ([]*Order, error) {
+	if res.Code != "0" {
+		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
+	}
+	var orders []*Order
+	for _, order := range res.Data {
+		var orderType OrderType
+		timeInForce := TIME_IN_FORCE_GTC
+		var px decimal.Decimal
+		var triggerPx decimal.Decimal
+		var triggerType OrderTriggerType
+		var triggerConditionType OrderTriggerConditionType
+
+		if order.TpTriggerPx != "" {
+			px, _ = decimal.NewFromString(order.TpOrdPx)
+			triggerPx, _ = decimal.NewFromString(order.TpTriggerPx)
+			triggerType = ORDER_TRIGGER_TYPE_TAKE_PROFIT
+
+			if order.Side == OKX_ORDER_SIDE_BUY {
+				//止盈买入 价格下穿触发
+				triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+			} else {
+				//止盈卖出 价格上穿触发
+				triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+			}
+		} else if order.SlTriggerPx != "" {
+			px, _ = decimal.NewFromString(order.SlOrdPx)
+			triggerPx, _ = decimal.NewFromString(order.SlTriggerPx)
+			triggerType = ORDER_TRIGGER_TYPE_STOP_LOSS
+
+			if order.Side == OKX_ORDER_SIDE_BUY {
+				//止损买入 价格上穿触发
+				triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+			} else {
+				//止损卖出 价格下穿触发
+				triggerConditionType = ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+			}
+		}
+
+		if px.Equal(decimal.NewFromInt(-1)) {
+			orderType = ORDER_TYPE_MARKET
+		} else {
+			orderType = ORDER_TYPE_LIMIT
+		}
+
+		var IsMargin, IsIsolated bool
+		if order.TdMode != "cash" {
+			IsMargin = true
+			switch order.TdMode {
+			case "cross":
+				IsIsolated = false
+			case "isolated":
+				IsIsolated = true
+			}
+		} else {
+			IsMargin = false
+			IsIsolated = false
+		}
+
+		order2 := &Order{
+			Exchange:      OKX_NAME.String(),
+			Symbol:        order.InstId,
+			AccountType:   req.AccountType,
+			IsMargin:      IsMargin,
+			IsIsolated:    IsIsolated,
+			OrderId:       order.AlgoId,
+			ClientOrderId: order.AlgoClOrdId,
+			Price:         px.String(),
+			Quantity:      order.Sz,
+			ExecutedQty:   decimal.Zero.String(),
+			AvgPrice:      decimal.Zero.String(),
+			Status:        o.okxConverter.FromOKXOrderStatus(order.State, true),
+			Type:          orderType,
+			Side:          o.okxConverter.FromOKXOrderSide(order.Side),
+			PositionSide:  o.okxConverter.FromOKXPositionSide(order.PosSide),
+			TimeInForce:   timeInForce,
+			ReduceOnly:    stringToBool(order.ReduceOnly),
+			CreateTime:    stringToInt64(order.CTime),
+			UpdateTime:    stringToInt64(order.UTime),
+			RealizedPnl:   decimal.Zero.String(),
+
+			IsAlgo:               true,
+			TriggerPrice:         triggerPx.String(),
+			TriggerType:          triggerType,
+			TriggerConditionType: triggerConditionType,
+		}
+		orders = append(orders, order2)
+	}
+
+	return orders, nil
+}
 
 // 策略订单推送处理
 func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo) *Order {
@@ -553,7 +644,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 		}
 	}
 
-	if triggerPx.Equal(decimal.NewFromInt(-1)) {
+	if px.Equal(decimal.NewFromInt(-1)) {
 		orderType = ORDER_TYPE_MARKET
 	} else {
 		orderType = ORDER_TYPE_LIMIT
@@ -639,7 +730,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam
 			}
 		}
 
-		if triggerPx.Equal(decimal.NewFromInt(-1)) {
+		if px.Equal(decimal.NewFromInt(-1)) {
 			orderType = ORDER_TYPE_MARKET
 		} else {
 			orderType = ORDER_TYPE_LIMIT
