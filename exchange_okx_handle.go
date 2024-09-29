@@ -172,7 +172,7 @@ func (o *OkxTradeEngine) handleTradesFromQueryTrades(req *QueryTradeParam, res *
 // 单订单返回结果处理
 func (o *OkxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderPostRes]) (*Order, error) {
 
-	if len(res.Data) != 1 {
+	if res == nil || len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
@@ -192,7 +192,7 @@ func (o *OkxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *myokxa
 }
 func (o *OkxTradeEngine) handleOrderFromOrderAmend(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeAmendOrderRes]) (*Order, error) {
 
-	if len(res.Data) != 1 {
+	if res == nil || len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
@@ -212,7 +212,7 @@ func (o *OkxTradeEngine) handleOrderFromOrderAmend(req *OrderParam, res *myokxap
 }
 func (o *OkxTradeEngine) handleOrderFromOrderCancel(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeCancelOrderRes]) (*Order, error) {
 
-	if len(res.Data) != 1 {
+	if res == nil || len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
@@ -356,7 +356,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order 
 
 // 策略订单返回结果处理
 func (o *OkxTradeEngine) handleOrderFromOrderAlgoCreate(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderAlgoPostRes]) (*Order, error) {
-	if len(res.Data) != 1 {
+	if res == nil || len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
@@ -378,7 +378,7 @@ func (o *OkxTradeEngine) handleOrderFromOrderAlgoCreate(req *OrderParam, res *my
 	return order, nil
 }
 func (o *OkxTradeEngine) handleOrderFromOrderAlgoAmend(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeAmendOrderAlgoRes]) (*Order, error) {
-	if len(res.Data) != 1 {
+	if res == nil || len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
