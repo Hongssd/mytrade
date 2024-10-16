@@ -172,7 +172,7 @@ func (o *OkxTradeEngine) handleTradesFromQueryTrades(req *QueryTradeParam, res *
 // 单订单返回结果处理
 func (o *OkxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderPostRes]) (*Order, error) {
 
-	if len(res.Data) != 1 {
+	if res == nil || len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
@@ -192,7 +192,7 @@ func (o *OkxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *myokxa
 }
 func (o *OkxTradeEngine) handleOrderFromOrderAmend(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeAmendOrderRes]) (*Order, error) {
 
-	if len(res.Data) != 1 {
+	if res == nil || len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
@@ -212,7 +212,7 @@ func (o *OkxTradeEngine) handleOrderFromOrderAmend(req *OrderParam, res *myokxap
 }
 func (o *OkxTradeEngine) handleOrderFromOrderCancel(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeCancelOrderRes]) (*Order, error) {
 
-	if len(res.Data) != 1 {
+	if res == nil || len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
@@ -356,7 +356,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order 
 
 // 策略订单返回结果处理
 func (o *OkxTradeEngine) handleOrderFromOrderAlgoCreate(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderAlgoPostRes]) (*Order, error) {
-	if len(res.Data) != 1 {
+	if res == nil || len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
@@ -378,7 +378,7 @@ func (o *OkxTradeEngine) handleOrderFromOrderAlgoCreate(req *OrderParam, res *my
 	return order, nil
 }
 func (o *OkxTradeEngine) handleOrderFromOrderAlgoAmend(req *OrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeAmendOrderAlgoRes]) (*Order, error) {
-	if len(res.Data) != 1 {
+	if res == nil || len(res.Data) != 1 {
 		return nil, errors.New("api return invalid data")
 	}
 	if res.Data[0].SCode != "0" {
@@ -472,25 +472,21 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res
 
 	var IsMargin, IsIsolated bool
 	if order.TdMode != "cash" {
-		IsMargin = true
 		switch order.TdMode {
 		case "cross":
 			IsIsolated = false
 		case "isolated":
 			IsIsolated = true
 		}
-	} else {
-		IsMargin = false
-		IsIsolated = false
 	}
-
-	if req.AccountType != OKX_AC_SPOT.String() {
-		IsMargin = false
+	if order.InstType == OKX_AC_MARGIN.String() {
+		IsMargin = true
+		order.InstType = OKX_AC_SPOT.String()
 	}
 
 	return &Order{
 		Exchange:      OKX_NAME.String(),
-		AccountType:   req.AccountType,
+		AccountType:   order.InstType,
 		Symbol:        order.InstId,
 		IsMargin:      IsMargin,
 		IsIsolated:    IsIsolated,
@@ -563,22 +559,22 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderAlgo(req *QueryOrderParam, re
 
 		var IsMargin, IsIsolated bool
 		if order.TdMode != "cash" {
-			IsMargin = true
 			switch order.TdMode {
 			case "cross":
 				IsIsolated = false
 			case "isolated":
 				IsIsolated = true
 			}
-		} else {
-			IsMargin = false
-			IsIsolated = false
+		}
+		if order.InstType == OKX_AC_MARGIN.String() {
+			IsMargin = true
+			order.InstType = OKX_AC_SPOT.String()
 		}
 
 		order2 := &Order{
 			Exchange:      OKX_NAME.String(),
 			Symbol:        order.InstId,
-			AccountType:   req.AccountType,
+			AccountType:   order.InstType,
 			IsMargin:      IsMargin,
 			IsIsolated:    IsIsolated,
 			OrderId:       order.AlgoId,
@@ -652,20 +648,21 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 
 	var IsMargin, IsIsolated bool
 	if order.TdMode != "cash" {
-		IsMargin = true
 		switch order.TdMode {
 		case "cross":
 			IsIsolated = false
 		case "isolated":
 			IsIsolated = true
 		}
-	} else {
-		IsMargin = false
-		IsIsolated = false
+	}
+	if order.OrdersAlgo.InstType == OKX_AC_MARGIN.String() {
+		IsMargin = true
+		order.OrdersAlgo.InstType = OKX_AC_SPOT.String()
 	}
 
 	return &Order{
 		Exchange:      OKX_NAME.String(),
+		AccountType:   order.OrdersAlgo.InstType,
 		Symbol:        order.OrdersAlgo.InstId,
 		IsMargin:      IsMargin,
 		IsIsolated:    IsIsolated,
@@ -738,25 +735,21 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam
 
 		var IsMargin, IsIsolated bool
 		if order.TdMode != "cash" {
-			IsMargin = true
 			switch order.TdMode {
 			case "cross":
 				IsIsolated = false
 			case "isolated":
 				IsIsolated = true
 			}
-		} else {
-			IsMargin = false
-			IsIsolated = false
 		}
-
-		if req.AccountType != OKX_AC_SPOT.String() {
-			IsMargin = false
+		if order.InstType == OKX_AC_MARGIN.String() {
+			IsMargin = true
+			order.InstType = OKX_AC_SPOT.String()
 		}
 
 		targetOrder := &Order{
 			Exchange:      OKX_NAME.String(),
-			AccountType:   req.AccountType,
+			AccountType:   order.InstType,
 			Symbol:        order.InstId,
 			IsMargin:      IsMargin,
 			IsIsolated:    IsIsolated,
@@ -856,7 +849,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderResult(req *OrderParam, res *myok
 		Exchange:      OKX_NAME.String(),
 		OrderId:       r.OrdId,
 		ClientOrderId: r.ClOrdId,
-		AccountType:   req.AccountType,
+		AccountType:   `1`,
 		Symbol:        req.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,

@@ -166,7 +166,7 @@ func (o *OkxTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 		defer o.closeSubscribeAlgo(b, sub)
 		//执行API
 		res, err := algoApi.Do()
-		if err != nil && res == nil {
+		if err != nil {
 			return nil, err
 		}
 		//处理API返回值
@@ -189,7 +189,7 @@ func (o *OkxTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 	defer o.closeSubscribe(b, sub)
 	//执行API
 	res, err := api.Do()
-	if err != nil && res == nil {
+	if err != nil {
 		return nil, err
 	}
 	//处理API返回值
@@ -218,7 +218,7 @@ func (o *OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 		defer o.closeSubscribeAlgo(b, sub)
 		//执行API
 		res, err := algoApi.Do()
-		if err != nil && res == nil {
+		if err != nil {
 			return nil, err
 		}
 		//处理API返回值
@@ -241,7 +241,7 @@ func (o *OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 	defer o.closeSubscribe(b, sub)
 	//执行API
 	res, err := api.Do()
-	if err != nil && res == nil {
+	if err != nil {
 		return nil, err
 	}
 	//处理API返回值
@@ -292,7 +292,7 @@ func (o *OkxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	defer o.closeSubscribe(b, sub)
 	//执行API
 	res, err := api.Do()
-	if err != nil && res == nil {
+	if err != nil {
 		return nil, err
 	}
 
