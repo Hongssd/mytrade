@@ -32,6 +32,12 @@ const (
 	OKX_ORDER_TYPE_IOC       = "ioc"
 )
 
+type OrderAlgoType string
+
+func (o OrderAlgoType) String() string {
+	return string(o)
+}
+
 // 订单类型
 // conditional：单向止盈止损
 // oco：双向止盈止损

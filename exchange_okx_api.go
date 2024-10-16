@@ -167,29 +167,52 @@ func (o *OkxTradeEngine) apiOrderAlgoCreate(req *OrderParam) *myokxapi.PrivateRe
 	api := client.NewPrivateRestTradeOrderAlgoPost().
 		InstId(req.Symbol).
 		TdMode(tdMode).
-		OrdType("conditional").
 		Side(o.okxConverter.ToOKXOrderSide(req.OrderSide)).
 		Sz(req.Quantity.String())
 
-	if req.TriggerType != ORDER_TRIGGER_TYPE_UNKNOWN && !req.TriggerPrice.IsZero() {
-		switch req.TriggerType {
-		case ORDER_TRIGGER_TYPE_STOP_LOSS:
-			api.ConditionalSlTriggerPx(req.TriggerPrice.String())
-			switch req.OrderType {
-			case ORDER_TYPE_LIMIT:
-				api.ConditionalSlOrdPx(req.Price.String())
-			case ORDER_TYPE_MARKET:
-				api.ConditionalSlOrdPx("-1")
+	if req.OrderAlgoType != "" {
+		api.OrdType(req.OrderAlgoType.String())
+		switch req.OrderAlgoType {
+		case OKX_ORDER_ALGO_TYPE_CONDITIONAL:
+			if req.TriggerType != ORDER_TRIGGER_TYPE_UNKNOWN && !req.TriggerPrice.IsZero() {
+				switch req.TriggerType {
+				case ORDER_TRIGGER_TYPE_STOP_LOSS:
+					api.ConditionalSlTriggerPx(req.TriggerPrice.String())
+					switch req.OrderType {
+					case ORDER_TYPE_LIMIT:
+						api.ConditionalSlOrdPx(req.Price.String())
+					case ORDER_TYPE_MARKET:
+						api.ConditionalSlOrdPx("-1")
+					}
+				case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+					api.ConditionalTpTriggerPx(req.TriggerPrice.String())
+					switch req.OrderType {
+					case ORDER_TYPE_LIMIT:
+						api.ConditionalTpOrdPx(req.Price.String())
+					case ORDER_TYPE_MARKET:
+						api.ConditionalTpOrdPx("-1")
+					}
+				}
 			}
-		case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
-			api.ConditionalTpTriggerPx(req.TriggerPrice.String())
-			switch req.OrderType {
+		case OKX_ORDER_ALGO_TYPE_OCO:
+			// 止盈
+			api.ConditionalTpTriggerPx(req.OcoTpTriggerPx.String())
+			switch req.OcoTpOrdType {
 			case ORDER_TYPE_LIMIT:
-				api.ConditionalTpOrdPx(req.Price.String())
+				api.ConditionalTpOrdPx(req.OcoTpOrdPx.String())
 			case ORDER_TYPE_MARKET:
 				api.ConditionalTpOrdPx("-1")
 			}
+			// 止损
+			api.ConditionalSlTriggerPx(req.OcoSlTriggerPx.String())
+			switch req.OcoSlOrdType {
+			case ORDER_TYPE_LIMIT:
+				api.ConditionalSlOrdPx(req.OcoSlOrdPx.String())
+			case ORDER_TYPE_MARKET:
+				api.ConditionalSlOrdPx("-1")
+			}
 		}
+
 	}
 
 	if OkxAccountType(req.AccountType) != "SPOT" {
@@ -224,25 +247,47 @@ func (o *OkxTradeEngine) apiOrderAlgoAmend(req *OrderParam) *myokxapi.PrivateRes
 		api.NewSz(req.Quantity.String())
 	}
 
-	if req.TriggerType != ORDER_TRIGGER_TYPE_UNKNOWN {
-		switch req.TriggerType {
-		case ORDER_TRIGGER_TYPE_STOP_LOSS:
-			api.NewSlTriggerPx(req.TriggerPrice.String())
-			switch req.OrderType {
-			case ORDER_TYPE_LIMIT:
-				api.NewSlOrdPx(req.Price.String())
-			case ORDER_TYPE_MARKET:
-				api.NewSlOrdPx("-1")
-			}
-		case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
-			api.NewTpTriggerPx(req.TriggerPrice.String())
-			switch req.OrderType {
-			case ORDER_TYPE_LIMIT:
-				api.NewTpOrdPx(req.Price.String())
-			case ORDER_TYPE_MARKET:
-				api.NewTpOrdPx("-1")
+	switch req.OrderAlgoType {
+	case OKX_ORDER_ALGO_TYPE_CONDITIONAL:
+		if req.TriggerType != ORDER_TRIGGER_TYPE_UNKNOWN {
+			switch req.TriggerType {
+			case ORDER_TRIGGER_TYPE_STOP_LOSS:
+				api.NewSlTriggerPx(req.TriggerPrice.String())
+				switch req.OrderType {
+				case ORDER_TYPE_LIMIT:
+					api.NewSlOrdPx(req.Price.String())
+				case ORDER_TYPE_MARKET:
+					api.NewSlOrdPx("-1")
+				}
+			case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+				api.NewTpTriggerPx(req.TriggerPrice.String())
+				switch req.OrderType {
+				case ORDER_TYPE_LIMIT:
+					api.NewTpOrdPx(req.Price.String())
+				case ORDER_TYPE_MARKET:
+					api.NewTpOrdPx("-1")
+				}
 			}
 		}
+	case OKX_ORDER_ALGO_TYPE_OCO:
+		// 止盈
+		api.NewTpTriggerPx(req.OcoTpTriggerPx.String())
+		switch req.OcoTpOrdType {
+		case ORDER_TYPE_LIMIT:
+			api.NewTpOrdPx(req.OcoTpOrdPx.String())
+		case ORDER_TYPE_MARKET:
+			api.NewTpOrdPx("-1")
+		}
+
+		// 止损
+		api.NewSlTriggerPx(req.OcoSlTriggerPx.String())
+		switch req.OcoSlOrdType {
+		case ORDER_TYPE_LIMIT:
+			api.NewSlOrdPx(req.OcoSlOrdPx.String())
+		case ORDER_TYPE_MARKET:
+			api.NewSlOrdPx("-1")
+		}
+
 	}
 
 	if req.ClientOrderId != "" {

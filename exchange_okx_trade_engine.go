@@ -227,7 +227,7 @@ func (o *OkxTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 			return nil, err
 		}
 		//异步接收ws结果，1秒超时
-		return o.waitOrderAlgoSubscribeReturn(sub, 1*time.Second)
+		return o.waitOrderAlgoSubscribeReturn(sub, 2*time.Second)
 	}
 
 	//获取API
