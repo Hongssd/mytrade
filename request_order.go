@@ -5,13 +5,14 @@ import "github.com/shopspring/decimal"
 type Param struct {
 
 	// 以下是必填参数
-	AccountType string          //账户类型
-	Symbol      string          //交易对
-	Price       decimal.Decimal //价格
-	Quantity    decimal.Decimal //数量
-	OrderType   OrderType       //订单类型
-	OrderSide   OrderSide       //买卖方向
-	IsAlgo      bool            // 是否是策略订单
+	AccountType   string          //账户类型
+	Symbol        string          //交易对
+	Price         decimal.Decimal //价格
+	Quantity      decimal.Decimal //数量
+	OrderType     OrderType       //订单类型
+	OrderSide     OrderSide       //买卖方向
+	IsAlgo        bool            // 是否是策略订单
+	OrderAlgoType OrderAlgoType   //策略订单类型
 
 	// 以下是可选参数
 	OrderId          string       //交易所自动生成的订单ID
@@ -26,9 +27,17 @@ type Param struct {
 	IsIsolated  bool        //是否是逐仓模式
 	Ccy         string      //杠杆订单保证金币种
 
-	//止盈止损
+	//单向止盈止损
 	TriggerPrice decimal.Decimal  //止盈止损触发价
 	TriggerType  OrderTriggerType //触发类型
+
+	// 双向止盈止损
+	OcoTpTriggerPx decimal.Decimal //止盈触发价
+	OcoTpOrdPx     decimal.Decimal //止盈委托价
+	OcoTpOrdType   OrderType       //止盈委托类型
+	OcoSlTriggerPx decimal.Decimal //止损触发价
+	OcoSlOrdPx     decimal.Decimal //止损委托价
+	OcoSlOrdType   OrderType       //止损委托类型
 }
 
 type OrderParam Param
