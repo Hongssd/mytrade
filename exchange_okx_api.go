@@ -201,6 +201,7 @@ func (o *OkxTradeEngine) apiOrderAlgoCreate(req *OrderParam) *myokxapi.PrivateRe
 			case ORDER_TYPE_LIMIT:
 				api.ConditionalTpOrdPx(req.OcoTpOrdPx.String())
 			case ORDER_TYPE_MARKET:
+
 				api.ConditionalTpOrdPx("-1")
 			}
 			// 止损
@@ -334,7 +335,7 @@ func (o *OkxTradeEngine) apiQueryOpenOrderAlgo(req *QueryOrderParam) *myokxapi.P
 }
 func (o *OkxTradeEngine) apiQueryOrderAlgo(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderAlgoGetAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-	api := client.NewPrivateRestTradeOrderAlgoGet() // 暂仅支持查询单向止盈止损订单
+	api := client.NewPrivateRestTradeOrderAlgoGet() // 暂仅支持查询单向/双向止盈止损订单
 	if req.OrderId != "" {
 		api.AlgoId(req.OrderId)
 	}
