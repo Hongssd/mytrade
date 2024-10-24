@@ -77,6 +77,7 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 		IsMargin:      isMargin,
 		IsIsolated:    isIsolated,
 		IsAlgo:        req.IsAlgo,
+		OrderAlgoType: req.OrderAlgoType,
 		Price:         r.Px,
 		Quantity:      r.Sz,
 		ExecutedQty:   r.FillSz,
@@ -117,6 +118,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderGet(req *QueryOrderParam, res
 			IsMargin:      isMargin,
 			IsIsolated:    isIsolated,
 			IsAlgo:        req.IsAlgo,
+			OrderAlgoType: req.OrderAlgoType,
 			Price:         r.Px,
 			Quantity:      r.Sz,
 			ExecutedQty:   r.FillSz,
@@ -802,7 +804,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam
 			order.InstType = OKX_AC_SPOT.String()
 		}
 
-		targetOrder := &Order{
+		appendOrder := &Order{
 			Exchange:      OKX_NAME.String(),
 			AccountType:   order.InstType,
 			Symbol:        order.InstId,
@@ -824,12 +826,32 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam
 			UpdateTime:    stringToInt64(order.UTime),
 			RealizedPnl:   decimal.Zero.String(),
 
-			IsAlgo:               true,
-			TriggerPrice:         triggerPx.String(),
-			TriggerType:          triggerType,
-			TriggerConditionType: triggerConditionType,
+			IsAlgo:        true,
+			OrderAlgoType: OrderAlgoType(order.OrdType),
 		}
-		orders = append(orders, targetOrder)
+
+		switch order.OrdType {
+		case OKX_ORDER_ALGO_TYPE_CONDITIONAL:
+			appendOrder.TriggerPrice = triggerPx.String()
+			appendOrder.TriggerType = triggerType
+			appendOrder.TriggerConditionType = triggerConditionType
+		case OKX_ORDER_ALGO_TYPE_OCO:
+			appendOrder.OcoTpTriggerPrice = order.TpTriggerPx
+			appendOrder.OcoTpOrdPrice = order.TpOrdPx
+			appendOrder.OcoSlTriggerPrice = order.SlTriggerPx
+			appendOrder.OcoSlOrdPrice = order.SlOrdPx
+			if order.TpOrdPx == "-1" {
+				appendOrder.OcoTpOrdType = ORDER_TYPE_MARKET
+			} else {
+				appendOrder.OcoTpOrdType = ORDER_TYPE_LIMIT
+			}
+			if order.SlOrdPx == "-1" {
+				appendOrder.OcoSlOrdType = ORDER_TYPE_MARKET
+			} else {
+				appendOrder.OcoSlOrdType = ORDER_TYPE_LIMIT
+			}
+		}
+		orders = append(orders, appendOrder)
 	}
 	return orders, nil
 }
