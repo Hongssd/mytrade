@@ -312,7 +312,9 @@ func (o *OkxTradeEngine) apiOrderAlgoCancel(req *OrderParam) *myokxapi.PrivateRe
 // 查询策略委托订单接口
 func (o *OkxTradeEngine) apiQueryOpenOrderAlgo(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderAlgoPendingAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-	api := client.NewPrivateRestTradeOrderAlgoPending().OrdType("conditional") // 暂只支持单向止盈止损 conditional
+	api := client.NewPrivateRestTradeOrderAlgoPending()
+	api.OrdType(req.OrderAlgoType.String()) // 策略委托类型
+
 	if req.Symbol != "" {
 		api.InstId(req.Symbol)
 	}
@@ -346,7 +348,9 @@ func (o *OkxTradeEngine) apiQueryOrderAlgo(req *QueryOrderParam) *myokxapi.Priva
 }
 func (o *OkxTradeEngine) apiQueryOrdersAlgo(req *QueryOrderParam) *myokxapi.PrivateRestTradeOrderAlgoHistoryAPI {
 	client := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient()
-	api := client.NewPrivateRestTradeOrderAlgoHistory().OrdType("conditional") // 暂只支持单向止盈止损 conditional
+	api := client.NewPrivateRestTradeOrderAlgoHistory()
+	api.OrdType(req.OrderAlgoType.String()) // 策略委托类型
+
 	api.State(o.okxConverter.ToOKXOrderStatus(req.AlgoState, true))
 
 	if req.Symbol != "" {
