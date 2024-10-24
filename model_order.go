@@ -26,9 +26,16 @@ type Order struct {
 	RealizedPnl   string       `json:"fillPnl"`       //成交盈亏
 
 	IsAlgo               bool                      `json:"isAlgo"`               //是否是策略订单
+	OrderAlgoType        OrderAlgoType             `json:"orderAlgoType"`        //策略订单类型
 	TriggerPrice         string                    `json:"triggerPrice"`         //触发价格
 	TriggerType          OrderTriggerType          `json:"triggerType"`          //触发类型
 	TriggerConditionType OrderTriggerConditionType `json:"triggerConditionType"` //触发条件类型
+	OcoTpTriggerPrice    string                    `json:"ocoTpTriggerPrice"`    //止盈触发价格
+	OcoTpOrdType         OrderType                 `json:"ocoTpOrderType"`       //止盈订单类型
+	OcoTpOrdPrice        string                    `json:"ocoTpOrderPrice"`      //止盈订单价格
+	OcoSlTriggerPrice    string                    `json:"ocoSlTriggerPrice"`    //止损触发价格
+	OcoSlOrdType         OrderType                 `json:"ocoSlOrderType"`       //止损订单类型
+	OcoSlOrdPrice        string                    `json:"ocoSlOrderPrice"`      //止损订单价格
 
 	MarginBuyBorrowAmount string `json:"marginBuyBorrowAmount"` //下单后没有发生借款则不返回该字段（杠杆）
 	MarginBuyBorrowAsset  string `json:"marginBuyBorrowAsset"`  //下单后没有发生借款则不返回该字段（杠杆）

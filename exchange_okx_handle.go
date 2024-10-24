@@ -484,7 +484,7 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res
 		order.InstType = OKX_AC_SPOT.String()
 	}
 
-	return &Order{
+	retOrder := &Order{
 		Exchange:      OKX_NAME.String(),
 		AccountType:   order.InstType,
 		Symbol:        order.InstId,
@@ -506,11 +506,33 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderAlgo(req *QueryOrderParam, res
 		UpdateTime:    stringToInt64(order.UTime),
 		RealizedPnl:   decimal.Zero.String(),
 
-		IsAlgo:               true,
-		TriggerPrice:         triggerPx.String(),
-		TriggerType:          triggerType,
-		TriggerConditionType: triggerConditionType,
-	}, nil
+		IsAlgo:        true,
+		OrderAlgoType: OrderAlgoType(order.OrdType),
+	}
+
+	switch order.OrdType {
+	case OKX_ORDER_ALGO_TYPE_CONDITIONAL:
+		retOrder.TriggerPrice = triggerPx.String()
+		retOrder.TriggerType = triggerType
+		retOrder.TriggerConditionType = triggerConditionType
+	case OKX_ORDER_ALGO_TYPE_OCO:
+		retOrder.OcoTpTriggerPrice = order.TpTriggerPx
+		retOrder.OcoTpOrdPrice = order.TpOrdPx
+		retOrder.OcoSlTriggerPrice = order.SlTriggerPx
+		retOrder.OcoSlOrdPrice = order.SlOrdPx
+		if order.TpOrdPx == "-1" {
+			retOrder.OcoTpOrdType = ORDER_TYPE_MARKET
+		} else {
+			retOrder.OcoTpOrdType = ORDER_TYPE_LIMIT
+		}
+		if order.SlOrdPx == "-1" {
+			retOrder.OcoSlOrdType = ORDER_TYPE_MARKET
+		} else {
+			retOrder.OcoSlOrdType = ORDER_TYPE_LIMIT
+		}
+	}
+
+	return retOrder, nil
 }
 func (o *OkxTradeEngine) handleOrdersFromQueryOrderAlgo(req *QueryOrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderAlgoHistoryRes]) ([]*Order, error) {
 	if res.Code != "0" {
@@ -571,7 +593,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderAlgo(req *QueryOrderParam, re
 			order.InstType = OKX_AC_SPOT.String()
 		}
 
-		order2 := &Order{
+		appendOrder := &Order{
 			Exchange:      OKX_NAME.String(),
 			Symbol:        order.InstId,
 			AccountType:   order.InstType,
@@ -593,12 +615,32 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderAlgo(req *QueryOrderParam, re
 			UpdateTime:    stringToInt64(order.UTime),
 			RealizedPnl:   decimal.Zero.String(),
 
-			IsAlgo:               true,
-			TriggerPrice:         triggerPx.String(),
-			TriggerType:          triggerType,
-			TriggerConditionType: triggerConditionType,
+			IsAlgo:        true,
+			OrderAlgoType: OrderAlgoType(order.OrdType),
 		}
-		orders = append(orders, order2)
+
+		switch order.OrdType {
+		case OKX_ORDER_ALGO_TYPE_CONDITIONAL:
+			appendOrder.TriggerPrice = triggerPx.String()
+			appendOrder.TriggerType = triggerType
+			appendOrder.TriggerConditionType = triggerConditionType
+		case OKX_ORDER_ALGO_TYPE_OCO:
+			appendOrder.OcoTpTriggerPrice = order.TpTriggerPx
+			appendOrder.OcoTpOrdPrice = order.TpOrdPx
+			appendOrder.OcoSlTriggerPrice = order.SlTriggerPx
+			appendOrder.OcoSlOrdPrice = order.SlOrdPx
+			if order.TpOrdPx == "-1" {
+				appendOrder.OcoTpOrdType = ORDER_TYPE_MARKET
+			} else {
+				appendOrder.OcoTpOrdType = ORDER_TYPE_LIMIT
+			}
+			if order.SlOrdPx == "-1" {
+				appendOrder.OcoSlOrdType = ORDER_TYPE_MARKET
+			} else {
+				appendOrder.OcoSlOrdType = ORDER_TYPE_LIMIT
+			}
+		}
+		orders = append(orders, appendOrder)
 	}
 
 	return orders, nil
@@ -660,7 +702,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 		order.OrdersAlgo.InstType = OKX_AC_SPOT.String()
 	}
 
-	return &Order{
+	retOrder := &Order{
 		Exchange:      OKX_NAME.String(),
 		AccountType:   order.OrdersAlgo.InstType,
 		Symbol:        order.OrdersAlgo.InstId,
@@ -682,11 +724,24 @@ func (o *OkxTradeEngine) handleOrderFromWsOrderAlgo(order myokxapi.WsOrdersAlgo)
 		UpdateTime:    stringToInt64(order.UTime),
 		RealizedPnl:   decimal.Zero.String(),
 
-		IsAlgo:               true,
-		TriggerPrice:         triggerPx.String(),
-		TriggerType:          triggerType,
-		TriggerConditionType: triggerConditionType,
+		IsAlgo:        true,
+		OrderAlgoType: OrderAlgoType(order.OrdersAlgo.OrdType),
 	}
+	switch order.OrdersAlgo.OrdType {
+	case OKX_ORDER_ALGO_TYPE_CONDITIONAL:
+		retOrder.TriggerPrice = triggerPx.String()
+		retOrder.TriggerType = triggerType
+		retOrder.TriggerConditionType = triggerConditionType
+	case OKX_ORDER_ALGO_TYPE_OCO:
+		retOrder.OcoTpTriggerPrice = order.OrdersAlgo.TpTriggerPx
+		retOrder.OcoTpOrdType = OrderType(order.OrdersAlgo.TpTriggerPxType)
+		retOrder.OcoTpOrdPrice = order.OrdersAlgo.TpOrdPx
+		retOrder.OcoSlTriggerPrice = order.OrdersAlgo.SlTriggerPx
+		retOrder.OcoSlOrdType = OrderType(order.OrdersAlgo.SlTriggerPxType)
+		retOrder.OcoSlOrdPrice = order.OrdersAlgo.SlOrdPx
+	}
+
+	return retOrder
 }
 func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrderAlgo(req *QueryOrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrderAlgoPendingRes]) ([]*Order, error) {
 	if res.Code != "0" {
