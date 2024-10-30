@@ -104,6 +104,22 @@ func (o *OrderParam) SetNewClientOrderId(newClientOrderId string) *OrderParam {
 	o.NewClientOrderId = newClientOrderId
 	return o
 }
+func (o *OrderParam) SetAttachOcoTpTriggerPrice(attachOcoTpTriggerPrice decimal.Decimal) *OrderParam {
+	o.AttachOcoTpTriggerPrice = attachOcoTpTriggerPrice
+	return o
+}
+func (o *OrderParam) SetAttachOcoTpOrderPrice(attachOcoTpOrderPrice decimal.Decimal) *OrderParam {
+	o.AttachOcoTpOrderPrice = attachOcoTpOrderPrice
+	return o
+}
+func (o *OrderParam) SetAttachOcoSlTriggerPrice(attachOcoSlTriggerPrice decimal.Decimal) *OrderParam {
+	o.AttachOcoSlTriggerPrice = attachOcoSlTriggerPrice
+	return o
+}
+func (o *OrderParam) SetAttachOcoSlOrderPrice(attachOcoSlOrderPrice decimal.Decimal) *OrderParam {
+	o.AttachOcoSlOrderPrice = attachOcoSlOrderPrice
+	return o
+}
 func (o *OrderParam) SetIsMargin(isMargin bool) *OrderParam {
 	o.IsMargin = isMargin
 	return o
