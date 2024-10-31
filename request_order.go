@@ -22,16 +22,22 @@ type Param struct {
 	ReduceOnly       bool         //是否只减仓
 	NewClientOrderId string       //新的用户自己生成的订单ID 改单时可用
 
+	// 附加OCO止盈止损
+	AttachOcoTpTriggerPrice decimal.Decimal //止盈触发价
+	AttachOcoTpOrderPrice   decimal.Decimal //止盈委托价
+	AttachOcoSlTriggerPrice decimal.Decimal //止损触发价
+	AttachOcoSlOrderPrice   decimal.Decimal //止损委托价
+
 	AccountMode AccountMode //账户模式（OKX）杠杆订单时必填
 	IsMargin    bool        //是否为杠杆订单
 	IsIsolated  bool        //是否是逐仓模式
 	Ccy         string      //杠杆订单保证金币种
 
-	//单向止盈止损
+	// 单向止盈止损（策略委托）
 	TriggerPrice decimal.Decimal  //止盈止损触发价
 	TriggerType  OrderTriggerType //触发类型
 
-	// 双向止盈止损
+	// 双向止盈止损（策略委托）
 	OcoTpTriggerPx decimal.Decimal //止盈触发价
 	OcoTpOrdPx     decimal.Decimal //止盈委托价
 	OcoTpOrdType   OrderType       //止盈委托类型
@@ -66,6 +72,14 @@ func (o *OrderParam) SetOrderSide(orderSide OrderSide) *OrderParam {
 	o.OrderSide = orderSide
 	return o
 }
+func (o *OrderParam) SetIsAlgo(isAlgo bool) *OrderParam {
+	o.IsAlgo = isAlgo
+	return o
+}
+func (o *OrderParam) SetOrderAlgoType(orderAlgoType OrderAlgoType) *OrderParam {
+	o.OrderAlgoType = orderAlgoType
+	return o
+}
 func (o *OrderParam) SetOrderId(orderId string) *OrderParam {
 	o.OrderId = orderId
 	return o
@@ -90,6 +104,26 @@ func (o *OrderParam) SetNewClientOrderId(newClientOrderId string) *OrderParam {
 	o.NewClientOrderId = newClientOrderId
 	return o
 }
+func (o *OrderParam) SetAttachOcoTpTriggerPrice(attachOcoTpTriggerPrice decimal.Decimal) *OrderParam {
+	o.AttachOcoTpTriggerPrice = attachOcoTpTriggerPrice
+	return o
+}
+func (o *OrderParam) SetAttachOcoTpOrderPrice(attachOcoTpOrderPrice decimal.Decimal) *OrderParam {
+	o.AttachOcoTpOrderPrice = attachOcoTpOrderPrice
+	return o
+}
+func (o *OrderParam) SetAttachOcoSlTriggerPrice(attachOcoSlTriggerPrice decimal.Decimal) *OrderParam {
+	o.AttachOcoSlTriggerPrice = attachOcoSlTriggerPrice
+	return o
+}
+func (o *OrderParam) SetAttachOcoSlOrderPrice(attachOcoSlOrderPrice decimal.Decimal) *OrderParam {
+	o.AttachOcoSlOrderPrice = attachOcoSlOrderPrice
+	return o
+}
+func (o *OrderParam) SetIsMargin(isMargin bool) *OrderParam {
+	o.IsMargin = isMargin
+	return o
+}
 func (o *OrderParam) SetIsIsolated(isIsolated bool) *OrderParam {
 	o.IsIsolated = isIsolated
 	return o
@@ -100,6 +134,30 @@ func (o *OrderParam) SetTriggerPrice(triggerPrice decimal.Decimal) *OrderParam {
 }
 func (o *OrderParam) SetOrderTriggerType(orderTriggerType OrderTriggerType) *OrderParam {
 	o.TriggerType = orderTriggerType
+	return o
+}
+func (o *OrderParam) SetOcoTpTriggerPx(ocoTpTriggerPx decimal.Decimal) *OrderParam {
+	o.OcoTpTriggerPx = ocoTpTriggerPx
+	return o
+}
+func (o *OrderParam) SetOcoTpOrdPx(ocoTpOrdPx decimal.Decimal) *OrderParam {
+	o.OcoTpOrdPx = ocoTpOrdPx
+	return o
+}
+func (o *OrderParam) SetOcoTpOrdType(ocoTpOrdType OrderType) *OrderParam {
+	o.OcoTpOrdType = ocoTpOrdType
+	return o
+}
+func (o *OrderParam) SetOcoSlTriggerPx(ocoSlTriggerPx decimal.Decimal) *OrderParam {
+	o.OcoSlTriggerPx = ocoSlTriggerPx
+	return o
+}
+func (o *OrderParam) SetOcoSlOrdPx(ocoSlOrdPx decimal.Decimal) *OrderParam {
+	o.OcoSlOrdPx = ocoSlOrdPx
+	return o
+}
+func (o *OrderParam) SetOcoSlOrdType(ocoSlOrdType OrderType) *OrderParam {
+	o.OcoSlOrdType = ocoSlOrdType
 	return o
 }
 

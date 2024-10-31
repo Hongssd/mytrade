@@ -83,6 +83,16 @@ func (o *OkxTradeEngine) apiOrderCreate(req *OrderParam) *myokxapi.PrivateRestTr
 			api.Ccy(req.Ccy)
 		}
 	}
+
+	api.AttachAlgoOrds([]myokxapi.PrivateRestTradeOrderPostReqAttachAlgoOrd{
+		{
+			TpTriggerPx: GetPointer(req.AttachOcoTpTriggerPrice.String()),
+			TpOrdPx:     GetPointer(req.AttachOcoTpOrderPrice.String()),
+			SlTriggerPx: GetPointer(req.AttachOcoSlTriggerPrice.String()),
+			SlOrdPx:     GetPointer(req.AttachOcoSlOrderPrice.String()),
+		},
+	})
+
 	if OkxAccountType(req.AccountType) != "SPOT" {
 		api.PosSide(o.okxConverter.ToOKXPositionSide(req.PositionSide))
 	} else {
