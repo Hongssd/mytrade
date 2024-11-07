@@ -46,6 +46,12 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, r
 			UpdateTime:    stringToInt64(r.UTime),
 			RealizedPnl:   r.Pnl,
 		}
+		if r.AttachAlgoOrds != nil && len(r.AttachAlgoOrds) > 0 {
+			order.AttachTpOrdPrice = r.AttachAlgoOrds[0].TpTriggerPx
+			order.AttachTpTriggerPrice = r.AttachAlgoOrds[0].TpOrdPx
+			order.AttachSlOrdPrice = r.AttachAlgoOrds[0].SlTriggerPx
+			order.AttachSlTriggerPrice = r.AttachAlgoOrds[0].SlOrdPx
+		}
 		orders = append(orders, order)
 	}
 	return orders, nil
