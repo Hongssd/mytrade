@@ -90,6 +90,11 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 		ReduceOnly:    stringToBool(r.ReduceOnly),
 		CreateTime:    stringToInt64(r.CTime),
 		UpdateTime:    stringToInt64(r.UTime),
+
+		AttachTpOrdPrice:     r.AttachAlgoOrds[0].TpTriggerPx,
+		AttachTpTriggerPrice: r.AttachAlgoOrds[0].TpOrdPx,
+		AttachSlOrdPrice:     r.AttachAlgoOrds[0].SlTriggerPx,
+		AttachSlTriggerPrice: r.AttachAlgoOrds[0].SlOrdPx,
 	}
 	return order, nil
 }
@@ -132,6 +137,11 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderGet(req *QueryOrderParam, res
 			CreateTime:    stringToInt64(r.CTime),
 			UpdateTime:    stringToInt64(r.UTime),
 			RealizedPnl:   r.Pnl,
+
+			AttachTpOrdPrice:     r.AttachAlgoOrds[0].TpTriggerPx,
+			AttachTpTriggerPrice: r.AttachAlgoOrds[0].TpOrdPx,
+			AttachSlOrdPrice:     r.AttachAlgoOrds[0].SlTriggerPx,
+			AttachSlTriggerPrice: r.AttachAlgoOrds[0].SlOrdPx,
 		}
 		orders = append(orders, order)
 	}
