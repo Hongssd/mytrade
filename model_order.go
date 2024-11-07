@@ -25,6 +25,12 @@ type Order struct {
 	UpdateTime    int64        `json:"updateTime"`    //更新时间
 	RealizedPnl   string       `json:"fillPnl"`       //成交盈亏
 
+	// 附加止盈止损
+	AttachTpTriggerPrice string `json:"attachTpTriggerPrice"` //附加止盈触发价格
+	AttachTpOrdPrice     string `json:"attachTpOrdPrice"`     //附加止盈订单价格
+	AttachSlTriggerPrice string `json:"attachSlTriggerPrice"` //附加止损触发价格
+	AttachSlOrdPrice     string `json:"attachSlOrdPrice"`     //附加止损订单价格
+
 	IsAlgo               bool                      `json:"isAlgo"`               //是否是策略订单
 	OrderAlgoType        OrderAlgoType             `json:"orderAlgoType"`        //策略订单类型
 	TriggerPrice         string                    `json:"triggerPrice"`         //触发价格
