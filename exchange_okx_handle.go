@@ -47,10 +47,10 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, r
 			RealizedPnl:   r.Pnl,
 		}
 		if r.AttachAlgoOrds != nil && len(r.AttachAlgoOrds) > 0 {
-			order.AttachTpOrdPrice = r.AttachAlgoOrds[0].TpTriggerPx
-			order.AttachTpTriggerPrice = r.AttachAlgoOrds[0].TpOrdPx
-			order.AttachSlOrdPrice = r.AttachAlgoOrds[0].SlTriggerPx
-			order.AttachSlTriggerPrice = r.AttachAlgoOrds[0].SlOrdPx
+			order.AttachTpOrdPrice = r.AttachAlgoOrds[0].TpOrdPx
+			order.AttachTpTriggerPrice = r.AttachAlgoOrds[0].TpTriggerPx
+			order.AttachSlOrdPrice = r.AttachAlgoOrds[0].SlOrdPx
+			order.AttachSlTriggerPrice = r.AttachAlgoOrds[0].SlTriggerPx
 		}
 		orders = append(orders, order)
 	}
@@ -98,10 +98,10 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 		UpdateTime:    stringToInt64(r.UTime),
 	}
 	if r.AttachAlgoOrds != nil && len(r.AttachAlgoOrds) > 0 {
-		order.AttachTpOrdPrice = r.AttachAlgoOrds[0].TpTriggerPx
-		order.AttachTpTriggerPrice = r.AttachAlgoOrds[0].TpOrdPx
-		order.AttachSlOrdPrice = r.AttachAlgoOrds[0].SlTriggerPx
-		order.AttachSlTriggerPrice = r.AttachAlgoOrds[0].SlOrdPx
+		order.AttachTpOrdPrice = r.AttachAlgoOrds[0].TpOrdPx
+		order.AttachTpTriggerPrice = r.AttachAlgoOrds[0].TpTriggerPx
+		order.AttachSlOrdPrice = r.AttachAlgoOrds[0].SlOrdPx
+		order.AttachSlTriggerPrice = r.AttachAlgoOrds[0].SlTriggerPx
 	}
 	return order, nil
 }
@@ -146,10 +146,10 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderGet(req *QueryOrderParam, res
 			RealizedPnl:   r.Pnl,
 		}
 		if r.AttachAlgoOrds != nil && len(r.AttachAlgoOrds) > 0 {
-			order.AttachTpOrdPrice = r.AttachAlgoOrds[0].TpTriggerPx
-			order.AttachTpTriggerPrice = r.AttachAlgoOrds[0].TpOrdPx
-			order.AttachSlOrdPrice = r.AttachAlgoOrds[0].SlTriggerPx
-			order.AttachSlTriggerPrice = r.AttachAlgoOrds[0].SlOrdPx
+			order.AttachTpOrdPrice = r.AttachAlgoOrds[0].TpOrdPx
+			order.AttachTpTriggerPrice = r.AttachAlgoOrds[0].TpTriggerPx
+			order.AttachSlOrdPrice = r.AttachAlgoOrds[0].SlOrdPx
+			order.AttachSlTriggerPrice = r.AttachAlgoOrds[0].SlTriggerPx
 		}
 		orders = append(orders, order)
 	}
