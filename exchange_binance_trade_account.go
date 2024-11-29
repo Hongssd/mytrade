@@ -469,16 +469,19 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 		}
 		for _, a := range *res {
 			if len(currencies) == 0 || stringInSlice(a.Asset, currencies) {
+				free, _ := decimal.NewFromString(a.Free)
 				locked, _ := decimal.NewFromString(a.Locked)           //锁定
 				freeze, _ := decimal.NewFromString(a.Freeze)           //冻结
 				withdrawing, _ := decimal.NewFromString(a.Withdrawing) //提币中
+				walletBalance := free.Add(locked).Add(freeze).Add(withdrawing)
 				assetList = append(assetList, &Asset{
 					Exchange:          b.ExchangeType().String(),                    //交易所
 					AccountType:       accountType,                                  //账户类型
 					Asset:             a.Asset,                                      //资产
 					Free:              a.Free,                                       //可用余额
 					Locked:            locked.Add(freeze).Add(withdrawing).String(), //locked=锁定+冻结+提币中
-					MaxWithdrawAmount: a.Free,
+					WalletBalance:     walletBalance.String(),                       //钱包余额
+					MaxWithdrawAmount: a.Free,                                       //最大可转
 					UpdateTime:        time.Now().UnixMilli(),
 				})
 			}
@@ -494,13 +497,14 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 				lock, _ := decimal.NewFromString(a.Locked)
 				walletBalance := free.Add(lock)
 				assetList = append(assetList, &Asset{
-					Exchange:      b.ExchangeType().String(), //交易所
-					AccountType:   accountType,               //账户类型
-					Asset:         a.Asset,                   //资产
-					Free:          a.Free,                    //可用余额
-					Locked:        a.Locked,                  //冻结余额
-					WalletBalance: walletBalance.String(),    //钱包余额
-					UpdateTime:    time.Now().UnixMilli(),
+					Exchange:          b.ExchangeType().String(), //交易所
+					AccountType:       accountType,               //账户类型
+					Asset:             a.Asset,                   //资产
+					Free:              a.Free,                    //可用余额
+					Locked:            a.Locked,                  //冻结余额
+					WalletBalance:     walletBalance.String(),    //钱包余额
+					MaxWithdrawAmount: a.Free,
+					UpdateTime:        time.Now().UnixMilli(),
 				})
 			}
 		}
