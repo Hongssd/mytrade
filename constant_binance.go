@@ -7,12 +7,13 @@ func (b BinanceAccountType) String() string {
 }
 
 const (
-	BN_AC_FUNDING         BinanceAccountType = "FUNDING"
-	BN_AC_SPOT            BinanceAccountType = "SPOT"
-	BN_AC_MARGIN_CROSSED  BinanceAccountType = "MARGIN_CROSSED"
-	BN_AC_MARGIN_ISOLATED BinanceAccountType = "MARGIN_ISOLATED"
-	BN_AC_FUTURE          BinanceAccountType = "FUTURE"
-	BN_AC_SWAP            BinanceAccountType = "SWAP"
+	BN_AC_FUNDING          BinanceAccountType = "FUNDING"
+	BN_AC_SPOT             BinanceAccountType = "SPOT"
+	BN_AC_MARGIN_CROSSED   BinanceAccountType = "MARGIN_CROSSED"
+	BN_AC_MARGIN_ISOLATED  BinanceAccountType = "MARGIN_ISOLATED"
+	BN_AC_FUTURE           BinanceAccountType = "FUTURE"
+	BN_AC_SWAP             BinanceAccountType = "SWAP"
+	BN_AC_PORTFOLIO_MARGIN BinanceAccountType = "PORTFOLIO_MARGIN"
 )
 
 const (
@@ -88,10 +89,11 @@ const (
 
 // 账户类型
 const (
-	BN_ASSET_TYPE_FUND     = "FUNDING"
-	BN_ASSET_TYPE_UNIFIED  = "MAIN"
-	BN_ASSET_TYPE_UMFUTURE = "UMFUTURE"
-	BN_ASSET_TYPE_CMFUTURE = "CMFUTURE"
+	BN_ASSET_TYPE_FUND             = "FUNDING"
+	BN_ASSET_TYPE_UNIFIED          = "MAIN"
+	BN_ASSET_TYPE_UMFUTURE         = "UMFUTURE"
+	BN_ASSET_TYPE_CMFUTURE         = "CMFUTURE"
+	BN_ASSET_TYPE_PORTFOLIO_MARGIN = "PORTFOLIO_MARGIN"
 )
 
 // 资金划转类型

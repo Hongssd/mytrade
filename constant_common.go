@@ -155,11 +155,12 @@ func (p AssetType) String() string {
 }
 
 const (
-	ASSET_TYPE_FUND     AssetType = "FUND"     //资金账户
-	ASSET_TYPE_UNIFIED  AssetType = "UNIFIED"  // 统一账户
-	ASSET_TYPE_CONTRACT AssetType = "CONTRACT" // 合约账户
-	ASSET_TYPE_UMFUTURE AssetType = "UMFUTURE" // U本位合约账户
-	ASSET_TYPE_CMFUTURE AssetType = "CMFUTURE" // 币本位合约账户
+	ASSET_TYPE_FUND             AssetType = "FUND"             //资金账户
+	ASSET_TYPE_UNIFIED          AssetType = "UNIFIED"          // 统一账户
+	ASSET_TYPE_CONTRACT         AssetType = "CONTRACT"         // 合约账户
+	ASSET_TYPE_UMFUTURE         AssetType = "UMFUTURE"         // U本位合约账户
+	ASSET_TYPE_CMFUTURE         AssetType = "CMFUTURE"         // 币本位合约账户
+	ASSET_TYPE_PORTFOLIO_MARGIN AssetType = "PORTFOLIO_MARGIN" // 组合保证金账户
 )
 
 // 划转状态类型

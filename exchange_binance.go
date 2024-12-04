@@ -27,9 +27,15 @@ func (b *BinanceExchange) NewTradeEngine(apiKey, secretKey, passphrase string) T
 
 // 获取账户信息
 func (b *BinanceExchange) NewTradeAccount(apiKey, secretKey, passphrase string) TradeAccount {
+	isPortfolioMargin := false
+	_, err := binance.NewPortfolioMarginClient(apiKey, secretKey).NewGetAccount().Do()
+	if err == nil {
+		isPortfolioMargin = true
+	}
 	return &BinanceTradeAccount{
-		ExchangeBase: b.ExchangeBase,
-		apiKey:       apiKey,
-		secretKey:    secretKey,
+		ExchangeBase:      b.ExchangeBase,
+		apiKey:            apiKey,
+		secretKey:         secretKey,
+		isPortfolioMargin: isPortfolioMargin,
 	}
 }

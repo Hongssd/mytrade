@@ -2,6 +2,7 @@ package mytrade
 
 import (
 	"github.com/shopspring/decimal"
+	"golang.org/x/sync/errgroup"
 	"strconv"
 	"sync"
 
@@ -101,4 +102,12 @@ func stringInSlice(str string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func ErrGroupWait(funs ...func() error) error {
+	var g errgroup.Group
+	for _, fun := range funs {
+		g.Go(fun)
+	}
+	return g.Wait()
 }
