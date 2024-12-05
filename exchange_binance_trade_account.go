@@ -183,7 +183,7 @@ func (b BinanceTradeAccount) GetLeverage(accountType, symbol string,
 				return leverage, err
 			}
 			for _, p := range res.Positions {
-				if r, ok := check(p.Symbol, true, p.PositionSide, p.Leverage); ok {
+				if r, ok := check(p.Symbol, false, p.PositionSide, p.Leverage); ok {
 					leverage = r
 					break
 				}
@@ -207,7 +207,7 @@ func (b BinanceTradeAccount) GetLeverage(accountType, symbol string,
 				return leverage, err
 			}
 			for _, p := range res.Positions {
-				if r, ok := check(p.Symbol, true, p.PositionSide, p.Leverage); ok {
+				if r, ok := check(p.Symbol, false, p.PositionSide, p.Leverage); ok {
 					leverage = r
 					break
 				}
