@@ -337,6 +337,10 @@ func (c *BinanceEnumConverter) FromBNAssetType(t string) AssetType {
 		return ASSET_TYPE_CMFUTURE
 	case BN_ASSET_TYPE_PORTFOLIO_MARGIN:
 		return ASSET_TYPE_PORTFOLIO_MARGIN
+	case BN_ASSET_TYPE_MARGIN_ISOLATED:
+		return ASSET_TYPE_MARGIN_ISOLATED
+	case BN_ASSET_TYPE_MARGIN_CROSSED:
+		return ASSET_TYPE_MARGIN_CROSSED
 	default:
 		return ""
 	}
@@ -353,6 +357,11 @@ func (c *BinanceEnumConverter) ToBNAssetType(t AssetType) string {
 		return BN_ASSET_TYPE_CMFUTURE
 	case ASSET_TYPE_PORTFOLIO_MARGIN:
 		return BN_ASSET_TYPE_PORTFOLIO_MARGIN
+	case ASSET_TYPE_MARGIN_CROSSED:
+		return BN_ASSET_TYPE_MARGIN_CROSSED
+	case ASSET_TYPE_MARGIN_ISOLATED:
+		return BN_ASSET_TYPE_MARGIN_ISOLATED
+
 	default:
 		return ""
 	}

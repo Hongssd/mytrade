@@ -161,6 +161,8 @@ const (
 	ASSET_TYPE_UMFUTURE         AssetType = "UMFUTURE"         // U本位合约账户
 	ASSET_TYPE_CMFUTURE         AssetType = "CMFUTURE"         // 币本位合约账户
 	ASSET_TYPE_PORTFOLIO_MARGIN AssetType = "PORTFOLIO_MARGIN" // 组合保证金账户
+	ASSET_TYPE_MARGIN_ISOLATED  AssetType = "MARGIN_ISOLATED"  // 逐仓保证金账户
+	ASSET_TYPE_MARGIN_CROSSED   AssetType = "MARGIN_CROSSED"   // 全仓保证金账户
 )
 
 // 划转状态类型
