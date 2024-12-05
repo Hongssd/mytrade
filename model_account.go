@@ -58,14 +58,16 @@ type Asset struct {
 // 资金划转（账户内）
 type AssetTransfer struct {
 	// required
-	Exchange string    `json:"exchange"` // 交易所名称 All required
-	TranId   string    `json:"tranId"`   // 划转ID BN, ByBit required, OKX optional
-	Asset    string    `json:"asset"`    // 币种 OKX required
-	From     AssetType `json:"from"`     // 转出账号 OKX required
-	To       AssetType `json:"to"`       // 转入账号 OKX required
-	Amount   string    `json:"amount"`   // 划转量 OKX required
-	Status   string    `json:"status"`   // 划转状态 ByBit required
-	ClientId string    `json:"clientId"` // 客户自定义ID OKX optional
+	Exchange   string    `json:"exchange"`   // 交易所名称 All required
+	TranId     string    `json:"tranId"`     // 划转ID BN, ByBit required, OKX optional
+	Asset      string    `json:"asset"`      // 币种 OKX required
+	From       AssetType `json:"from"`       // 转出账号 OKX required
+	To         AssetType `json:"to"`         // 转入账号 OKX required
+	Amount     string    `json:"amount"`     // 划转量 OKX required
+	Status     string    `json:"status"`     // 划转状态 ByBit required
+	ClientId   string    `json:"clientId"`   // 客户自定义ID OKX optional
+	FromSymbol string    `json:"fromSymbol"` // 转出账号的交易对 币安 逐仓杠杆账号
+	ToSymbol   string    `json:"toSymbol"`   // 转入账号的交易对 币安 逐仓杠杆账号
 }
 
 // 查询资金划转历史

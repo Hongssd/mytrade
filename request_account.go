@@ -4,10 +4,12 @@ import "github.com/shopspring/decimal"
 
 type AssetTransferParams struct {
 	// required
-	Asset  string          //币种 All required
-	Amount decimal.Decimal //数量 All required
-	From   AssetType       //从哪个账户划转 All required
-	To     AssetType       //划转到哪个账户 All required
+	Asset      string          //币种 All required
+	Amount     decimal.Decimal //数量 All required
+	From       AssetType       //从哪个账户划转 All required
+	To         AssetType       //划转到哪个账户 All required
+	FromSymbol string          //转出账号的交易对 币安 逐仓杠杆账号
+	ToSymbol   string          //转入账号的交易对 币安 逐仓杠杆账号
 }
 
 type QueryAssetTransferParams struct {

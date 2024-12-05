@@ -1054,6 +1054,14 @@ func (b BinanceTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTr
 
 	api.Asset(req.Asset).Amount(req.Amount)
 
+	if req.FromSymbol != "" {
+		api.FromSymbol(req.FromSymbol)
+	}
+
+	if req.ToSymbol != "" {
+		api.ToSymbol(req.ToSymbol)
+	}
+
 	res, err := api.Do()
 	if err != nil {
 		log.Error(err)
@@ -1063,14 +1071,16 @@ func (b BinanceTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTr
 	var assetTransfers []*AssetTransfer
 	tranId := strconv.FormatInt(res.TranId, 10)
 	assetTransfers = append(assetTransfers, &AssetTransfer{
-		Exchange: b.ExchangeType().String(),
-		TranId:   tranId,
-		Asset:    req.Asset,
-		From:     req.From,
-		To:       req.To,
-		Amount:   req.Amount.String(),
-		Status:   "",
-		ClientId: "",
+		Exchange:   b.ExchangeType().String(),
+		TranId:     tranId,
+		Asset:      req.Asset,
+		From:       req.From,
+		To:         req.To,
+		Amount:     req.Amount.String(),
+		Status:     "",
+		ClientId:   "",
+		FromSymbol: req.FromSymbol,
+		ToSymbol:   req.ToSymbol,
 	})
 
 	return assetTransfers, nil
