@@ -225,7 +225,7 @@ func (b BinanceTradeAccount) GetLeverage(accountType, symbol string,
 
 func (b BinanceTradeAccount) SetAccountMode(mode AccountMode) error {
 	if b.isPortfolioMargin {
-		return nil
+		return ErrorNotSupport
 	}
 	nowAccountMode, err := b.GetAccountMode()
 	if err != nil {
@@ -245,7 +245,7 @@ func (b BinanceTradeAccount) SetAccountMode(mode AccountMode) error {
 
 func (b BinanceTradeAccount) SetMarginMode(accountType, symbol string, mode MarginMode) error {
 	if b.isPortfolioMargin {
-		return nil
+		return ErrorNotSupport
 	}
 	if accountType == BN_AC_SPOT.String() {
 		return nil
@@ -342,9 +342,6 @@ func (b BinanceTradeAccount) SetLeverage(accountType, symbol string,
 	leverage decimal.Decimal) error {
 	switch BinanceAccountType(accountType) {
 	case BN_AC_SPOT:
-		if b.isPortfolioMargin {
-			return nil
-		}
 		if marginMode == MARGIN_MODE_CROSSED {
 			// tips: maxleverage only 3x， 5x， 10x are supported
 			_, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).
