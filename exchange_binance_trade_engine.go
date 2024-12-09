@@ -10,9 +10,10 @@ import (
 type BinanceTradeEngine struct {
 	ExchangeBase
 
-	bnConverter BinanceEnumConverter
-	apiKey      string
-	secretKey   string
+	bnConverter       BinanceEnumConverter
+	apiKey            string
+	secretKey         string
+	isPortfolioMargin bool
 
 	wsSpotAccount   *mybinanceapi.SpotWsStreamClient
 	wsFutureAccount *mybinanceapi.FutureWsStreamClient
@@ -36,35 +37,62 @@ func (b *BinanceTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, er
 	var orders []*Order
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		if req.IsMargin {
-			api := b.apiSpotMarginOpenOrders(req)
+		if b.isPortfolioMargin && req.IsMargin {
+			api := b.apiPortfolioMarginMarginOpenOrdersQuery(req)
 			res, err := api.Do()
 			if err != nil {
 				return nil, err
 			}
-			orders = b.handleOrdersFromSpotMarginOpenOrders(req, res)
+			orders = b.handlePortfolioMarginMarginOpenOrders(req, res)
 		} else {
-			api := b.apiSpotOpenOrders(req)
-			res, err := api.Do()
-			if err != nil {
-				return nil, err
+			if req.IsMargin {
+				api := b.apiSpotMarginOpenOrders(req)
+				res, err := api.Do()
+				if err != nil {
+					return nil, err
+				}
+				orders = b.handleOrdersFromSpotMarginOpenOrders(req, res)
+			} else {
+				api := b.apiSpotOpenOrders(req)
+				res, err := api.Do()
+				if err != nil {
+					return nil, err
+				}
+				orders = b.handleOrdersFromSpotOpenOrders(req, res)
 			}
-			orders = b.handleOrdersFromSpotOpenOrders(req, res)
 		}
 	case BN_AC_FUTURE:
-		api := b.apiFutureOpenOrders(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginUmOpenOrdersQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handlePortfolioMarginUmOpenOrders(req, res)
+		} else {
+			api := b.apiFutureOpenOrders(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handleOrdersFromFutureOpenOrders(req, res)
 		}
-		orders = b.handleOrdersFromFutureOpenOrders(req, res)
 	case BN_AC_SWAP:
-		api := b.apiSwapOpenOrders(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginCmOpenOrdersQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handlePortfolioMarginCmOpenOrders(req, res)
+		} else {
+			api := b.apiSwapOpenOrders(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handleOrdersFromSwapOpenOrders(req, res)
 		}
-		orders = b.handleOrdersFromSwapOpenOrders(req, res)
 	default:
 		return nil, ErrorAccountType
 	}
@@ -75,35 +103,62 @@ func (b *BinanceTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		if req.IsMargin {
-			api := b.apiSpotMarginOrderQuery(req)
+		if b.isPortfolioMargin && req.IsMargin {
+			api := b.apiPortfolioMarginMarginOrderQuery(req)
 			res, err := api.Do()
 			if err != nil {
 				return nil, err
 			}
-			order = b.handleOrderFromSpotMarginOrderQuery(req, res)
+			order = b.handlePortfolioMarginMarginOrderQuery(req, res)
 		} else {
-			api := b.apiSpotOrderQuery(req)
-			res, err := api.Do()
-			if err != nil {
-				return nil, err
+			if req.IsMargin {
+				api := b.apiSpotMarginOrderQuery(req)
+				res, err := api.Do()
+				if err != nil {
+					return nil, err
+				}
+				order = b.handleOrderFromSpotMarginOrderQuery(req, res)
+			} else {
+				api := b.apiSpotOrderQuery(req)
+				res, err := api.Do()
+				if err != nil {
+					return nil, err
+				}
+				order = b.handleOrderFromSpotOrderQuery(req, res)
 			}
-			order = b.handleOrderFromSpotOrderQuery(req, res)
 		}
 	case BN_AC_FUTURE:
-		api := b.apiFutureOrderQuery(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginUmOrderQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handlePortfolioMarginUmOrderQuery(req, res)
+		} else {
+			api := b.apiFutureOrderQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromFutureOrderQuery(req, res)
 		}
-		order = b.handleOrderFromFutureOrderQuery(req, res)
 	case BN_AC_SWAP:
-		api := b.apiSwapOrderQuery(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginCmOrderQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handlePortfolioMarginCmOrderQuery(req, res)
+		} else {
+			api := b.apiSwapOrderQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromSwapOrderQuery(req, res)
 		}
-		order = b.handleOrderFromSwapOrderQuery(req, res)
 	default:
 		return nil, ErrorAccountType
 	}
@@ -115,35 +170,62 @@ func (b *BinanceTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error)
 
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		if req.IsMargin {
-			api := b.apiSpotMarginOrdersQuery(req)
+		if b.isPortfolioMargin && req.IsMargin {
+			api := b.apiPortfolioMarginMarginOrdersQuery(req)
 			res, err := api.Do()
 			if err != nil {
 				return nil, err
 			}
-			orders = b.handleOrderFromSpotMarginOrdersQuery(req, res)
+			orders = b.handlePortfolioMarginMarginOrdersQuery(req, res)
 		} else {
-			api := b.apiSpotOrdersQuery(req)
-			res, err := api.Do()
-			if err != nil {
-				return nil, err
+			if req.IsMargin {
+				api := b.apiSpotMarginOrdersQuery(req)
+				res, err := api.Do()
+				if err != nil {
+					return nil, err
+				}
+				orders = b.handleOrderFromSpotMarginOrdersQuery(req, res)
+			} else {
+				api := b.apiSpotOrdersQuery(req)
+				res, err := api.Do()
+				if err != nil {
+					return nil, err
+				}
+				orders = b.handleOrderFromSpotOrdersQuery(req, res)
 			}
-			orders = b.handleOrderFromSpotOrdersQuery(req, res)
 		}
 	case BN_AC_FUTURE:
-		api := b.apiFutureOrdersQuery(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginUmOrdersQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handlePortfolioMarginUmOrdersQuery(req, res)
+		} else {
+			api := b.apiFutureOrdersQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handleOrderFromFutureOrdersQuery(req, res)
 		}
-		orders = b.handleOrderFromFutureOrdersQuery(req, res)
 	case BN_AC_SWAP:
-		api := b.apiSwapOrdersQuery(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginCmOrdersQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handlePortfolioMarginCmOrdersQuery(req, res)
+		} else {
+			api := b.apiSwapOrdersQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handleOrderFromSwapOrdersQuery(req, res)
 		}
-		orders = b.handleOrderFromSwapOrdersQuery(req, res)
 	default:
 		return nil, ErrorAccountType
 	}
@@ -155,26 +237,53 @@ func (b *BinanceTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error)
 
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		api := b.apiSpotTradeQuery(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin && req.IsMargin {
+			api := b.apiPortfolioMarginMarginTradesQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			trades = b.handlePortfolioMarginMarginTradesQuery(req, res)
+		} else {
+			api := b.apiSpotTradeQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			trades = b.handleTradesFromSpotTradeQuery(req, res)
 		}
-		trades = b.handleTradesFromSpotTradeQuery(req, res)
 	case BN_AC_FUTURE:
-		api := b.apiFutureTradeQuery(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginUmTradesQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			trades = b.handlePortfolioMarginUmTradesQuery(req, res)
+		} else {
+			api := b.apiFutureTradeQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			trades = b.handleTradesFromFutureTradeQuery(req, res)
 		}
-		trades = b.handleTradesFromFutureTradeQuery(req, res)
 	case BN_AC_SWAP:
-		api := b.apiSwapTradeQuery(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginCmTradesQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			trades = b.handlePortfolioMarginCmTradesQuery(req, res)
+		} else {
+			api := b.apiSwapTradeQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			trades = b.handleTradesFromSwapTradeQuery(req, res)
 		}
-		trades = b.handleTradesFromSwapTradeQuery(req, res)
 	default:
 		return nil, ErrorAccountType
 	}
@@ -187,12 +296,21 @@ func (b *BinanceTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
 		if req.IsMargin {
-			api := b.apiSpotMarginOrderCreate(req)
-			res, err := api.Do()
-			if err != nil {
-				return nil, err
+			if b.isPortfolioMargin {
+				api := b.apiPortfolioMarginMarginOrderCreate(req)
+				res, err := api.Do()
+				if err != nil {
+					return nil, err
+				}
+				order = b.handlePortfolioMarginMarginOrderCreate(req, res)
+			} else {
+				api := b.apiSpotMarginOrderCreate(req)
+				res, err := api.Do()
+				if err != nil {
+					return nil, err
+				}
+				order = b.handleOrderFromSpotMarginOrderCreate(req, res)
 			}
-			order = b.handleOrderFromSpotMarginOrderCreate(req, res)
 		} else {
 			api := b.apiSpotOrderCreate(req)
 			res, err := api.Do()
@@ -202,19 +320,37 @@ func (b *BinanceTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 			order = b.handleOrderFromSpotOrderCreate(req, res)
 		}
 	case BN_AC_FUTURE:
-		api := b.apiFutureOrderCreate(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginUmOrderCreate(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handlePortfolioMarginUmOrderCreate(req, res)
+		} else {
+			api := b.apiFutureOrderCreate(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromFutureOrderCreate(req, res)
 		}
-		order = b.handleOrderFromFutureOrderCreate(req, res)
 	case BN_AC_SWAP:
-		api := b.apiSwapOrderCreate(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginCmOrderCreate(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handlePortfolioMarginCmOrderCreate(req, res)
+		} else {
+			api := b.apiSwapOrderCreate(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromSwapOrderCreate(req, res)
 		}
-		order = b.handleOrderFromSwapOrderCreate(req, res)
 	default:
 		return nil, ErrorAccountType
 	}
@@ -225,6 +361,9 @@ func (b *BinanceTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
+		if req.IsMargin && b.isPortfolioMargin {
+			return nil, errors.New("portfolio margin account not support amend order")
+		}
 		api := b.apiSpotOrderAmend(req)
 		res, err := api.Do()
 		if err != nil {
@@ -238,19 +377,37 @@ func (b *BinanceTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 		}
 		order = b.handleOrderFromSpotOrderAmend(req, res)
 	case BN_AC_FUTURE:
-		api := b.apiFutureOrderAmend(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginUmOrderAmend(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handlePortfolioMarginUmOrderAmend(req, res)
+		} else {
+			api := b.apiFutureOrderAmend(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromFutureOrderAmend(req, res)
 		}
-		order = b.handleOrderFromFutureOrderAmend(req, res)
 	case BN_AC_SWAP:
-		api := b.apiSwapOrderAmend(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginCmOrderAmend(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handlePortfolioMarginCmOrderAmend(req, res)
+		} else {
+			api := b.apiSwapOrderAmend(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromSwapOrderAmend(req, res)
 		}
-		order = b.handleOrderFromSwapOrderAmend(req, res)
 	default:
 		return nil, ErrorAccountType
 	}
@@ -261,35 +418,62 @@ func (b *BinanceTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	var order *Order
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		if req.IsMargin {
-			api := b.apiSpotMarginOrderCancel(req)
+		if b.isPortfolioMargin && req.IsMargin { // 统一账号杠杆撤单
+			api := b.apiPortfolioMarginMarginOrderCancel(req)
 			res, err := api.Do()
 			if err != nil {
 				return nil, err
 			}
-			order = b.handleOrderFromSpotMarginOrderCancel(req, res)
+			order = b.handlePortfolioMarginMarginOrderCancel(req, res)
 		} else {
-			api := b.apiSpotOrderCancel(req)
-			res, err := api.Do()
-			if err != nil {
-				return nil, err
+			if req.IsMargin {
+				api := b.apiSpotMarginOrderCancel(req)
+				res, err := api.Do()
+				if err != nil {
+					return nil, err
+				}
+				order = b.handleOrderFromSpotMarginOrderCancel(req, res)
+			} else {
+				api := b.apiSpotOrderCancel(req)
+				res, err := api.Do()
+				if err != nil {
+					return nil, err
+				}
+				order = b.handleOrderFromSpotOrderCancel(req, res)
 			}
-			order = b.handleOrderFromSpotOrderCancel(req, res)
 		}
 	case BN_AC_FUTURE:
-		api := b.apiFutureOrderCancel(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginUmOrderCancel(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handlePortfolioMarginUmOrderCancel(req, res)
+		} else {
+			api := b.apiFutureOrderCancel(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromFutureOrderCancel(req, res)
 		}
-		order = b.handleOrderFromFutureOrderCancel(req, res)
 	case BN_AC_SWAP:
-		api := b.apiSwapOrderCancel(req)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			api := b.apiPortfolioMarginCmOrderCancel(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handlePortfolioMarginCmOrderCancel(req, res)
+		} else {
+			api := b.apiSwapOrderCancel(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			order = b.handleOrderFromSwapOrderCancel(req, res)
 		}
-		order = b.handleOrderFromSwapOrderCancel(req, res)
 	default:
 		return nil, ErrorAccountType
 	}

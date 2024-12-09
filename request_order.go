@@ -230,6 +230,7 @@ type QueryTradeParam struct {
 	StartTime   int64  //开始时间
 	EndTime     int64  //结束时间
 	Limit       int    //限制返回的成交明细数量
+	IsMargin    bool   //是否为杠杆订单
 }
 
 func (q *QueryTradeParam) SetAccountType(accountType string) *QueryTradeParam {
@@ -254,6 +255,10 @@ func (q *QueryTradeParam) SetEndTime(endTime int64) *QueryTradeParam {
 }
 func (q *QueryTradeParam) SetLimit(limit int) *QueryTradeParam {
 	q.Limit = limit
+	return q
+}
+func (q *QueryTradeParam) SetIsMargin(isMargin bool) *QueryTradeParam {
+	q.IsMargin = isMargin
 	return q
 }
 
