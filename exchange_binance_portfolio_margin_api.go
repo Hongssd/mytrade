@@ -18,7 +18,6 @@ func (b *BinanceTradeEngine) apiPortfolioMarginUmOrderCreate(req *OrderParam) *m
 		api.Price(req.Price)
 	}
 
-	api.TimeInForce(BN_TIME_IN_FORCE_GTC) // default tif
 	if req.TimeInForce != "" {
 		api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
 	}
@@ -138,7 +137,6 @@ func (b *BinanceTradeEngine) apiPortfolioMarginCmOrderCreate(req *OrderParam) *m
 		api.Price(req.Price)
 	}
 
-	api.TimeInForce(BN_TIME_IN_FORCE_GTC) // default tif
 	if req.TimeInForce != "" {
 		api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
 	}

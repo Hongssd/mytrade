@@ -280,6 +280,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderCancel(req *OrderParam,
 func (b *BinanceTradeEngine) handlePortfolioMarginCmOpenOrders(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginCmOpenOrdersRes) []*Order {
 	var orders []*Order
 	for _, o := range *res {
+		cumQuoteQty := decimal.RequireFromString(o.Price).Mul(decimal.RequireFromString(o.ExecutedQty))
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
@@ -291,7 +292,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOpenOrders(req *QueryOrderPa
 			Price:         o.Price,
 			Quantity:      o.OrigQty,
 			ExecutedQty:   o.ExecutedQty,
-			CumQuoteQty:   o.CumBase, // 返回值无相关参数，cumBase代替
+			CumQuoteQty:   cumQuoteQty.String(),
 			AvgPrice:      o.AvgPrice,
 			Status:        b.bnConverter.FromBNOrderStatus(o.Status, o.Type),
 			Type:          b.bnConverter.FromBNOrderType(o.Type),
@@ -308,6 +309,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOpenOrders(req *QueryOrderPa
 	return orders
 }
 func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderQuery(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginCmOrderGetRes) *Order {
+	cumQuoteQty := decimal.RequireFromString(res.Price).Mul(decimal.RequireFromString(res.ExecuteQty))
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
@@ -319,7 +321,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderQuery(req *QueryOrderPa
 		Price:         res.Price,
 		Quantity:      res.OrigQty,
 		ExecutedQty:   res.ExecuteQty,
-		CumQuoteQty:   res.CumBase, // 返回值无相关参数，cumBase代替?
+		CumQuoteQty:   cumQuoteQty.String(),
 		AvgPrice:      res.AvgPrice,
 		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
 		Type:          b.bnConverter.FromBNOrderType(res.Type),
@@ -336,6 +338,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderQuery(req *QueryOrderPa
 func (b *BinanceTradeEngine) handlePortfolioMarginCmOrdersQuery(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginCmAllOrdersRes) []*Order {
 	var orders []*Order
 	for _, o := range *res {
+		cumQuoteQty := decimal.RequireFromString(o.Price).Mul(decimal.RequireFromString(o.ExecuteQty))
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
@@ -347,7 +350,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrdersQuery(req *QueryOrderP
 			Price:         o.Price,
 			Quantity:      o.OrigQty,
 			ExecutedQty:   o.ExecuteQty,
-			CumQuoteQty:   o.CumBase, // 返回值无相关参数，cumBase代替?
+			CumQuoteQty:   cumQuoteQty.String(),
 			AvgPrice:      o.AvgPrice,
 			Status:        b.bnConverter.FromBNOrderStatus(o.Status, o.Type),
 			Type:          b.bnConverter.FromBNOrderType(o.Type),
@@ -366,6 +369,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrdersQuery(req *QueryOrderP
 func (b *BinanceTradeEngine) handlePortfolioMarginCmTradesQuery(req *QueryTradeParam, res *mybinanceapi.PortfolioMarginCmUserTradesRes) []*Trade {
 	var trades []*Trade
 	for _, trade := range *res {
+		quoteQty := decimal.RequireFromString(trade.Price).Mul(decimal.RequireFromString(trade.Qty))
 		trades = append(trades, &Trade{
 			Exchange:     BINANCE_NAME.String(),
 			AccountType:  req.AccountType,
@@ -374,7 +378,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmTradesQuery(req *QueryTradeP
 			OrderId:      strconv.FormatInt(trade.OrderId, 10),
 			Price:        trade.Price,
 			Quantity:     trade.Qty,
-			QuoteQty:     trade.BaseQty, // 返回值无相关参数，baseQty代替?
+			QuoteQty:     quoteQty.String(),
 			Side:         b.bnConverter.FromBNOrderSide(trade.Side),
 			PositionSide: b.bnConverter.FromBNPositionSide(trade.PositionSide),
 			FeeAmount:    trade.Commission,
@@ -571,6 +575,13 @@ func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrdersQuery(req *QueryOr
 func (b *BinanceTradeEngine) handlePortfolioMarginMarginTradesQuery(req *QueryTradeParam, res *mybinanceapi.PortfolioMarginMarginMyTradesRes) []*Trade {
 	var trades []*Trade
 	for _, trade := range *res {
+		var orderSide OrderSide
+		if trade.IsBuyer {
+			orderSide = ORDER_SIDE_BUY
+		} else {
+			orderSide = ORDER_SIDE_SELL
+		}
+		quoteQty := decimal.RequireFromString(trade.Price).Mul(decimal.RequireFromString(trade.Qty))
 		trades = append(trades, &Trade{
 			Exchange:    BINANCE_NAME.String(),
 			AccountType: req.AccountType,
@@ -579,14 +590,12 @@ func (b *BinanceTradeEngine) handlePortfolioMarginMarginTradesQuery(req *QueryTr
 			OrderId:     strconv.FormatInt(trade.OrderId, 10),
 			Price:       trade.Price,
 			Quantity:    trade.Qty,
-			//QuoteQty:     trade.,
-			//Side:         b.bnConverter.FromBNOrderSide(trade.Side),
-			//PositionSide: b.bnConverter.FromBNPositionSide(trade.PositionSide),
-			FeeAmount: trade.Commission,
-			FeeCcy:    trade.CommissionAsset,
-			//RealizedPnl:  trade.RealizedPnl,
-			IsMaker:   trade.IsMaker,
-			Timestamp: trade.Time,
+			QuoteQty:    quoteQty.String(),
+			Side:        orderSide,
+			FeeAmount:   trade.Commission,
+			FeeCcy:      trade.CommissionAsset,
+			IsMaker:     trade.IsMaker,
+			Timestamp:   trade.Time,
 		})
 	}
 	return trades
