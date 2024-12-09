@@ -280,7 +280,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderCancel(req *OrderParam,
 func (b *BinanceTradeEngine) handlePortfolioMarginCmOpenOrders(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginCmOpenOrdersRes) []*Order {
 	var orders []*Order
 	for _, o := range *res {
-		cumQuoteQty := decimal.RequireFromString(o.Price).Mul(decimal.RequireFromString(o.ExecutedQty))
+		cumQuoteQty := decimal.RequireFromString(o.AvgPrice).Mul(decimal.RequireFromString(o.ExecutedQty))
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
@@ -309,7 +309,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOpenOrders(req *QueryOrderPa
 	return orders
 }
 func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderQuery(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginCmOrderGetRes) *Order {
-	cumQuoteQty := decimal.RequireFromString(res.Price).Mul(decimal.RequireFromString(res.ExecuteQty))
+	cumQuoteQty := decimal.RequireFromString(res.AvgPrice).Mul(decimal.RequireFromString(res.ExecuteQty))
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
@@ -338,7 +338,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderQuery(req *QueryOrderPa
 func (b *BinanceTradeEngine) handlePortfolioMarginCmOrdersQuery(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginCmAllOrdersRes) []*Order {
 	var orders []*Order
 	for _, o := range *res {
-		cumQuoteQty := decimal.RequireFromString(o.Price).Mul(decimal.RequireFromString(o.ExecuteQty))
+		cumQuoteQty := decimal.RequireFromString(o.AvgPrice).Mul(decimal.RequireFromString(o.ExecuteQty))
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
