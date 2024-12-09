@@ -8,167 +8,167 @@ import (
 )
 
 // UM
-func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderCreate(req *OrderParam, res *mybinanceapi.PortfolioMarginUmOrderPostRes) *Order {
+func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderCreate(req *OrderParam, order *mybinanceapi.PortfolioMarginUmOrderPostRes) *Order {
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        order.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
-		OrderId:       strconv.FormatInt(res.OrderId, 10),
-		ClientOrderId: res.ClientOrderId,
-		Price:         res.Price,
-		Quantity:      res.OrigQty,
-		ExecutedQty:   res.ExecutedQty,
-		CumQuoteQty:   res.CumQty,
-		AvgPrice:      res.AvgPrice,
-		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
-		Type:          b.bnConverter.FromBNOrderType(res.Type),
-		Side:          b.bnConverter.FromBNOrderSide(res.Side),
-		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-		CreateTime:    res.UpdateTime,
-		UpdateTime:    res.UpdateTime,
+		OrderId:       strconv.FormatInt(order.OrderId, 10),
+		ClientOrderId: order.ClientOrderId,
+		Price:         order.Price,
+		Quantity:      order.OrigQty,
+		ExecutedQty:   order.ExecutedQty,
+		CumQuoteQty:   order.CumQty,
+		AvgPrice:      order.AvgPrice,
+		Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+		Type:          b.bnConverter.FromBNOrderType(order.Type),
+		Side:          b.bnConverter.FromBNOrderSide(order.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		CreateTime:    order.UpdateTime,
+		UpdateTime:    order.UpdateTime,
 
 		TriggerPrice:         req.TriggerPrice.String(),
-		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(res.Type),
-		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(res.Side, res.Type),
+		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 	}
 }
-func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderAmend(req *OrderParam, res *mybinanceapi.PortfolioMarginUmOrderPutRes) *Order {
+func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderAmend(req *OrderParam, order *mybinanceapi.PortfolioMarginUmOrderPutRes) *Order {
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        order.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
-		OrderId:       strconv.FormatInt(res.OrderId, 10),
-		ClientOrderId: res.ClientOrderId,
-		Price:         res.Price,
-		Quantity:      res.OrigQty,
-		ExecutedQty:   res.ExecutedQty,
-		CumQuoteQty:   res.CumQty,
-		AvgPrice:      res.AvgPrice,
-		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
-		Type:          b.bnConverter.FromBNOrderType(res.Type),
-		Side:          b.bnConverter.FromBNOrderSide(res.Side),
-		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-		CreateTime:    res.UpdateTime,
-		UpdateTime:    res.UpdateTime,
+		OrderId:       strconv.FormatInt(order.OrderId, 10),
+		ClientOrderId: order.ClientOrderId,
+		Price:         order.Price,
+		Quantity:      order.OrigQty,
+		ExecutedQty:   order.ExecutedQty,
+		CumQuoteQty:   order.CumQty,
+		AvgPrice:      order.AvgPrice,
+		Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+		Type:          b.bnConverter.FromBNOrderType(order.Type),
+		Side:          b.bnConverter.FromBNOrderSide(order.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		CreateTime:    order.UpdateTime,
+		UpdateTime:    order.UpdateTime,
 
 		TriggerPrice:         req.TriggerPrice.String(),
-		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(res.Type),
-		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(res.Side, res.Type),
+		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 	}
 }
-func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderCancel(req *OrderParam, res *mybinanceapi.PortfolioMarginUmOrderDeleteRes) *Order {
+func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderCancel(req *OrderParam, order *mybinanceapi.PortfolioMarginUmOrderDeleteRes) *Order {
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        order.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
-		OrderId:       strconv.FormatInt(res.OrderId, 10),
-		ClientOrderId: res.ClientOrderId,
-		Price:         res.Price,
-		Quantity:      res.OrigQty,
-		ExecutedQty:   res.ExecutedQty,
-		CumQuoteQty:   res.CumQty,
-		AvgPrice:      res.AvgPrice,
-		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
-		Type:          b.bnConverter.FromBNOrderType(res.Type),
-		Side:          b.bnConverter.FromBNOrderSide(res.Side),
-		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-		CreateTime:    res.UpdateTime,
-		UpdateTime:    res.UpdateTime,
+		OrderId:       strconv.FormatInt(order.OrderId, 10),
+		ClientOrderId: order.ClientOrderId,
+		Price:         order.Price,
+		Quantity:      order.OrigQty,
+		ExecutedQty:   order.ExecutedQty,
+		CumQuoteQty:   order.CumQty,
+		AvgPrice:      order.AvgPrice,
+		Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+		Type:          b.bnConverter.FromBNOrderType(order.Type),
+		Side:          b.bnConverter.FromBNOrderSide(order.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		CreateTime:    order.UpdateTime,
+		UpdateTime:    order.UpdateTime,
 
 		TriggerPrice:         req.TriggerPrice.String(),
-		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(res.Type),
-		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(res.Side, res.Type),
+		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 	}
 }
 
 func (b *BinanceTradeEngine) handlePortfolioMarginUmOpenOrders(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginUmOpenOrdersGetRes) []*Order {
 	var orders []*Order
-	for _, o := range *res {
+	for _, order := range *res {
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			IsMargin:      req.IsMargin,
 			IsIsolated:    req.IsIsolated,
-			OrderId:       strconv.FormatInt(o.OrderId, 10),
-			ClientOrderId: o.ClientOrderId,
-			Price:         o.Price,
-			Quantity:      o.OrigQty,
-			ExecutedQty:   o.ExecutedQty,
-			CumQuoteQty:   o.CumQuote,
-			AvgPrice:      o.AvgPrice,
-			Status:        b.bnConverter.FromBNOrderStatus(o.Status, o.Type),
-			Type:          b.bnConverter.FromBNOrderType(o.Type),
-			Side:          b.bnConverter.FromBNOrderSide(o.Side),
-			TimeInForce:   b.bnConverter.FromBNTimeInForce(o.TimeInForce),
-			CreateTime:    o.Time,
-			UpdateTime:    o.UpdateTime,
+			OrderId:       strconv.FormatInt(order.OrderId, 10),
+			ClientOrderId: order.ClientOrderId,
+			Price:         order.Price,
+			Quantity:      order.OrigQty,
+			ExecutedQty:   order.ExecutedQty,
+			CumQuoteQty:   order.CumQuote,
+			AvgPrice:      order.AvgPrice,
+			Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+			Type:          b.bnConverter.FromBNOrderType(order.Type),
+			Side:          b.bnConverter.FromBNOrderSide(order.Side),
+			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			CreateTime:    order.Time,
+			UpdateTime:    order.UpdateTime,
 
-			TriggerPrice:         o.Price, // 返回值无相关参数，price代替
-			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(o.Type),
-			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(o.Side, o.Type),
+			TriggerPrice:         order.Price, // 返回值无相关参数，price代替
+			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 		})
 	}
 	return orders
 }
-func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderQuery(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginUmOrderGetRes) *Order {
+func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderQuery(req *QueryOrderParam, order *mybinanceapi.PortfolioMarginUmOrderGetRes) *Order {
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        order.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
-		OrderId:       strconv.FormatInt(res.OrderId, 10),
-		ClientOrderId: res.ClientOrderId,
-		Price:         res.Price,
-		Quantity:      res.OrigQty,
-		ExecutedQty:   res.ExecutedQty,
-		CumQuoteQty:   res.CumQuote,
-		AvgPrice:      res.AvgPrice,
-		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
-		Type:          b.bnConverter.FromBNOrderType(res.Type),
-		Side:          b.bnConverter.FromBNOrderSide(res.Side),
-		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-		CreateTime:    res.UpdateTime,
-		UpdateTime:    res.UpdateTime,
+		OrderId:       strconv.FormatInt(order.OrderId, 10),
+		ClientOrderId: order.ClientOrderId,
+		Price:         order.Price,
+		Quantity:      order.OrigQty,
+		ExecutedQty:   order.ExecutedQty,
+		CumQuoteQty:   order.CumQuote,
+		AvgPrice:      order.AvgPrice,
+		Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+		Type:          b.bnConverter.FromBNOrderType(order.Type),
+		Side:          b.bnConverter.FromBNOrderSide(order.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		CreateTime:    order.UpdateTime,
+		UpdateTime:    order.UpdateTime,
 
-		TriggerPrice:         res.Price, // 返回值无相关参数，price代替
-		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(res.Type),
-		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(res.Side, res.Type),
+		TriggerPrice:         order.Price, // 返回值无相关参数，price代替
+		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 	}
 }
 func (b *BinanceTradeEngine) handlePortfolioMarginUmOrdersQuery(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginUmAllOrdersGetRes) []*Order {
 	var orders []*Order
-	for _, o := range *res {
+	for _, order := range *res {
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			IsMargin:      req.IsMargin,
 			IsIsolated:    req.IsIsolated,
-			OrderId:       strconv.FormatInt(o.OrderId, 10),
-			ClientOrderId: o.ClientOrderId,
-			Price:         o.Price,
-			Quantity:      o.OrigQty,
-			ExecutedQty:   o.ExecutedQty,
-			CumQuoteQty:   o.CumQuote,
-			AvgPrice:      o.AvgPrice,
-			Status:        b.bnConverter.FromBNOrderStatus(o.Status, o.Type),
-			Type:          b.bnConverter.FromBNOrderType(o.Type),
-			Side:          b.bnConverter.FromBNOrderSide(o.Side),
-			TimeInForce:   b.bnConverter.FromBNTimeInForce(o.TimeInForce),
-			CreateTime:    o.UpdateTime,
-			UpdateTime:    o.UpdateTime,
+			OrderId:       strconv.FormatInt(order.OrderId, 10),
+			ClientOrderId: order.ClientOrderId,
+			Price:         order.Price,
+			Quantity:      order.OrigQty,
+			ExecutedQty:   order.ExecutedQty,
+			CumQuoteQty:   order.CumQuote,
+			AvgPrice:      order.AvgPrice,
+			Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+			Type:          b.bnConverter.FromBNOrderType(order.Type),
+			Side:          b.bnConverter.FromBNOrderSide(order.Side),
+			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			CreateTime:    order.UpdateTime,
+			UpdateTime:    order.UpdateTime,
 
-			TriggerPrice:         o.Price, // 返回值无相关参数，price代替
-			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(o.Type),
-			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(o.Side, o.Type),
+			TriggerPrice:         order.Price, // 返回值无相关参数，price代替
+			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 		})
 	}
 	return orders
@@ -179,7 +179,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginUmTradesQuery(req *QueryTradeP
 		trades = append(trades, &Trade{
 			Exchange:     BINANCE_NAME.String(),
 			AccountType:  req.AccountType,
-			Symbol:       req.Symbol,
+			Symbol:       trade.Symbol,
 			TradeId:      strconv.FormatInt(trade.Id, 10),
 			OrderId:      strconv.FormatInt(trade.OrderId, 10),
 			Price:        trade.Price,
@@ -198,170 +198,170 @@ func (b *BinanceTradeEngine) handlePortfolioMarginUmTradesQuery(req *QueryTradeP
 }
 
 // CM
-func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderCreate(req *OrderParam, res *mybinanceapi.PortfolioMarginCmOrderPostRes) *Order {
+func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderCreate(req *OrderParam, order *mybinanceapi.PortfolioMarginCmOrderPostRes) *Order {
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        order.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
-		OrderId:       strconv.FormatInt(res.OrderId, 10),
-		ClientOrderId: res.ClientOrderId,
-		Price:         res.Price,
-		Quantity:      res.OrigQty,
-		ExecutedQty:   res.ExecutedQty,
-		CumQuoteQty:   res.CumQty,
-		AvgPrice:      res.AvgPrice,
-		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
-		Type:          b.bnConverter.FromBNOrderType(res.Type),
-		Side:          b.bnConverter.FromBNOrderSide(res.Side),
-		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-		CreateTime:    res.UpdateTime,
-		UpdateTime:    res.UpdateTime,
+		OrderId:       strconv.FormatInt(order.OrderId, 10),
+		ClientOrderId: order.ClientOrderId,
+		Price:         order.Price,
+		Quantity:      order.OrigQty,
+		ExecutedQty:   order.ExecutedQty,
+		CumQuoteQty:   order.CumQty,
+		AvgPrice:      order.AvgPrice,
+		Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+		Type:          b.bnConverter.FromBNOrderType(order.Type),
+		Side:          b.bnConverter.FromBNOrderSide(order.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		CreateTime:    order.UpdateTime,
+		UpdateTime:    order.UpdateTime,
 
 		TriggerPrice:         req.TriggerPrice.String(),
-		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(res.Type),
-		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(res.Side, res.Type),
+		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 	}
 }
-func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderAmend(req *OrderParam, res *mybinanceapi.PortfolioMarginCmOrderPutRes) *Order {
+func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderAmend(req *OrderParam, order *mybinanceapi.PortfolioMarginCmOrderPutRes) *Order {
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        order.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
-		OrderId:       strconv.FormatInt(res.OrderId, 10),
-		ClientOrderId: res.ClientOrderId,
-		Price:         res.Price,
-		Quantity:      res.OrigQty,
-		ExecutedQty:   res.ExecutedQty,
-		CumQuoteQty:   res.CumQty,
-		AvgPrice:      res.AvgPrice,
-		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
-		Type:          b.bnConverter.FromBNOrderType(res.Type),
-		Side:          b.bnConverter.FromBNOrderSide(res.Side),
-		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-		CreateTime:    res.UpdateTime,
-		UpdateTime:    res.UpdateTime,
+		OrderId:       strconv.FormatInt(order.OrderId, 10),
+		ClientOrderId: order.ClientOrderId,
+		Price:         order.Price,
+		Quantity:      order.OrigQty,
+		ExecutedQty:   order.ExecutedQty,
+		CumQuoteQty:   order.CumQty,
+		AvgPrice:      order.AvgPrice,
+		Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+		Type:          b.bnConverter.FromBNOrderType(order.Type),
+		Side:          b.bnConverter.FromBNOrderSide(order.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		CreateTime:    order.UpdateTime,
+		UpdateTime:    order.UpdateTime,
 
 		TriggerPrice:         req.TriggerPrice.String(),
-		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(res.Type),
-		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(res.Side, res.Type),
+		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 	}
 }
-func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderCancel(req *OrderParam, res *mybinanceapi.PortfolioMarginCmOrderDeleteRes) *Order {
+func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderCancel(req *OrderParam, order *mybinanceapi.PortfolioMarginCmOrderDeleteRes) *Order {
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        order.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
-		OrderId:       strconv.FormatInt(res.OrderId, 10),
-		ClientOrderId: res.ClientOrderId,
-		Price:         res.Price,
-		Quantity:      res.OrigQty,
-		ExecutedQty:   res.ExecutedQty,
-		CumQuoteQty:   res.CumQty,
-		AvgPrice:      res.AvgPrice,
-		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
-		Type:          b.bnConverter.FromBNOrderType(res.Type),
-		Side:          b.bnConverter.FromBNOrderSide(res.Side),
-		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-		CreateTime:    res.UpdateTime,
-		UpdateTime:    res.UpdateTime,
+		OrderId:       strconv.FormatInt(order.OrderId, 10),
+		ClientOrderId: order.ClientOrderId,
+		Price:         order.Price,
+		Quantity:      order.OrigQty,
+		ExecutedQty:   order.ExecutedQty,
+		CumQuoteQty:   order.CumQty,
+		AvgPrice:      order.AvgPrice,
+		Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+		Type:          b.bnConverter.FromBNOrderType(order.Type),
+		Side:          b.bnConverter.FromBNOrderSide(order.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		CreateTime:    order.UpdateTime,
+		UpdateTime:    order.UpdateTime,
 
 		TriggerPrice:         req.TriggerPrice.String(),
-		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(res.Type),
-		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(res.Side, res.Type),
+		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 	}
 }
 
 func (b *BinanceTradeEngine) handlePortfolioMarginCmOpenOrders(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginCmOpenOrdersRes) []*Order {
 	var orders []*Order
-	for _, o := range *res {
-		cumQuoteQty := decimal.RequireFromString(o.AvgPrice).Mul(decimal.RequireFromString(o.ExecutedQty))
+	for _, order := range *res {
+		cumQuoteQty := decimal.RequireFromString(order.AvgPrice).Mul(decimal.RequireFromString(order.CumBase))
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			IsMargin:      req.IsMargin,
 			IsIsolated:    req.IsIsolated,
-			OrderId:       strconv.FormatInt(o.OrderId, 10),
-			ClientOrderId: o.ClientOrderId,
-			Price:         o.Price,
-			Quantity:      o.OrigQty,
-			ExecutedQty:   o.ExecutedQty,
+			OrderId:       strconv.FormatInt(order.OrderId, 10),
+			ClientOrderId: order.ClientOrderId,
+			Price:         order.Price,
+			Quantity:      order.OrigQty,
+			ExecutedQty:   order.ExecutedQty,
 			CumQuoteQty:   cumQuoteQty.String(),
-			AvgPrice:      o.AvgPrice,
-			Status:        b.bnConverter.FromBNOrderStatus(o.Status, o.Type),
-			Type:          b.bnConverter.FromBNOrderType(o.Type),
-			Side:          b.bnConverter.FromBNOrderSide(o.Side),
-			TimeInForce:   b.bnConverter.FromBNTimeInForce(o.TimeInForce),
-			CreateTime:    o.UpdateTime,
-			UpdateTime:    o.UpdateTime,
+			AvgPrice:      order.AvgPrice,
+			Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+			Type:          b.bnConverter.FromBNOrderType(order.Type),
+			Side:          b.bnConverter.FromBNOrderSide(order.Side),
+			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			CreateTime:    order.UpdateTime,
+			UpdateTime:    order.UpdateTime,
 
-			TriggerPrice:         o.Price, // 返回值无相关参数，price代替
-			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(o.Type),
-			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(o.Side, o.Type),
+			TriggerPrice:         order.Price, // 返回值无相关参数，price代替
+			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 		})
 	}
 	return orders
 }
-func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderQuery(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginCmOrderGetRes) *Order {
-	cumQuoteQty := decimal.RequireFromString(res.AvgPrice).Mul(decimal.RequireFromString(res.ExecuteQty))
+func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderQuery(req *QueryOrderParam, order *mybinanceapi.PortfolioMarginCmOrderGetRes) *Order {
+	cumQuoteQty := decimal.RequireFromString(order.AvgPrice).Mul(decimal.RequireFromString(order.CumBase))
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        order.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
-		OrderId:       strconv.FormatInt(res.OrderId, 10),
-		ClientOrderId: res.ClientOrderId,
-		Price:         res.Price,
-		Quantity:      res.OrigQty,
-		ExecutedQty:   res.ExecuteQty,
+		OrderId:       strconv.FormatInt(order.OrderId, 10),
+		ClientOrderId: order.ClientOrderId,
+		Price:         order.Price,
+		Quantity:      order.OrigQty,
+		ExecutedQty:   order.ExecuteQty,
 		CumQuoteQty:   cumQuoteQty.String(),
-		AvgPrice:      res.AvgPrice,
-		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
-		Type:          b.bnConverter.FromBNOrderType(res.Type),
-		Side:          b.bnConverter.FromBNOrderSide(res.Side),
-		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-		CreateTime:    res.UpdateTime,
-		UpdateTime:    res.UpdateTime,
+		AvgPrice:      order.AvgPrice,
+		Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+		Type:          b.bnConverter.FromBNOrderType(order.Type),
+		Side:          b.bnConverter.FromBNOrderSide(order.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		CreateTime:    order.UpdateTime,
+		UpdateTime:    order.UpdateTime,
 
-		TriggerPrice:         res.Price, // 返回值无相关参数，price代替
-		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(res.Type),
-		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(res.Side, res.Type),
+		TriggerPrice:         order.Price, // 返回值无相关参数，price代替
+		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 	}
 }
 func (b *BinanceTradeEngine) handlePortfolioMarginCmOrdersQuery(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginCmAllOrdersRes) []*Order {
 	var orders []*Order
-	for _, o := range *res {
-		cumQuoteQty := decimal.RequireFromString(o.AvgPrice).Mul(decimal.RequireFromString(o.ExecuteQty))
+	for _, order := range *res {
+		cumQuoteQty := decimal.RequireFromString(order.AvgPrice).Mul(decimal.RequireFromString(order.CumBase))
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			IsMargin:      req.IsMargin,
 			IsIsolated:    req.IsIsolated,
-			OrderId:       strconv.FormatInt(o.OrderId, 10),
-			ClientOrderId: o.ClientOrderId,
-			Price:         o.Price,
-			Quantity:      o.OrigQty,
-			ExecutedQty:   o.ExecuteQty,
+			OrderId:       strconv.FormatInt(order.OrderId, 10),
+			ClientOrderId: order.ClientOrderId,
+			Price:         order.Price,
+			Quantity:      order.OrigQty,
+			ExecutedQty:   order.ExecuteQty,
 			CumQuoteQty:   cumQuoteQty.String(),
-			AvgPrice:      o.AvgPrice,
-			Status:        b.bnConverter.FromBNOrderStatus(o.Status, o.Type),
-			Type:          b.bnConverter.FromBNOrderType(o.Type),
-			Side:          b.bnConverter.FromBNOrderSide(o.Side),
-			TimeInForce:   b.bnConverter.FromBNTimeInForce(o.TimeInForce),
-			CreateTime:    o.UpdateTime,
-			UpdateTime:    o.UpdateTime,
+			AvgPrice:      order.AvgPrice,
+			Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+			Type:          b.bnConverter.FromBNOrderType(order.Type),
+			Side:          b.bnConverter.FromBNOrderSide(order.Side),
+			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			CreateTime:    order.UpdateTime,
+			UpdateTime:    order.UpdateTime,
 
-			TriggerPrice:         o.Price, // 返回值无相关参数，price代替
-			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(o.Type),
-			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(o.Side, o.Type),
+			TriggerPrice:         order.Price, // 返回值无相关参数，price代替
+			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 		})
 	}
 	return orders
@@ -369,11 +369,11 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrdersQuery(req *QueryOrderP
 func (b *BinanceTradeEngine) handlePortfolioMarginCmTradesQuery(req *QueryTradeParam, res *mybinanceapi.PortfolioMarginCmUserTradesRes) []*Trade {
 	var trades []*Trade
 	for _, trade := range *res {
-		quoteQty := decimal.RequireFromString(trade.Price).Mul(decimal.RequireFromString(trade.Qty))
+		quoteQty := decimal.RequireFromString(trade.Price).Mul(decimal.RequireFromString(trade.BaseQty))
 		trades = append(trades, &Trade{
 			Exchange:     BINANCE_NAME.String(),
 			AccountType:  req.AccountType,
-			Symbol:       req.Symbol,
+			Symbol:       trade.Symbol,
 			TradeId:      strconv.FormatInt(trade.Id, 10),
 			OrderId:      strconv.FormatInt(trade.OrderId, 10),
 			Price:        trade.Price,
@@ -392,11 +392,11 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmTradesQuery(req *QueryTradeP
 }
 
 // Margin
-func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrderCreate(req *OrderParam, res *mybinanceapi.PortfolioMarginMarginOrderPostRes) *Order {
+func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrderCreate(req *OrderParam, order *mybinanceapi.PortfolioMarginMarginOrderPostRes) *Order {
 	avgPrice := decimal.Zero
-	if res.ExecutedQty != "" && res.CummulativeQuoteQty != "" {
-		executedQty, _ := decimal.NewFromString(res.ExecutedQty)
-		cumQuoteQty, _ := decimal.NewFromString(res.CummulativeQuoteQty)
+	if order.ExecutedQty != "" && order.CummulativeQuoteQty != "" {
+		executedQty, _ := decimal.NewFromString(order.ExecutedQty)
+		cumQuoteQty, _ := decimal.NewFromString(order.CummulativeQuoteQty)
 		if !executedQty.IsZero() {
 			avgPrice = cumQuoteQty.Div(executedQty)
 		}
@@ -404,33 +404,33 @@ func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrderCreate(req *OrderPa
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        order.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
-		OrderId:       strconv.FormatInt(res.OrderId, 10),
-		ClientOrderId: res.ClientOrderId,
-		Price:         res.Price,
-		Quantity:      res.OrigQty,
-		ExecutedQty:   res.ExecutedQty,
-		CumQuoteQty:   res.CummulativeQuoteQty,
+		OrderId:       strconv.FormatInt(order.OrderId, 10),
+		ClientOrderId: order.ClientOrderId,
+		Price:         order.Price,
+		Quantity:      order.OrigQty,
+		ExecutedQty:   order.ExecutedQty,
+		CumQuoteQty:   order.CummulativeQuoteQty,
 		AvgPrice:      avgPrice.String(),
-		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
-		Type:          b.bnConverter.FromBNOrderType(res.Type),
-		Side:          b.bnConverter.FromBNOrderSide(res.Side),
-		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-		CreateTime:    res.TransactTime,
-		UpdateTime:    res.TransactTime,
+		Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+		Type:          b.bnConverter.FromBNOrderType(order.Type),
+		Side:          b.bnConverter.FromBNOrderSide(order.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		CreateTime:    order.TransactTime,
+		UpdateTime:    order.TransactTime,
 
 		TriggerPrice:         req.TriggerPrice.String(),
-		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(res.Type),
-		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(res.Side, res.Type),
+		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 	}
 }
-func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrderCancel(req *OrderParam, res *mybinanceapi.PortfolioMarginMarginOrderDeleteRes) *Order {
+func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrderCancel(req *OrderParam, order *mybinanceapi.PortfolioMarginMarginOrderDeleteRes) *Order {
 	avgPrice := decimal.Zero
-	if res.ExecutedQty != "" && res.CummulativeQuoteQty != "" {
-		executedQty, _ := decimal.NewFromString(res.ExecutedQty)
-		cumQuoteQty, _ := decimal.NewFromString(res.CummulativeQuoteQty)
+	if order.ExecutedQty != "" && order.CummulativeQuoteQty != "" {
+		executedQty, _ := decimal.NewFromString(order.ExecutedQty)
+		cumQuoteQty, _ := decimal.NewFromString(order.CummulativeQuoteQty)
 		if !executedQty.IsZero() {
 			avgPrice = cumQuoteQty.Div(executedQty)
 		}
@@ -439,36 +439,36 @@ func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrderCancel(req *OrderPa
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        order.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
-		OrderId:       strconv.FormatInt(res.OrderId, 10),
-		ClientOrderId: res.ClientOrderId,
-		Price:         res.Price,
-		Quantity:      res.OrigQty,
-		ExecutedQty:   res.ExecutedQty,
-		CumQuoteQty:   res.CummulativeQuoteQty,
+		OrderId:       strconv.FormatInt(order.OrderId, 10),
+		ClientOrderId: order.ClientOrderId,
+		Price:         order.Price,
+		Quantity:      order.OrigQty,
+		ExecutedQty:   order.ExecutedQty,
+		CumQuoteQty:   order.CummulativeQuoteQty,
 		AvgPrice:      avgPrice.String(),
-		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
-		Type:          b.bnConverter.FromBNOrderType(res.Type),
-		Side:          b.bnConverter.FromBNOrderSide(res.Side),
-		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
+		Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+		Type:          b.bnConverter.FromBNOrderType(order.Type),
+		Side:          b.bnConverter.FromBNOrderSide(order.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
 		CreateTime:    timestamp, // 返回值无相关参数，使用当前系统时间代替
 		UpdateTime:    timestamp,
 
 		TriggerPrice:         req.TriggerPrice.String(),
-		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(res.Type),
-		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(res.Side, res.Type),
+		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 	}
 }
 
 func (b *BinanceTradeEngine) handlePortfolioMarginMarginOpenOrders(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginMarginOpenOrdersRes) []*Order {
 	var orders []*Order
-	for _, o := range *res {
+	for _, order := range *res {
 		avgPrice := decimal.Zero
-		if o.ExecutedQty != "" && o.CummulativeQuoteQty != "" {
-			executedQty, _ := decimal.NewFromString(o.ExecutedQty)
-			cumQuoteQty, _ := decimal.NewFromString(o.CummulativeQuoteQty)
+		if order.ExecutedQty != "" && order.CummulativeQuoteQty != "" {
+			executedQty, _ := decimal.NewFromString(order.ExecutedQty)
+			cumQuoteQty, _ := decimal.NewFromString(order.CummulativeQuoteQty)
 			if !executedQty.IsZero() {
 				avgPrice = cumQuoteQty.Div(executedQty)
 			}
@@ -476,35 +476,35 @@ func (b *BinanceTradeEngine) handlePortfolioMarginMarginOpenOrders(req *QueryOrd
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			IsMargin:      req.IsMargin,
 			IsIsolated:    req.IsIsolated,
-			OrderId:       strconv.FormatInt(o.OrderId, 10),
-			ClientOrderId: o.ClientOrderId,
-			Price:         o.Price,
-			Quantity:      o.OrigQty,
-			ExecutedQty:   o.ExecutedQty,
-			CumQuoteQty:   o.CummulativeQuoteQty,
+			OrderId:       strconv.FormatInt(order.OrderId, 10),
+			ClientOrderId: order.ClientOrderId,
+			Price:         order.Price,
+			Quantity:      order.OrigQty,
+			ExecutedQty:   order.ExecutedQty,
+			CumQuoteQty:   order.CummulativeQuoteQty,
 			AvgPrice:      avgPrice.String(),
-			Status:        b.bnConverter.FromBNOrderStatus(o.Status, o.Type),
-			Type:          b.bnConverter.FromBNOrderType(o.Type),
-			Side:          b.bnConverter.FromBNOrderSide(o.Side),
-			TimeInForce:   b.bnConverter.FromBNTimeInForce(o.TimeInForce),
-			CreateTime:    o.Time,
-			UpdateTime:    o.UpdateTime,
+			Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+			Type:          b.bnConverter.FromBNOrderType(order.Type),
+			Side:          b.bnConverter.FromBNOrderSide(order.Side),
+			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			CreateTime:    order.Time,
+			UpdateTime:    order.UpdateTime,
 
-			TriggerPrice:         o.StopPrice,
-			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(o.Type),
-			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(o.Side, o.Type),
+			TriggerPrice:         order.StopPrice,
+			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 		})
 	}
 	return orders
 }
-func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrderQuery(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginMarginOrderGetRes) *Order {
+func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrderQuery(req *QueryOrderParam, order *mybinanceapi.PortfolioMarginMarginOrderGetRes) *Order {
 	avgPrice := decimal.Zero
-	if res.ExecutedQty != "" && res.CummulativeQuoteQty != "" {
-		executedQty, _ := decimal.NewFromString(res.ExecutedQty)
-		cumQuoteQty, _ := decimal.NewFromString(res.CummulativeQuoteQty)
+	if order.ExecutedQty != "" && order.CummulativeQuoteQty != "" {
+		executedQty, _ := decimal.NewFromString(order.ExecutedQty)
+		cumQuoteQty, _ := decimal.NewFromString(order.CummulativeQuoteQty)
 		if !executedQty.IsZero() {
 			avgPrice = cumQuoteQty.Div(executedQty)
 		}
@@ -512,35 +512,35 @@ func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrderQuery(req *QueryOrd
 	return &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        order.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
-		OrderId:       strconv.FormatInt(res.OrderId, 10),
-		ClientOrderId: res.ClientOrderId,
-		Price:         res.Price,
-		Quantity:      res.OrigQty,
-		ExecutedQty:   res.ExecutedQty,
-		CumQuoteQty:   res.CummulativeQuoteQty,
+		OrderId:       strconv.FormatInt(order.OrderId, 10),
+		ClientOrderId: order.ClientOrderId,
+		Price:         order.Price,
+		Quantity:      order.OrigQty,
+		ExecutedQty:   order.ExecutedQty,
+		CumQuoteQty:   order.CummulativeQuoteQty,
 		AvgPrice:      avgPrice.String(),
-		Status:        b.bnConverter.FromBNOrderStatus(res.Status, res.Type),
-		Type:          b.bnConverter.FromBNOrderType(res.Type),
-		Side:          b.bnConverter.FromBNOrderSide(res.Side),
-		TimeInForce:   b.bnConverter.FromBNTimeInForce(res.TimeInForce),
-		CreateTime:    res.Time,
-		UpdateTime:    res.UpdateTime,
+		Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+		Type:          b.bnConverter.FromBNOrderType(order.Type),
+		Side:          b.bnConverter.FromBNOrderSide(order.Side),
+		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		CreateTime:    order.Time,
+		UpdateTime:    order.UpdateTime,
 
-		TriggerPrice:         res.StopPrice,
-		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(res.Type),
-		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(res.Side, res.Type),
+		TriggerPrice:         order.StopPrice,
+		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 	}
 }
 func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrdersQuery(req *QueryOrderParam, res *mybinanceapi.PortfolioMarginMarginAllOrdersRes) []*Order {
 	var orders []*Order
-	for _, o := range *res {
+	for _, order := range *res {
 		avgPrice := decimal.Zero
-		if o.ExecutedQty != "" && o.CummulativeQuoteQty != "" {
-			executedQty, _ := decimal.NewFromString(o.ExecutedQty)
-			cumQuoteQty, _ := decimal.NewFromString(o.CummulativeQuoteQty)
+		if order.ExecutedQty != "" && order.CummulativeQuoteQty != "" {
+			executedQty, _ := decimal.NewFromString(order.ExecutedQty)
+			cumQuoteQty, _ := decimal.NewFromString(order.CummulativeQuoteQty)
 			if !executedQty.IsZero() {
 				avgPrice = cumQuoteQty.Div(executedQty)
 			}
@@ -548,26 +548,26 @@ func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrdersQuery(req *QueryOr
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			IsMargin:      req.IsMargin,
 			IsIsolated:    req.IsIsolated,
-			OrderId:       strconv.FormatInt(o.OrderId, 10),
-			ClientOrderId: o.ClientOrderId,
-			Price:         o.Price,
-			Quantity:      o.OrigQty,
-			ExecutedQty:   o.ExecutedQty,
-			CumQuoteQty:   o.CummulativeQuoteQty,
+			OrderId:       strconv.FormatInt(order.OrderId, 10),
+			ClientOrderId: order.ClientOrderId,
+			Price:         order.Price,
+			Quantity:      order.OrigQty,
+			ExecutedQty:   order.ExecutedQty,
+			CumQuoteQty:   order.CummulativeQuoteQty,
 			AvgPrice:      avgPrice.String(),
-			Status:        b.bnConverter.FromBNOrderStatus(o.Status, o.Type),
-			Type:          b.bnConverter.FromBNOrderType(o.Type),
-			Side:          b.bnConverter.FromBNOrderSide(o.Side),
-			TimeInForce:   b.bnConverter.FromBNTimeInForce(o.TimeInForce),
-			CreateTime:    o.Time,
-			UpdateTime:    o.UpdateTime,
+			Status:        b.bnConverter.FromBNOrderStatus(order.Status, order.Type),
+			Type:          b.bnConverter.FromBNOrderType(order.Type),
+			Side:          b.bnConverter.FromBNOrderSide(order.Side),
+			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			CreateTime:    order.Time,
+			UpdateTime:    order.UpdateTime,
 
-			TriggerPrice:         o.StopPrice,
-			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(o.Type),
-			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(o.Side, o.Type),
+			TriggerPrice:         order.StopPrice,
+			TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
+			TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
 		})
 	}
 	return orders
@@ -585,7 +585,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginMarginTradesQuery(req *QueryTr
 		trades = append(trades, &Trade{
 			Exchange:    BINANCE_NAME.String(),
 			AccountType: req.AccountType,
-			Symbol:      req.Symbol,
+			Symbol:      trade.Symbol,
 			TradeId:     strconv.FormatInt(trade.Id, 10),
 			OrderId:     strconv.FormatInt(trade.OrderId, 10),
 			Price:       trade.Price,

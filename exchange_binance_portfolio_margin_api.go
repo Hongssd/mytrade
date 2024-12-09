@@ -304,7 +304,11 @@ func (b *BinanceTradeEngine) apiPortfolioMarginMarginOrdersQuery(req *QueryOrder
 	return api
 }
 func (b *BinanceTradeEngine) apiPortfolioMarginMarginOpenOrdersQuery(req *QueryOrderParam) *mybinanceapi.PortfolioMarginMarginOpenOrdersApi {
-	return binance.NewPortfolioMarginClient(b.apiKey, b.secretKey).NewMarginOpenOrders().Symbol(req.Symbol)
+	api := binance.NewPortfolioMarginClient(b.apiKey, b.secretKey).NewMarginOpenOrders()
+	if req.Symbol != "" {
+		api.Symbol(req.Symbol)
+	}
+	return api
 }
 func (b *BinanceTradeEngine) apiPortfolioMarginMarginTradesQuery(req *QueryTradeParam) *mybinanceapi.PortfolioMarginMarginMyTradesApi {
 	api := binance.NewPortfolioMarginClient(b.apiKey, b.secretKey).NewMarginMyTrades().Symbol(req.Symbol)

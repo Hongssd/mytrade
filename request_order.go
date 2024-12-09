@@ -231,6 +231,7 @@ type QueryTradeParam struct {
 	EndTime     int64  //结束时间
 	Limit       int    //限制返回的成交明细数量
 	IsMargin    bool   //是否为杠杆订单
+	IsIsolated  bool   //是否是逐仓模式（杠杆） 币安统一账号使用
 }
 
 func (q *QueryTradeParam) SetAccountType(accountType string) *QueryTradeParam {
@@ -259,6 +260,10 @@ func (q *QueryTradeParam) SetLimit(limit int) *QueryTradeParam {
 }
 func (q *QueryTradeParam) SetIsMargin(isMargin bool) *QueryTradeParam {
 	q.IsMargin = isMargin
+	return q
+}
+func (q *QueryTradeParam) SetIsIsolated(isIsolated bool) *QueryTradeParam {
+	q.IsIsolated = isIsolated
 	return q
 }
 

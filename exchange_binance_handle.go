@@ -230,8 +230,8 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res
 			avgPrice = cumQuoteQty.Div(executedQty)
 		}
 	}
-	d, _ := json.MarshalIndent(res, "", "  ")
-	log.Info(string(d))
+	//d, _ := json.MarshalIndent(res, "", "  ")
+	//log.Info(string(d))
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
