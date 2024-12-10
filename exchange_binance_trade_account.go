@@ -244,13 +244,13 @@ func (b BinanceTradeAccount) SetAccountMode(mode AccountMode) error {
 }
 
 func (b BinanceTradeAccount) SetMarginMode(accountType, symbol string, mode MarginMode) error {
-	if b.isPortfolioMargin {
-		return ErrorNotSupport
-	}
 	if accountType == BN_AC_SPOT.String() {
 		return nil
 	}
 
+	if b.isPortfolioMargin {
+		return ErrorNotSupport
+	}
 	positionMode, err := b.GetPositionMode(accountType, symbol)
 	if err != nil {
 		return err
