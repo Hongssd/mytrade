@@ -808,6 +808,24 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 			return nil, err
 		}
 
+		//获取统一账号USD权益数据
+		r, err := binance.NewPortfolioMarginClient(b.apiKey, b.secretKey).NewGetAccount().Do()
+		if err != nil {
+			return nil, err
+		}
+
+		assetList = append(assetList, &Asset{
+			Exchange:          b.ExchangeType().String(), //交易所
+			AccountType:       accountType,               //账户类型
+			Asset:             "USD",                     //资产
+			WalletBalance:     r.AccountEquity,           //账户USD权益
+			MarginBalance:     r.AccountEquity,           //保证金余额
+			InitialMargin:     r.AccountMaintMargin,      //初始保证金
+			MaintMargin:       r.AccountMaintMargin,      //维持保证金
+			MarginAvailable:   true,
+			MaxWithdrawAmount: r.VirtualMaxWithdrawAmount, //以USD计价的最大可转出金额
+		})
+
 	case BN_AC_FUNDING:
 		res, err := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotAssetGetFundingAsset().Do()
 		if err != nil {
