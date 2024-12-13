@@ -15,9 +15,11 @@ type BinanceTradeEngine struct {
 	secretKey         string
 	isPortfolioMargin bool
 
-	wsSpotAccount   *mybinanceapi.SpotWsStreamClient
-	wsFutureAccount *mybinanceapi.FutureWsStreamClient
-	wsSwapAccount   *mybinanceapi.SwapWsStreamClient
+	wsSpotAccount       *mybinanceapi.SpotWsStreamClient
+	wsFutureAccount     *mybinanceapi.FutureWsStreamClient
+	wsSwapAccount       *mybinanceapi.SwapWsStreamClient
+	wsPMMarginAccount   *mybinanceapi.PMMarginStreamClient
+	wsPMContractAccount *mybinanceapi.PMContractStreamClient
 
 	wsSpotWsApi   *mybinanceapi.SpotWsStreamClient
 	wsFutureWsApi *mybinanceapi.FutureWsStreamClient
@@ -716,6 +718,59 @@ func (b *BinanceTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscr
 		}
 
 		b.handleSubscribeOrderFromSwapPayload(req, newPayload, newSub)
+		return newSub, nil
+	case BN_AC_PORTFOLIO_MARGIN_MARGIN:
+		// Margin
+		if b.wsPMMarginAccount == nil {
+			b.wsPMMarginAccount, err = binance.NewPMMarginStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey)
+			if err != nil {
+				return nil, err
+			}
+			err = b.wsPMMarginAccount.OpenConn()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		newPayload, err := b.wsPMMarginAccount.CreatePayload()
+		if err != nil {
+			return nil, err
+		}
+
+		//构建一个推送订单数据的中转订阅
+		newSub := &subscription[Order]{
+			resultChan: make(chan Order, 100),
+			errChan:    make(chan error, 10),
+			closeChan:  make(chan struct{}, 10),
+		}
+
+		b.handleSubscribeOrderFromPMMarginPayload(req, newPayload, newSub)
+		return newSub, nil
+	case BN_AC_PORTFOLIO_MARGIN_CONTRACT:
+		// Contract
+		if b.wsPMContractAccount == nil {
+			b.wsPMContractAccount, err = binance.NewPMContractStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey)
+			if err != nil {
+				return nil, err
+			}
+			err = b.wsPMContractAccount.OpenConn()
+			if err != nil {
+				return nil, err
+			}
+		}
+		newPayload, err := b.wsPMContractAccount.CreatePayload()
+		if err != nil {
+			return nil, err
+		}
+
+		//构建一个推送订单数据的中转订阅
+		newSub := &subscription[Order]{
+			resultChan: make(chan Order, 100),
+			errChan:    make(chan error, 10),
+			closeChan:  make(chan struct{}, 10),
+		}
+
+		b.handleSubscribeOrderFromPMContractPayload(req, newPayload, newSub)
 		return newSub, nil
 	default:
 		return nil, ErrorAccountType

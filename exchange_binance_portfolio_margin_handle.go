@@ -600,3 +600,143 @@ func (b *BinanceTradeEngine) handlePortfolioMarginMarginTradesQuery(req *QueryTr
 	}
 	return trades
 }
+
+// handle ws
+func (b *BinanceTradeEngine) handleSubscribeOrderFromPMMarginPayload(req SubscribeOrderParam, newPayload *mybinanceapi.WsPMMarginPayload, newSub *subscription[Order]) {
+	//处理不需要的订阅数据
+	go func() {
+		for {
+			select {
+			case <-newPayload.BalanceUpdatePayload.ErrChan():
+				continue
+			case <-newSub.closeChan:
+				return
+			case r := <-newPayload.BalanceUpdatePayload.ResultChan():
+				_ = r
+			}
+		}
+	}()
+	go func() {
+		for {
+			select {
+			case <-newPayload.OutboundAccountPositionPayload.ErrChan():
+				continue
+			case <-newSub.closeChan:
+				return
+			case r := <-newPayload.OutboundAccountPositionPayload.ResultChan():
+				_ = r
+			}
+		}
+	}()
+
+	//处理订单推送订阅
+	go func() {
+		for {
+			select {
+			case err := <-newPayload.ExecutionReportPayload.ErrChan():
+				newSub.errChan <- err
+			case <-newSub.closeChan:
+				newSub.CloseChan() <- struct{}{}
+				return
+			case r := <-newPayload.ExecutionReportPayload.ResultChan():
+				avgPrice := decimal.Zero
+				if r.ExecutedQty != "" && r.CummulativeQuoteQty != "" {
+					executedQty, _ := decimal.NewFromString(r.ExecutedQty)
+					cumQuoteQty, _ := decimal.NewFromString(r.CummulativeQuoteQty)
+					if !executedQty.IsZero() {
+						avgPrice = cumQuoteQty.Div(executedQty)
+					}
+				}
+				order := Order{
+					Exchange:      BINANCE_NAME.String(),
+					AccountType:   req.AccountType,
+					Symbol:        r.Symbol,
+					OrderId:       strconv.FormatInt(r.OrderId, 10),
+					ClientOrderId: r.ClientOrderId,
+					Price:         r.Price,
+					Quantity:      r.OrigQty,
+					ExecutedQty:   r.ExecutedQty,
+					CumQuoteQty:   r.CummulativeQuoteQty,
+					AvgPrice:      avgPrice.String(),
+					Status:        b.bnConverter.FromBNOrderStatus(r.Status, r.Type),
+					Type:          b.bnConverter.FromBNOrderType(r.Type),
+					Side:          b.bnConverter.FromBNOrderSide(r.Side),
+					TimeInForce:   b.bnConverter.FromBNTimeInForce(r.TimeInForce),
+					FeeAmount:     r.FeeQty,
+					FeeCcy:        r.FeeAsset,
+					CreateTime:    r.OrderCreateTime,
+					UpdateTime:    r.Timestamp,
+					IsMargin:      true,
+
+					TriggerPrice:         r.StopPrice,
+					TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(r.Type),
+					TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(r.Side, r.Type),
+				}
+				newSub.resultChan <- order
+			}
+		}
+	}()
+}
+func (b *BinanceTradeEngine) handleSubscribeOrderFromPMContractPayload(req SubscribeOrderParam, newPayload *mybinanceapi.WsPMContractPayload, newSub *subscription[Order]) {
+	//处理不需要的订阅数据
+	go func() {
+		for {
+			select {
+			case <-newPayload.AccountUpdatePayload.ErrChan():
+				continue
+			case <-newSub.closeChan:
+				return
+			case r := <-newPayload.AccountUpdatePayload.ResultChan():
+				_ = r
+			}
+		}
+	}()
+
+	//处理订单推送订阅
+	go func() {
+		for {
+			select {
+			case err := <-newPayload.OrderTradeUpdatePayload.ErrChan():
+				newSub.errChan <- err
+			case <-newSub.closeChan:
+				newSub.CloseChan() <- struct{}{}
+				return
+			case result := <-newPayload.OrderTradeUpdatePayload.ResultChan():
+				r := result.Order
+				CumQuoteQty := decimal.Zero
+				avgPrice, err := decimal.NewFromString(r.AvgPrice)
+				if err != nil {
+					newSub.ErrChan() <- err
+				}
+				CumQuoteQty = avgPrice.Mul(decimal.RequireFromString(r.ExecutedQty))
+				order := Order{
+					Exchange:      BINANCE_NAME.String(),
+					AccountType:   req.AccountType,
+					Symbol:        r.Symbol,
+					OrderId:       strconv.FormatInt(r.OrderId, 10),
+					ClientOrderId: r.ClientOrderId,
+					Price:         r.Price,
+					Quantity:      r.OrigQty,
+					ExecutedQty:   r.ExecutedQty,
+					CumQuoteQty:   CumQuoteQty.String(),
+					AvgPrice:      r.AvgPrice,
+					Status:        b.bnConverter.FromBNOrderStatus(r.Status, r.Type),
+					Type:          b.bnConverter.FromBNOrderType(r.Type),
+					Side:          b.bnConverter.FromBNOrderSide(r.Side),
+					PositionSide:  b.bnConverter.FromBNPositionSide(r.PositionSide),
+					TimeInForce:   b.bnConverter.FromBNTimeInForce(r.TimeInForce),
+					FeeAmount:     r.FeeQty,
+					FeeCcy:        r.FeeAsset,
+					ReduceOnly:    r.IsReduceOnly,
+					CreateTime:    result.Timestamp,
+					UpdateTime:    result.Timestamp,
+
+					TriggerPrice:         r.StopPrice,
+					TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(r.Type),
+					TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(r.Side, r.Type),
+				}
+				newSub.resultChan <- order
+			}
+		}
+	}()
+}
