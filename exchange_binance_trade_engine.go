@@ -15,11 +15,13 @@ type BinanceTradeEngine struct {
 	secretKey         string
 	isPortfolioMargin bool
 
-	wsSpotAccount       *mybinanceapi.SpotWsStreamClient
-	wsFutureAccount     *mybinanceapi.FutureWsStreamClient
-	wsSwapAccount       *mybinanceapi.SwapWsStreamClient
-	wsPMMarginAccount   *mybinanceapi.PMMarginStreamClient
-	wsPMContractAccount *mybinanceapi.PMContractStreamClient
+	wsSpotAccount               *mybinanceapi.SpotWsStreamClient
+	wsSpotMarginAccount         *mybinanceapi.SpotWsStreamClient
+	wsSpotIsolatedMarginAccount MySyncMap[string, *mybinanceapi.SpotWsStreamClient]
+	wsFutureAccount             *mybinanceapi.FutureWsStreamClient
+	wsSwapAccount               *mybinanceapi.SwapWsStreamClient
+	wsPMMarginAccount           *mybinanceapi.PMMarginStreamClient
+	wsPMContractAccount         *mybinanceapi.PMContractStreamClient
 
 	wsSpotWsApi   *mybinanceapi.SpotWsStreamClient
 	wsFutureWsApi *mybinanceapi.FutureWsStreamClient
@@ -639,142 +641,111 @@ func (b *BinanceTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
 }
 func (b *BinanceTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscribe[Order], error) {
 	req := *r
-	binance := &mybinanceapi.MyBinance{}
 	var err error
+	//构建一个推送订单数据的中转订阅
+	newSub := &subscription[Order]{
+		resultChan: make(chan Order, 100),
+		errChan:    make(chan error, 10),
+		closeChan:  make(chan struct{}, 10),
+	}
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
-		if b.wsSpotAccount == nil {
-			b.wsSpotAccount, err = binance.NewSpotWsStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey, mybinanceapi.SPOT_WS_TYPE)
+		var targetWs *mybinanceapi.SpotWsStreamClient
+		if r.IsMargin {
+			if !r.IsIsolated {
+				//全仓杠杆
+				if !b.isPortfolioMargin {
+					err = b.checkWsSpotMarginAccount()
+					if err != nil {
+						return nil, err
+					}
+					targetWs = b.wsSpotMarginAccount
+				} else {
+					err = b.checkWsPmMarginAccount()
+					if err != nil {
+						return nil, err
+					}
+					newPayload, err := b.wsPMMarginAccount.CreatePayload()
+					if err != nil {
+						return nil, err
+					}
+					b.handleSubscribeOrderFromPMMarginPayload(req, newPayload, newSub)
+					return newSub, nil
+				}
+			} else {
+				//逐仓杠杆
+				err = b.checkWsSpotIsolatedMarginAccount(r.IsolatedSymbol)
+				if err != nil {
+					return nil, err
+				}
+				var ok bool
+				targetWs, ok = b.wsSpotIsolatedMarginAccount.Load(r.IsolatedSymbol)
+				if !ok {
+					return nil, fmt.Errorf("isolated symbol %s not found", r.IsolatedSymbol)
+				}
+			}
+		} else {
+			//现货
+			err = b.checkWsSpotAccount()
 			if err != nil {
 				return nil, err
 			}
-			err := b.wsSpotAccount.OpenConn()
-			if err != nil {
-				return nil, err
-			}
-		}
+			targetWs = b.wsSpotAccount
 
-		newPayload, err := b.wsSpotAccount.CreatePayload()
+		}
+		newPayload, err := targetWs.CreatePayload()
 		if err != nil {
 			return nil, err
-		}
-		//构建一个推送订单数据的中转订阅
-		newSub := &subscription[Order]{
-			resultChan: make(chan Order, 100),
-			errChan:    make(chan error, 10),
-			closeChan:  make(chan struct{}, 10),
 		}
 		b.handleSubscribeOrderFromSpotPayload(req, newPayload, newSub)
 		return newSub, nil
 	case BN_AC_FUTURE:
-		if b.wsFutureAccount == nil {
-			b.wsFutureAccount, err = binance.NewFutureWsStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey)
+		if !b.isPortfolioMargin {
+			err := b.checkWsFutureAccount()
 			if err != nil {
 				return nil, err
 			}
-			err := b.wsFutureAccount.OpenConn()
+			newPayload, err := b.wsFutureAccount.CreatePayload()
 			if err != nil {
 				return nil, err
 			}
+			b.handleSubscribeOrderFromFuturePayload(req, newPayload, newSub)
 		}
-
-		newPayload, err := b.wsFutureAccount.CreatePayload()
-		if err != nil {
-			return nil, err
-		}
-
-		//构建一个推送订单数据的中转订阅
-		newSub := &subscription[Order]{
-			resultChan: make(chan Order, 100),
-			errChan:    make(chan error, 10),
-			closeChan:  make(chan struct{}, 10),
-		}
-
-		b.handleSubscribeOrderFromFuturePayload(req, newPayload, newSub)
-
 		return newSub, nil
 	case BN_AC_SWAP:
-		if b.wsSwapAccount == nil {
-			b.wsSwapAccount, err = binance.NewSwapWsStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey)
+		if !b.isPortfolioMargin {
+
+			err := b.checkWsSwapAccount()
 			if err != nil {
 				return nil, err
 			}
-			err := b.wsSwapAccount.OpenConn()
+			newPayload, err := b.wsSwapAccount.CreatePayload()
 			if err != nil {
 				return nil, err
 			}
-		}
 
-		newPayload, err := b.wsSwapAccount.CreatePayload()
-		if err != nil {
-			return nil, err
+			b.handleSubscribeOrderFromSwapPayload(req, newPayload, newSub)
+			return newSub, nil
 		}
-
-		//构建一个推送订单数据的中转订阅
-		newSub := &subscription[Order]{
-			resultChan: make(chan Order, 100),
-			errChan:    make(chan error, 10),
-			closeChan:  make(chan struct{}, 10),
-		}
-
-		b.handleSubscribeOrderFromSwapPayload(req, newPayload, newSub)
-		return newSub, nil
-	case BN_AC_PORTFOLIO_MARGIN_MARGIN:
-		// Margin
-		if b.wsPMMarginAccount == nil {
-			b.wsPMMarginAccount, err = binance.NewPMMarginStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey)
-			if err != nil {
-				return nil, err
-			}
-			err = b.wsPMMarginAccount.OpenConn()
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		newPayload, err := b.wsPMMarginAccount.CreatePayload()
-		if err != nil {
-			return nil, err
-		}
-
-		//构建一个推送订单数据的中转订阅
-		newSub := &subscription[Order]{
-			resultChan: make(chan Order, 100),
-			errChan:    make(chan error, 10),
-			closeChan:  make(chan struct{}, 10),
-		}
-
-		b.handleSubscribeOrderFromPMMarginPayload(req, newPayload, newSub)
-		return newSub, nil
-	case BN_AC_PORTFOLIO_MARGIN_CONTRACT:
-		// Contract
-		if b.wsPMContractAccount == nil {
-			b.wsPMContractAccount, err = binance.NewPMContractStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey)
-			if err != nil {
-				return nil, err
-			}
-			err = b.wsPMContractAccount.OpenConn()
-			if err != nil {
-				return nil, err
-			}
-		}
-		newPayload, err := b.wsPMContractAccount.CreatePayload()
-		if err != nil {
-			return nil, err
-		}
-
-		//构建一个推送订单数据的中转订阅
-		newSub := &subscription[Order]{
-			resultChan: make(chan Order, 100),
-			errChan:    make(chan error, 10),
-			closeChan:  make(chan struct{}, 10),
-		}
-
-		b.handleSubscribeOrderFromPMContractPayload(req, newPayload, newSub)
-		return newSub, nil
 	default:
 		return nil, ErrorAccountType
 	}
+
+	if b.isPortfolioMargin {
+		switch BinanceAccountType(req.AccountType) {
+		case BN_AC_FUTURE, BN_AC_SWAP:
+			err := b.checkWsPmContractAccount()
+			if err != nil {
+				return nil, err
+			}
+			newPayload, err := b.wsPMContractAccount.CreatePayload()
+			if err != nil {
+				return nil, err
+			}
+			b.handleSubscribeOrderFromPMContractPayload(req, newPayload, newSub)
+		}
+	}
+	return newSub, nil
 }
 
 func (b *BinanceTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {

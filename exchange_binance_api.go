@@ -610,3 +610,108 @@ func (b *BinanceTradeEngine) accountTypePreCheck(accountType string) error {
 		return ErrorInvalid("binance account type invalid")
 	}
 }
+func (b *BinanceTradeEngine) checkWsSpotAccount() error {
+	var err error
+	if b.wsSpotAccount == nil {
+		b.wsSpotAccount, err = binance.NewSpotWsStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey, mybinanceapi.SPOT_WS_TYPE)
+		if err != nil {
+			return err
+		}
+		err := b.wsSpotAccount.OpenConn()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (b *BinanceTradeEngine) checkWsSpotMarginAccount() error {
+	var err error
+	if b.wsSpotMarginAccount == nil {
+		b.wsSpotMarginAccount, err = binance.NewSpotWsStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey, mybinanceapi.SPOT_MARGIN_WS_TYPE)
+		if err != nil {
+			return err
+		}
+		err := b.wsSpotMarginAccount.OpenConn()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (b *BinanceTradeEngine) checkWsSpotIsolatedMarginAccount(symbol string) error {
+	var err error
+	if _, ok := b.wsSpotIsolatedMarginAccount.Load(symbol); !ok {
+		var targetWs *mybinanceapi.SpotWsStreamClient
+		targetWs, err = binance.NewSpotWsStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey, mybinanceapi.SPOT_ISOLATED_MARGIN_WS_TYPE, symbol)
+		if err != nil {
+			return err
+		}
+		err := targetWs.OpenConn()
+		if err != nil {
+			return err
+		}
+		b.wsSpotIsolatedMarginAccount.Store(symbol, targetWs)
+	}
+	return nil
+}
+
+func (b *BinanceTradeEngine) checkWsFutureAccount() error {
+	var err error
+	if b.wsFutureAccount == nil {
+		b.wsFutureAccount, err = binance.NewFutureWsStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey)
+		if err != nil {
+			return err
+		}
+		err := b.wsFutureAccount.OpenConn()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (b *BinanceTradeEngine) checkWsSwapAccount() error {
+	var err error
+	if b.wsSwapAccount == nil {
+		b.wsSwapAccount, err = binance.NewSwapWsStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey)
+		if err != nil {
+			return err
+		}
+		err := b.wsSwapAccount.OpenConn()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (b *BinanceTradeEngine) checkWsPmContractAccount() error {
+	var err error
+	if b.wsPMContractAccount == nil {
+		b.wsPMContractAccount, err = binance.NewPMContractStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey)
+		if err != nil {
+			return err
+		}
+		err := b.wsPMContractAccount.OpenConn()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (b *BinanceTradeEngine) checkWsPmMarginAccount() error {
+	var err error
+	if b.wsPMMarginAccount == nil {
+		b.wsPMMarginAccount, err = binance.NewPMMarginStreamClient().ConvertToAccountWs(b.apiKey, b.secretKey)
+		if err != nil {
+			return err
+		}
+		err := b.wsPMMarginAccount.OpenConn()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

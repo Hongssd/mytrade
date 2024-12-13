@@ -268,10 +268,28 @@ func (q *QueryTradeParam) SetIsIsolated(isIsolated bool) *QueryTradeParam {
 }
 
 type SubscribeOrderParam struct {
-	AccountType string //账户类型
+	AccountType    string //账户类型
+	IsMargin       bool   //是否为杠杆订单
+	IsIsolated     bool   //是否是逐仓模式（杠杆）
+	IsolatedSymbol string //逐仓模式（杠杆）币对
 }
 
 func (s *SubscribeOrderParam) SetAccountType(accountType string) *SubscribeOrderParam {
 	s.AccountType = accountType
+	return s
+}
+
+func (s *SubscribeOrderParam) SetIsMargin(isMargin bool) *SubscribeOrderParam {
+	s.IsMargin = isMargin
+	return s
+}
+
+func (s *SubscribeOrderParam) SetIsIsolated(isIsolated bool) *SubscribeOrderParam {
+	s.IsIsolated = isIsolated
+	return s
+}
+
+func (s *SubscribeOrderParam) SetIsolatedSymbol(isolatedSymbol string) *SubscribeOrderParam {
+	s.IsolatedSymbol = isolatedSymbol
 	return s
 }

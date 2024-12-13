@@ -3,7 +3,7 @@ module github.com/Hongssd/mytrade
 go 1.19
 
 require (
-	github.com/Hongssd/mybinanceapi v1.7.9
+	github.com/Hongssd/mybinanceapi v1.8.1
 	github.com/Hongssd/mybybitapi v0.1.4
 	github.com/Hongssd/myokxapi v0.4.5
 	github.com/google/uuid v1.6.0
