@@ -29,3 +29,11 @@ func NewBybitExchange() TradeExchange {
 		},
 	}
 }
+
+func NewGateExchange() TradeExchange {
+	return &GateExchange{
+		ExchangeBase: ExchangeBase{
+			exchangeType: GATE_NAME,
+		},
+	}
+}

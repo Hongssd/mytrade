@@ -10,6 +10,7 @@ const (
 	BINANCE_NAME ExchangeType = "BINANCE"
 	OKX_NAME     ExchangeType = "OKX"
 	BYBIT_NAME   ExchangeType = "BYBIT"
+	GATE_NAME    ExchangeType = "GATE"
 )
 
 type OrderStatus string

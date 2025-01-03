@@ -35,6 +35,7 @@ func NewExchangeManager() *ExchangeManager {
 	e.ExchangeMap.Store(BINANCE_NAME.String(), NewBinanceExchange())
 	e.ExchangeMap.Store(OKX_NAME.String(), NewOkxExchange())
 	e.ExchangeMap.Store(BYBIT_NAME.String(), NewBybitExchange())
+	e.ExchangeMap.Store(GATE_NAME.String(), NewGateExchange())
 	return e
 }
 

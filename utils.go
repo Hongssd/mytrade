@@ -75,3 +75,11 @@ func countDecimalPlaces(str string) int {
 	// 如果没有小数部分，则返回0
 	return 0
 }
+
+// 计算指定精度下最小值  如0 返回1 如1 返回0.1
+func getSizeFromPrecision(precision int) string {
+	if precision == 0 {
+		return "1"
+	}
+	return "0." + strings.Repeat("0", precision-1) + "1"
+}
