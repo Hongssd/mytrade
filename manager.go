@@ -268,12 +268,12 @@ func (e *ExchangeManager) SetPositionMode(api ExchangeApiParam, accountType, sym
 }
 
 // 设置杠杆倍数
-func (e *ExchangeManager) SetLeverage(api ExchangeApiParam, accountType, symbol string, marginMode MarginMode, positionSide PositionSide, leverage decimal.Decimal) error {
+func (e *ExchangeManager) SetLeverage(api ExchangeApiParam, accountType, symbol string, marginMode MarginMode, positionMode PositionMode, positionSide PositionSide, leverage decimal.Decimal) error {
 	tradeAccount, err := e.getTradeAccount(api.Exchange, api.ApiKey, api.ApiSecret, api.Passphrase)
 	if err != nil {
 		return err
 	}
-	return tradeAccount.SetLeverage(accountType, symbol, marginMode, positionSide, leverage)
+	return tradeAccount.SetLeverage(accountType, symbol, marginMode, positionMode, positionSide, leverage)
 }
 
 // 资金划转（账户内）

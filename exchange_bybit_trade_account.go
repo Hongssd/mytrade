@@ -175,7 +175,7 @@ func (b BybitTradeAccount) SetPositionMode(accountType, symbol string, mode Posi
 }
 
 func (b BybitTradeAccount) SetLeverage(accountType, symbol string,
-	marginMode MarginMode,
+	marginMode MarginMode, positionMode PositionMode,
 	positionSide PositionSide, leverage decimal.Decimal) error {
 
 	// spot cross leverage

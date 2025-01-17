@@ -338,7 +338,7 @@ func (b BinanceTradeAccount) SetPositionMode(accountType, symbol string, mode Po
 }
 
 func (b BinanceTradeAccount) SetLeverage(accountType, symbol string,
-	marginMode MarginMode, positionSide PositionSide,
+	marginMode MarginMode, positionMode PositionMode, positionSide PositionSide,
 	leverage decimal.Decimal) error {
 	switch BinanceAccountType(accountType) {
 	case BN_AC_SPOT:

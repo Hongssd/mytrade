@@ -8,6 +8,8 @@ func (b GateAccountType) String() string {
 
 const (
 	GATE_AC_SPOT     GateAccountType = "SPOT"     //现货
+	GATE_AC_MARGIN   GateAccountType = "MARGIN"   //现货杠杆
+	GATE_AC_UNIFIED  GateAccountType = "UNIFIED"  //统一账户
 	GATE_AC_FUTURES  GateAccountType = "FUTURES"  //合约
 	GATE_AC_DELIVERY GateAccountType = "DELIVERY" //交割
 )
@@ -89,3 +91,53 @@ func gateGetMillisecondFromInterval(interval string) int64 {
 func gateGetKlineCloseTime(ts int64, interval string) int64 {
 	return ts + gateGetMillisecondFromInterval(interval) - 1
 }
+
+const (
+	GATE_ACCOUNT_MODE_FREE_MARGIN  = 1 //现货模式
+	GATE_ACCOUNT_MODE_MULTI_MARGIN = 2 //跨币种保证金模式
+)
+
+const (
+	GATE_ACCOUNT_TYPE_SPOT     = "spot"     //现货
+	GATE_ACCOUNT_TYPE_MARGIN   = "margin"   //现货杠杆
+	GATE_ACCOUNT_TYPE_FUTURES  = "futures"  //合约
+	GATE_ACCOUNT_TYPE_DELIVERY = "delivery" //交割
+	GATE_ACCOUNT_TYPE_UNIFIED  = "unified"  //统一账户
+	GATE_ACCOUNT_TYPE_UNKNOWN  = ""         //未知
+)
+
+const (
+	GATE_ASSET_TYPE_SPOT     = "spot"     //现货
+	GATE_ASSET_TYPE_MARGIN   = "margin"   //现货杠杆
+	GATE_ASSET_TYPE_FUTURES  = "futures"  //合约
+	GATE_ASSET_TYPE_DELIVERY = "delivery" //交割
+	GATE_ASSET_TYPE_UNFIED   = "unified"  //统一账户
+)
+
+const (
+	GATE_POSITION_MODE_ONEWAY      = "single"     //单向持仓
+	GATE_POSITION_MODE_HEDGE_LONG  = "dual_long"  //双向持仓多头
+	GATE_POSITION_MODE_HEDGE_SHORT = "dual_short" //双向持仓空头
+)
+
+const (
+	GATE_ORDER_SIDE_BUY  = "buy"
+	GATE_ORDER_SIDE_SELL = "sell"
+)
+
+const (
+	GATE_ORDER_TYPE_LIMIT  = "limit"
+	GATE_ORDER_TYPE_MARKET = "market"
+)
+
+const (
+	GATE_TIME_IN_FORCE_GTC = "gtc" // - GoodTillCancelled
+	GATE_TIME_IN_FORCE_IOC = "ioc" // - ioc: ImmediateOrCancelled ，立即成交或者取消，只吃单不挂单
+	GATE_TIME_IN_FORCE_POC = "poc" // - poc: PendingOrCancelled，被动委托，只挂单不吃单
+)
+
+const (
+	GATE_ORDER_STATUS_NEW       = "open"
+	GATE_ORDER_STATUS_FILLED    = "closed"
+	GATE_ORDER_STATUS_CANCELLED = "cancelled"
+)

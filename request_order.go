@@ -176,6 +176,9 @@ type QueryOrderParam struct {
 	StartTime     int64         //开始时间 选填 默认返回7天内订单
 	EndTime       int64         //结束时间 选填 默认返回7天内订单
 	Limit         int           //限制返回的订单数量 选填 默认返回100条 最大100
+
+	// GateIO
+	Status OrderStatus //订单状态
 }
 
 func (q *QueryOrderParam) SetAccountType(accountType string) *QueryOrderParam {

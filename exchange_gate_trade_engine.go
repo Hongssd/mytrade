@@ -21,75 +21,298 @@ type GateTradeEngine struct {
 	wsForDeliveryOrderMu sync.Mutex
 }
 
-func (o *GateTradeEngine) NewOrderReq() *OrderParam {
+func (g *GateTradeEngine) NewOrderReq() *OrderParam {
 	return &OrderParam{}
 }
-func (o *GateTradeEngine) NewQueryOrderReq() *QueryOrderParam {
+func (g *GateTradeEngine) NewQueryOrderReq() *QueryOrderParam {
 	return &QueryOrderParam{}
 }
-func (o *GateTradeEngine) NewQueryTradeReq() *QueryTradeParam {
+func (g *GateTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 	return &QueryTradeParam{}
 }
 
-func (o *GateTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
+func (g *GateTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
+	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+		api := g.apiSpotOpenOrders(req)
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrdersFromSpotOpenOrders(req, res), nil
+	case GATE_ACCOUNT_TYPE_FUTURES:
+		api := g.apiFuturesOpenOrders(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrdersFromFuturesOpenOrders(req, res), nil
+	case GATE_ACCOUNT_TYPE_DELIVERY:
+		api := g.apiDeliveryOpenOrders(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrdersFromDeliveryOpenOrders(req, res), nil
+	case GATE_ACCOUNT_TYPE_UNIFIED:
+		// TODO
+		return nil, ErrorNotSupport
+	default:
+		return nil, ErrorAccountType
+	}
+}
+func (g *GateTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
+	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+		api := g.apiSpotOrderQuery(req)
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrderFromSpotOrderQuery(req, res), nil
+	case GATE_ACCOUNT_TYPE_FUTURES:
+		api := g.apiFuturesOrderQuery(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrderFromFuturesOrderQuery(req, res), nil
+	case GATE_ACCOUNT_TYPE_DELIVERY:
+		api := g.apiDeliveryOrderQuery(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrderFromDeliveryOrderQuery(req, res), nil
+	case GATE_ACCOUNT_TYPE_UNIFIED:
+		// TODO
+		return nil, ErrorNotSupport
+	default:
+		return nil, ErrorAccountType
+	}
+}
+func (g *GateTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
+	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+		api := g.apiSpotOrdersQuery(req)
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrdersFromSpotOrdersQuery(req, res), nil
+	case GATE_ACCOUNT_TYPE_FUTURES:
+		api := g.apiFuturesOrdersQuery(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrdersFromFuturesOrdersQuery(req, res), nil
+	case GATE_ACCOUNT_TYPE_DELIVERY:
+		api := g.apiDeliveryOrdersQuery(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrdersFromDeliveryOrdersQuery(req, res), nil
+	case GATE_ACCOUNT_TYPE_UNIFIED:
+		// TODO
+		return nil, ErrorNotSupport
+	default:
+		return nil, ErrorAccountType
+	}
+}
 
+func (g *GateTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
+	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+		api := g.apiSpotTradesQuery(req)
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleTradesFromSpotTradesQuery(req, res), nil
+	case GATE_ACCOUNT_TYPE_FUTURES:
+		api := g.apiFuturesTradesQuery(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleTradesFromFuturesTradesQuery(req, res), nil
+	case GATE_ACCOUNT_TYPE_DELIVERY:
+		api := g.apiDeliveryTradesQuery(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleTradesFromDeliveryTradesQuery(req, res), nil
+	case GATE_ACCOUNT_TYPE_UNIFIED:
+		// TODO
+		return nil, ErrorNotSupport
+	default:
+		return nil, ErrorAccountType
+	}
+}
+
+func (g *GateTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
+	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+		log.Info("CreateOrder", req.Symbol)
+		api := g.apiSpotOrderCreate(req)
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrderFromSpotOrderCreate(req, res), nil
+	case GATE_ACCOUNT_TYPE_FUTURES:
+		api := g.apiFuturesOrderCreate(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrderFromFuturesOrderCreate(req, res), nil
+	case GATE_ACCOUNT_TYPE_DELIVERY:
+		api := g.apiDeliveryOrderCreate(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrderFromDeliveryOrderCreate(req, res), nil
+	case GATE_ACCOUNT_TYPE_UNIFIED:
+		// TODO
+		return nil, ErrorNotSupport
+	default:
+		return nil, ErrorAccountType
+	}
+}
+func (g *GateTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
+	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+		api := g.apiSpotOrderAmend(req)
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrderFromSpotOrderAmend(req, res), nil
+	case GATE_ACCOUNT_TYPE_FUTURES:
+		api := g.apiFuturesOrderAmend(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		return g.handleOrderFromFuturesOrderAmend(req, res), nil
+	case GATE_ACCOUNT_TYPE_DELIVERY:
+		return nil, ErrorNotSupport
+	case GATE_ACCOUNT_TYPE_UNIFIED:
+		return nil, ErrorNotSupport
+	default:
+		return nil, ErrorAccountType
+	}
+}
+func (g *GateTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
+	var order *Order
+	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+		api := g.apiSpotOrderCancel(req)
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		order = g.handleOrderFromSpotOrderCancel(req, res)
+	case GATE_ACCOUNT_TYPE_FUTURES:
+		api := g.apiFuturesOrderCancel(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		order = g.handleOrderFromFuturesOrderCancel(req, res)
+	case GATE_ACCOUNT_TYPE_DELIVERY:
+		api := g.apiDeliveryOrderCancel(req)
+		if api == nil {
+			return nil, ErrorSymbolNotFound
+		}
+		res, err := api.Do()
+		if err != nil {
+			return nil, err
+		}
+		order = g.handleOrderFromDeliveryOrderCancel(req, res)
+	//case GATE_ACCOUNT_TYPE_UNIFIED:
+	// TODO
+	default:
+		return nil, ErrorAccountType
+	}
+	return order, nil
+}
+
+func (g *GateTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 	return nil, nil
 }
-func (o *GateTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
+func (g *GateTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 	return nil, nil
 }
-func (o *GateTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
+func (g *GateTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 	return nil, nil
 }
 
-func (o *GateTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
-	return nil, nil
-}
-
-func (o *GateTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
-	return nil, nil
-
-}
-func (o *GateTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
-	return nil, nil
-}
-func (o *GateTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
-	return nil, nil
-}
-
-func (o *GateTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
-	return nil, nil
-}
-func (o *GateTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
-	return nil, nil
-}
-func (o *GateTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
-	return nil, nil
-}
-
-func (o *GateTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
+func (g *GateTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
 	return &SubscribeOrderParam{}
 }
-func (o *GateTradeEngine) SubscribeOrder(req *SubscribeOrderParam) (TradeSubscribe[Order], error) {
+
+func (g *GateTradeEngine) SubscribeOrder(req *SubscribeOrderParam) (TradeSubscribe[Order], error) {
 	return nil, nil
 }
 
-func (o *GateTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
+func (g *GateTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
 	return nil, nil
 }
-func (o *GateTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
+func (g *GateTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
 	return nil, nil
 }
-func (o *GateTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
+func (g *GateTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
 	return nil, nil
 }
 
-func (o *GateTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
+func (g *GateTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
 	return nil, nil
 }
-func (o *GateTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
+func (g *GateTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
 	return nil, nil
 }
-func (o *GateTradeEngine) WsCancelOrders(reqs []*OrderParam) ([]*Order, error) {
+func (g *GateTradeEngine) WsCancelOrders(reqs []*OrderParam) ([]*Order, error) {
 	return nil, nil
 }
