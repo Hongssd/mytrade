@@ -165,7 +165,7 @@ type TradeAccount interface {
 	SetMarginMode(accountType, symbol string, mode MarginMode) error     //设置保证金模式
 	SetPositionMode(accountType, symbol string, mode PositionMode) error //设置持仓模式
 	SetLeverage(accountType, symbol string,
-		marginMode MarginMode, positionSide PositionSide,
+		marginMode MarginMode, positionMode PositionMode, positionSide PositionSide,
 		leverage decimal.Decimal) error //设置杠杆
 
 	AssetTransfer(AssetTransferParams *AssetTransferParams) ([]*AssetTransfer, error) //资金划转

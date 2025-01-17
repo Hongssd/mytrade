@@ -78,6 +78,9 @@ type QueryAssetTransfer struct {
 	From   AssetType          `json:"from"`   // 转出账号
 	To     AssetType          `json:"to"`     // 转入账号
 	Status TransferStatusType `json:"status"` // 状态
+
+	// GATE
+	ChangeId string `json:"changeId"` // 资金变动ID
 }
 
 type OKXAssetBill struct {
