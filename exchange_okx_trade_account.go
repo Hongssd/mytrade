@@ -130,7 +130,7 @@ func (o OkxTradeAccount) SetPositionMode(accountType, symbol string, mode Positi
 	return nil
 }
 
-func (o OkxTradeAccount) SetLeverage(accountType, symbol string, marginMode MarginMode, positionMode PositionMode, positionSide PositionSide, leverage decimal.Decimal) error {
+func (o OkxTradeAccount) SetLeverage(accountType, symbol string, marginMode MarginMode,  positionSide PositionSide, leverage decimal.Decimal) error {
 
 	api := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().
 		NewPrivateRestAccountSetLeverage().InstId(symbol).

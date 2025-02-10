@@ -1,8 +1,9 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mygateapi"
 	"sync"
+
+	"github.com/Hongssd/mygateapi"
 )
 
 type GateTradeEngine struct {
@@ -32,7 +33,7 @@ func (g *GateTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 }
 
 func (g *GateTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
-	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	switch req.AccountType {
 	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
 		api := g.apiSpotOpenOrders(req)
 		res, err := api.Do()
@@ -68,7 +69,7 @@ func (g *GateTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error
 	}
 }
 func (g *GateTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
-	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	switch req.AccountType {
 	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
 		api := g.apiSpotOrderQuery(req)
 		res, err := api.Do()
@@ -104,7 +105,7 @@ func (g *GateTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 	}
 }
 func (g *GateTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
-	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	switch req.AccountType {
 	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
 		api := g.apiSpotOrdersQuery(req)
 		res, err := api.Do()
@@ -141,7 +142,7 @@ func (g *GateTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
 }
 
 func (g *GateTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
-	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	switch req.AccountType {
 	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
 		api := g.apiSpotTradesQuery(req)
 		res, err := api.Do()
@@ -178,7 +179,7 @@ func (g *GateTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
 }
 
 func (g *GateTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
-	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	switch req.AccountType {
 	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
 		log.Info("CreateOrder", req.Symbol)
 		api := g.apiSpotOrderCreate(req)
@@ -215,7 +216,7 @@ func (g *GateTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 	}
 }
 func (g *GateTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
-	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	switch req.AccountType {
 	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
 		api := g.apiSpotOrderAmend(req)
 		res, err := api.Do()
@@ -243,7 +244,7 @@ func (g *GateTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 }
 func (g *GateTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	var order *Order
-	switch g.gateConverter.ToGateAssetType(AssetType(req.AccountType)) {
+	switch req.AccountType {
 	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
 		api := g.apiSpotOrderCancel(req)
 		res, err := api.Do()

@@ -92,9 +92,16 @@ func gateGetKlineCloseTime(ts int64, interval string) int64 {
 	return ts + gateGetMillisecondFromInterval(interval) - 1
 }
 
+// 统一账户模式：
+// - classic: 经典账户模式
+// - multi_currency: 跨币种保证金模式
+// - portfolio: 组合保证金模式
+// - single_currency: 单币种保证金模式
 const (
-	GATE_ACCOUNT_MODE_FREE_MARGIN  = 1 //现货模式
-	GATE_ACCOUNT_MODE_MULTI_MARGIN = 2 //跨币种保证金模式
+	GATE_ACCOUNT_MODE_CLASSIC       = "classic"         //经典保证金模式
+	GATE_ACCOUNT_MODE_MULTI_MARGIN  = "multi_currency"  //跨币种保证金模式
+	GATE_ACCOUNT_MODE_PORTFOLIO     = "portfolio"       //组合保证金模式
+	GATE_ACCOUNT_MODE_SINGLE_MARGIN = "single_currency" //单币种保证金模式
 )
 
 const (
@@ -115,9 +122,14 @@ const (
 )
 
 const (
-	GATE_POSITION_MODE_ONEWAY      = "single"     //单向持仓
-	GATE_POSITION_MODE_HEDGE_LONG  = "dual_long"  //双向持仓多头
-	GATE_POSITION_MODE_HEDGE_SHORT = "dual_short" //双向持仓空头
+	GATE_POSITION_MODE_ONEWAY = false //单向持仓
+	GATE_POSITION_MODE_HEDGE  = true  //双向持仓
+)
+
+const (
+	GATE_POSITION_SIDE_BOTH  = "single"     //单向持仓
+	GATE_POSITION_SIDE_LONG  = "dual_long"  //双向持仓多头
+	GATE_POSITION_SIDE_SHORT = "dual_short" //双向持仓空头
 )
 
 const (
@@ -137,7 +149,32 @@ const (
 )
 
 const (
-	GATE_ORDER_STATUS_NEW       = "open"
-	GATE_ORDER_STATUS_FILLED    = "closed"
-	GATE_ORDER_STATUS_CANCELLED = "cancelled"
+	GATE_ORDER_SPOT_STATUS_NEW       = "open"
+	GATE_ORDER_SPOT_STATUS_FILLED    = "closed"
+	GATE_ORDER_SPOT_STATUS_CANCELLED = "cancelled"
+)
+
+const (
+	GATE_ORDER_CONTRACT_STATUS_OPEN     = "open"
+	GATE_ORDER_CONTRACT_STATUS_FINISHED = "finished"
+)
+
+// gate合约订单
+// 结束方式，包括：
+// - filled: 完全成交
+// - cancelled: 用户撤销
+// - liquidated: 强制平仓撤销
+// - ioc: 未立即完全成交，因为tif设置为ioc
+// - auto_deleveraged: 自动减仓撤销
+// - reduce_only: 增持仓位撤销，因为设置reduce_only或平仓
+// - position_closed: 因为仓位平掉了，所以挂单被撤掉
+// - reduce_out: 只减仓被排除的不容易成交的挂单
+// - stp: 订单发生自成交限制而被撤销
+const (
+	GATE_ORDER_CONTRACT_FINISH_AS_FILLED           = "filled"
+	GATE_ORDER_CONTRACT_FINISH_AS_CANCELLED        = "cancelled"
+	GATE_ORDER_CONTRACT_FINISH_AS_LIQUIDATED       = "liquidated"
+	GATE_ORDER_CONTRACT_FINISH_AS_IOC              = "ioc"
+	GATE_ORDER_CONTRACT_FINISH_AS_AUTO_DELEVERAGED = "auto_deleveraged"
+	GATE_ORDER_CONTRACT_FINISH_AS_REDUCE_ONLY      = "reduce_only"
 )

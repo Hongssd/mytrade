@@ -1,10 +1,11 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mygateapi"
-	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
+
+	"github.com/Hongssd/mygateapi"
+	"github.com/shopspring/decimal"
 )
 
 func (g *GateTradeEngine) apiSpotOrderCreate(req *OrderParam) *mygateapi.PrivateRestSpotOrdersPostAPI {
@@ -33,7 +34,13 @@ func (g *GateTradeEngine) apiFuturesOrderCreate(req *OrderParam) *mygateapi.Priv
 	}
 	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestFuturesSettleOrdersPost().
-		Settle(settle).Contract(req.Symbol).Size(req.Quantity.IntPart()).Price(req.Price.String())
+		Settle(settle).Contract(req.Symbol).Price(req.Price.String())
+
+	if req.OrderSide == ORDER_SIDE_BUY {
+		api.Size(req.Quantity.Abs().IntPart())
+	} else {
+		api.Size(req.Quantity.Abs().Neg().IntPart())
+	}
 
 	if req.TimeInForce != "" {
 		api.Tif(g.gateConverter.ToGateTimeInForce(req.TimeInForce))
@@ -47,6 +54,10 @@ func (g *GateTradeEngine) apiFuturesOrderCreate(req *OrderParam) *mygateapi.Priv
 	// 平仓时 size = 0, close = true
 	if req.Quantity.IsZero() {
 		api.Close(true)
+	}
+
+	if req.ReduceOnly {
+		api.ReduceOnly(req.ReduceOnly)
 	}
 
 	if req.ClientOrderId != "" {
@@ -216,7 +227,7 @@ func (g *GateTradeEngine) apiFuturesOpenOrders(req *QueryOrderParam) *mygateapi.
 	}
 	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestFuturesSettleOrdersGet().
-		Settle(settle).Status(GATE_ORDER_STATUS_NEW)
+		Settle(settle).Status(GATE_ORDER_CONTRACT_STATUS_OPEN)
 
 	if req.Limit != 0 {
 		api.Limit(req.Limit)
@@ -232,7 +243,7 @@ func (g *GateTradeEngine) apiDeliveryOpenOrders(req *QueryOrderParam) *mygateapi
 	}
 	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestDeliverySettleOrdersGet().
-		Settle(settle).Status(GATE_ORDER_STATUS_NEW)
+		Settle(settle).Status(GATE_ORDER_CONTRACT_STATUS_OPEN)
 
 	if req.Limit != 0 {
 		api.Limit(req.Limit)
@@ -305,7 +316,7 @@ func (g *GateTradeEngine) apiDeliveryOrderQuery(req *QueryOrderParam) *mygateapi
 
 func (g *GateTradeEngine) apiSpotOrdersQuery(req *QueryOrderParam) *mygateapi.PrivateRestSpotOrdersGetAPI {
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotOrdersGet().
-		Status(g.gateConverter.ToGateOrderStatus(req.Status))
+		Status(g.gateConverter.ToGateSpotOrderStatus(req.Status))
 
 	if req.AccountType != "" {
 		api.Account(g.gateConverter.ToGateAssetType(AssetType(req.AccountType)))
@@ -315,6 +326,11 @@ func (g *GateTradeEngine) apiSpotOrdersQuery(req *QueryOrderParam) *mygateapi.Pr
 		api.CurrencyPair(req.Symbol)
 	}
 
+	if req.Limit != 0 {
+		api.Limit(req.Limit)
+	} else {
+		api.Limit(100)
+	}
 	return api
 }
 func (g *GateTradeEngine) apiFuturesOrdersQuery(req *QueryOrderParam) *mygateapi.PrivateRestFuturesSettleOrdersGetAPI {
@@ -325,8 +341,13 @@ func (g *GateTradeEngine) apiFuturesOrdersQuery(req *QueryOrderParam) *mygateapi
 	}
 	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestFuturesSettleOrdersGet().Settle(settle).
-		Status(g.gateConverter.ToGateOrderStatus(req.Status))
+		Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
 
+	if req.Limit != 0 {
+		api.Limit(req.Limit)
+	} else {
+		api.Limit(100)
+	}
 	return api
 }
 func (g *GateTradeEngine) apiDeliveryOrdersQuery(req *QueryOrderParam) *mygateapi.PrivateRestDeliverySettleOrdersGetAPI {
@@ -337,8 +358,13 @@ func (g *GateTradeEngine) apiDeliveryOrdersQuery(req *QueryOrderParam) *mygateap
 	}
 	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestDeliverySettleOrdersGet().Settle(settle).
-		Status(g.gateConverter.ToGateOrderStatus(req.Status))
+		Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
 
+	if req.Limit != 0 {
+		api.Limit(req.Limit)
+	} else {
+		api.Limit(100)
+	}
 	return api
 }
 

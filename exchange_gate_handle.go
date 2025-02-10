@@ -1,11 +1,14 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mygateapi"
-	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
+
+	"github.com/Hongssd/mygateapi"
+	"github.com/shopspring/decimal"
 )
+
+var gateTimeMul = decimal.NewFromInt(1000)
 
 func (g *GateTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersPostRes]) *Order {
 	return &Order{
@@ -21,46 +24,48 @@ func (g *GateTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *m
 		ExecutedQty:   res.Data.FilledAmount,
 		CumQuoteQty:   res.Data.FilledTotal,
 		AvgPrice:      res.Data.AvgDealPrice,
-		Status:        g.gateConverter.FromGateOrderStatus(res.Data.Status),
+		Status:        g.gateConverter.FromGateSpotOrderStatus(res.Data.Status),
 		Type:          g.gateConverter.FromGateOrderType(res.Data.Type),
 		Side:          g.gateConverter.FromGateOrderSide(res.Data.Side),
 		TimeInForce:   g.gateConverter.FromGateTimeInForce(res.Data.TimeInForce),
 		FeeAmount:     res.Data.Fee,
 		FeeCcy:        res.Data.FeeCurrency,
-		CreateTime:    stringToInt64(res.Data.CreateTime),
-		UpdateTime:    stringToInt64(res.Data.UpdateTime),
+		CreateTime:    int64(res.Data.CreateTimeMs),
+		UpdateTime:    int64(res.Data.UpdateTimeMs),
 	}
 }
 func (g *GateTradeEngine) handleOrderFromFuturesOrderCreate(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestFuturesSettleOrdersPostRes]) *Order {
 	executedQty := decimal.NewFromInt(res.Data.Size).Sub(decimal.NewFromInt(res.Data.Left))
 	var updateTime int64
 	if decimal.NewFromFloat(res.Data.FinishTime).IsZero() {
-		updateTime = decimal.NewFromFloat(res.Data.CreateTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart()
 	} else {
-		updateTime = decimal.NewFromFloat(res.Data.FinishTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.FinishTime).Mul(gateTimeMul).IntPart()
 	}
+
 	return &Order{
-		Exchange:              g.ExchangeType().String(),
-		AccountType:           req.AccountType,
-		Symbol:                res.Data.Contract,
-		IsMargin:              req.IsMargin,
-		IsIsolated:            req.IsIsolated,
-		OrderId:               decimal.NewFromInt(res.Data.Id).String(),
-		ClientOrderId:         res.Data.Text,
-		Price:                 res.Data.Price,
-		Quantity:              decimal.NewFromInt(res.Data.Size).String(),
-		ExecutedQty:           executedQty.String(),
-		CumQuoteQty:           "",
-		AvgPrice:              res.Data.Price,
-		Status:                g.gateConverter.FromGateOrderStatus(res.Data.Status),
-		Type:                  req.OrderType,
-		Side:                  req.OrderSide,
-		PositionSide:          req.PositionSide,
+		Exchange:      g.ExchangeType().String(),
+		AccountType:   req.AccountType,
+		Symbol:        res.Data.Contract,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
+		OrderId:       decimal.NewFromInt(res.Data.Id).String(),
+		ClientOrderId: res.Data.Text,
+		Price:         res.Data.Price,
+		Quantity:      decimal.NewFromInt(res.Data.Size).String(),
+		ExecutedQty:   executedQty.String(),
+		CumQuoteQty:   "",
+		AvgPrice:      res.Data.Price,
+		Status:        g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
+		Type:          req.OrderType,
+		Side:          req.OrderSide,
+		PositionSide:  req.PositionSide,
+
 		TimeInForce:           g.gateConverter.FromGateTimeInForce(res.Data.Tif),
 		FeeAmount:             "",
 		FeeCcy:                "",
 		ReduceOnly:            false,
-		CreateTime:            decimal.NewFromFloat(res.Data.CreateTime).IntPart(),
+		CreateTime:            decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:            updateTime,
 		RealizedPnl:           "",
 		AttachTpTriggerPrice:  "",
@@ -94,37 +99,39 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCreate(req *OrderParam, re
 	}
 	var updateTime int64
 	if decimal.NewFromFloat(res.Data.FinishTime).IsZero() {
-		updateTime = decimal.NewFromFloat(res.Data.CreateTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart()
 	} else {
-		updateTime = decimal.NewFromFloat(res.Data.FinishTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.FinishTime).Mul(gateTimeMul).IntPart()
 	}
+
 	return &Order{
-		Exchange:              g.ExchangeType().String(),
-		AccountType:           req.AccountType,
-		Symbol:                res.Data.Contract,
-		IsMargin:              req.IsMargin,
-		IsIsolated:            req.IsIsolated,
-		OrderId:               decimal.NewFromInt(res.Data.Id).String(),
-		ClientOrderId:         res.Data.Text,
-		Price:                 res.Data.Price,
-		Quantity:              decimal.NewFromInt(res.Data.Size).String(),
-		ExecutedQty:           executedQty.String(),
-		CumQuoteQty:           "",
-		AvgPrice:              res.Data.Price,
-		Status:                g.gateConverter.FromGateOrderStatus(res.Data.Status),
-		Type:                  req.OrderType,
-		Side:                  req.OrderSide,
-		PositionSide:          positionSide,
-		TimeInForce:           g.gateConverter.FromGateTimeInForce(res.Data.Tif),
-		FeeAmount:             "",
-		FeeCcy:                "",
-		ReduceOnly:            false,
-		CreateTime:            decimal.NewFromFloat(res.Data.CreateTime).IntPart(),
-		UpdateTime:            updateTime,
-		RealizedPnl:           "",
-		AttachTpTriggerPrice:  "",
-		AttachTpOrdPrice:      "",
-		AttachSlTriggerPrice:  "",
+		Exchange:             g.ExchangeType().String(),
+		AccountType:          req.AccountType,
+		Symbol:               res.Data.Contract,
+		IsMargin:             req.IsMargin,
+		IsIsolated:           req.IsIsolated,
+		OrderId:              decimal.NewFromInt(res.Data.Id).String(),
+		ClientOrderId:        res.Data.Text,
+		Price:                res.Data.Price,
+		Quantity:             decimal.NewFromInt(res.Data.Size).String(),
+		ExecutedQty:          executedQty.String(),
+		CumQuoteQty:          "",
+		AvgPrice:             res.Data.Price,
+		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
+		Type:                 req.OrderType,
+		Side:                 req.OrderSide,
+		PositionSide:         positionSide,
+		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
+		FeeAmount:            "",
+		FeeCcy:               "",
+		ReduceOnly:           false,
+		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
+		UpdateTime:           updateTime,
+		RealizedPnl:          "",
+		AttachTpTriggerPrice: "",
+		AttachTpOrdPrice:     "",
+		AttachSlTriggerPrice: "",
+
 		AttachSlOrdPrice:      "",
 		IsAlgo:                req.IsAlgo,
 		OrderAlgoType:         "",
@@ -158,51 +165,54 @@ func (g *GateTradeEngine) handleOrderFromSpotOrderAmend(req *OrderParam, res *my
 		ExecutedQty:   res.Data.FilledAmount,
 		CumQuoteQty:   res.Data.FilledTotal,
 		AvgPrice:      res.Data.AvgDealPrice,
-		Status:        g.gateConverter.FromGateOrderStatus(res.Data.Status),
+		Status:        g.gateConverter.FromGateSpotOrderStatus(res.Data.Status),
 		Type:          g.gateConverter.FromGateOrderType(res.Data.Type),
 		Side:          g.gateConverter.FromGateOrderSide(res.Data.Side),
 		TimeInForce:   g.gateConverter.FromGateTimeInForce(res.Data.TimeInForce),
-		FeeAmount:     res.Data.Fee,
-		FeeCcy:        res.Data.FeeCurrency,
-		CreateTime:    stringToInt64(res.Data.CreateTime),
-		UpdateTime:    stringToInt64(res.Data.UpdateTime),
+
+		FeeAmount:  res.Data.Fee,
+		FeeCcy:     res.Data.FeeCurrency,
+		CreateTime: stringToInt64(res.Data.CreateTime),
+		UpdateTime: stringToInt64(res.Data.UpdateTime),
 	}
 }
 func (g *GateTradeEngine) handleOrderFromFuturesOrderAmend(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestFuturesSettleOrdersOrderIdPutRes]) *Order {
 	executedQty := decimal.NewFromInt(res.Data.Size).Sub(decimal.NewFromInt(res.Data.Left)).String()
 	var updateTime int64
 	if decimal.NewFromFloat(res.Data.FinishTime).IsZero() {
-		updateTime = decimal.NewFromFloat(res.Data.CreateTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart()
 	} else {
-		updateTime = decimal.NewFromFloat(res.Data.FinishTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.FinishTime).Mul(gateTimeMul).IntPart()
 	}
+
 	return &Order{
-		Exchange:              g.ExchangeType().String(),
-		AccountType:           req.AccountType,
-		Symbol:                res.Data.Contract,
-		IsMargin:              req.IsMargin,
-		IsIsolated:            req.IsIsolated,
-		OrderId:               decimal.NewFromInt(res.Data.Id).String(),
-		ClientOrderId:         res.Data.Text,
-		Price:                 res.Data.Price,
-		Quantity:              decimal.NewFromInt(res.Data.Size).String(),
-		ExecutedQty:           executedQty,
-		CumQuoteQty:           "",
-		AvgPrice:              res.Data.Price,
-		Status:                g.gateConverter.FromGateOrderStatus(res.Data.Status),
-		Type:                  req.OrderType,
-		Side:                  req.OrderSide,
-		PositionSide:          req.PositionSide,
-		TimeInForce:           g.gateConverter.FromGateTimeInForce(res.Data.Tif),
-		FeeAmount:             "",
-		FeeCcy:                "",
-		ReduceOnly:            false,
-		CreateTime:            decimal.NewFromFloat(res.Data.CreateTime).IntPart(),
-		UpdateTime:            updateTime,
-		RealizedPnl:           "",
-		AttachTpTriggerPrice:  "",
-		AttachTpOrdPrice:      "",
-		AttachSlTriggerPrice:  "",
+		Exchange:             g.ExchangeType().String(),
+		AccountType:          req.AccountType,
+		Symbol:               res.Data.Contract,
+		IsMargin:             req.IsMargin,
+		IsIsolated:           req.IsIsolated,
+		OrderId:              decimal.NewFromInt(res.Data.Id).String(),
+		ClientOrderId:        res.Data.Text,
+		Price:                res.Data.Price,
+		Quantity:             decimal.NewFromInt(res.Data.Size).String(),
+		ExecutedQty:          executedQty,
+		CumQuoteQty:          "",
+		AvgPrice:             res.Data.Price,
+		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
+		Type:                 req.OrderType,
+		Side:                 req.OrderSide,
+		PositionSide:         req.PositionSide,
+		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
+		FeeAmount:            "",
+		FeeCcy:               "",
+		ReduceOnly:           false,
+		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
+		UpdateTime:           updateTime,
+		RealizedPnl:          "",
+		AttachTpTriggerPrice: "",
+		AttachTpOrdPrice:     "",
+		AttachSlTriggerPrice: "",
+
 		AttachSlOrdPrice:      "",
 		IsAlgo:                req.IsAlgo,
 		OrderAlgoType:         "",
@@ -224,22 +234,23 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderAmend(req *OrderParam, res 
 
 func (g *GateTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersOrderIdDeleteRes]) *Order {
 	return &Order{
-		Exchange:              g.ExchangeType().String(),
-		AccountType:           g.gateConverter.FromGateAssetType(res.Data.Account).String(),
-		Symbol:                res.Data.CurrencyPair,
-		IsMargin:              req.IsMargin,
-		IsIsolated:            req.IsIsolated,
-		OrderId:               res.Data.ID,
-		ClientOrderId:         res.Data.Text,
-		Price:                 res.Data.Price,
-		Quantity:              res.Data.Amount,
-		ExecutedQty:           res.Data.FilledAmount,
-		CumQuoteQty:           res.Data.FilledTotal,
-		AvgPrice:              res.Data.AvgDealPrice,
-		Status:                g.gateConverter.FromGateOrderStatus(res.Data.Status),
-		Type:                  req.OrderType,
-		Side:                  req.OrderSide,
-		PositionSide:          "",
+		Exchange:      g.ExchangeType().String(),
+		AccountType:   g.gateConverter.FromGateAssetType(res.Data.Account).String(),
+		Symbol:        res.Data.CurrencyPair,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
+		OrderId:       res.Data.ID,
+		ClientOrderId: res.Data.Text,
+		Price:         res.Data.Price,
+		Quantity:      res.Data.Amount,
+		ExecutedQty:   res.Data.FilledAmount,
+		CumQuoteQty:   res.Data.FilledTotal,
+		AvgPrice:      res.Data.AvgDealPrice,
+		Status:        g.gateConverter.FromGateSpotOrderStatus(res.Data.Status),
+		Type:          req.OrderType,
+		Side:          req.OrderSide,
+		PositionSide:  "",
+
 		TimeInForce:           g.gateConverter.FromGateTimeInForce(res.Data.TimeInForce),
 		FeeAmount:             res.Data.Fee,
 		FeeCcy:                res.Data.FeeCurrency,
@@ -272,37 +283,39 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCancel(req *OrderParam, res
 	executedQty := decimal.NewFromInt(res.Data.Size).Sub(decimal.NewFromInt(res.Data.Left)).String()
 	var updateTime int64
 	if decimal.NewFromFloat(res.Data.FinishTime).IsZero() {
-		updateTime = decimal.NewFromFloat(res.Data.CreateTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart()
 	} else {
-		updateTime = decimal.NewFromFloat(res.Data.FinishTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.FinishTime).Mul(gateTimeMul).IntPart()
 	}
+
 	return &Order{
-		Exchange:              g.ExchangeType().String(),
-		AccountType:           req.AccountType,
-		Symbol:                res.Data.Contract,
-		IsMargin:              req.IsMargin,
-		IsIsolated:            req.IsIsolated,
-		OrderId:               decimal.NewFromInt(res.Data.Id).String(),
-		ClientOrderId:         res.Data.Text,
-		Price:                 res.Data.Price,
-		Quantity:              decimal.NewFromInt(res.Data.Size).String(),
-		ExecutedQty:           executedQty,
-		CumQuoteQty:           "",
-		AvgPrice:              res.Data.Price,
-		Status:                g.gateConverter.FromGateOrderStatus(res.Data.Status),
-		Type:                  req.OrderType,
-		Side:                  req.OrderSide,
-		PositionSide:          req.PositionSide,
-		TimeInForce:           g.gateConverter.FromGateTimeInForce(res.Data.Tif),
-		FeeAmount:             "",
-		FeeCcy:                "",
-		ReduceOnly:            false,
-		CreateTime:            decimal.NewFromFloat(res.Data.CreateTime).IntPart(),
-		UpdateTime:            updateTime,
-		RealizedPnl:           "",
-		AttachTpTriggerPrice:  "",
-		AttachTpOrdPrice:      "",
-		AttachSlTriggerPrice:  "",
+		Exchange:             g.ExchangeType().String(),
+		AccountType:          req.AccountType,
+		Symbol:               res.Data.Contract,
+		IsMargin:             req.IsMargin,
+		IsIsolated:           req.IsIsolated,
+		OrderId:              decimal.NewFromInt(res.Data.Id).String(),
+		ClientOrderId:        res.Data.Text,
+		Price:                res.Data.Price,
+		Quantity:             decimal.NewFromInt(res.Data.Size).String(),
+		ExecutedQty:          executedQty,
+		CumQuoteQty:          "",
+		AvgPrice:             res.Data.Price,
+		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
+		Type:                 req.OrderType,
+		Side:                 req.OrderSide,
+		PositionSide:         req.PositionSide,
+		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
+		FeeAmount:            "",
+		FeeCcy:               "",
+		ReduceOnly:           false,
+		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
+		UpdateTime:           updateTime,
+		RealizedPnl:          "",
+		AttachTpTriggerPrice: "",
+		AttachTpOrdPrice:     "",
+		AttachSlTriggerPrice: "",
+
 		AttachSlOrdPrice:      "",
 		IsAlgo:                req.IsAlgo,
 		OrderAlgoType:         "",
@@ -331,37 +344,39 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCancel(req *OrderParam, re
 	}
 	var updateTime int64
 	if decimal.NewFromFloat(res.Data.FinishTime).IsZero() {
-		updateTime = decimal.NewFromFloat(res.Data.CreateTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart()
 	} else {
-		updateTime = decimal.NewFromFloat(res.Data.FinishTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.FinishTime).Mul(gateTimeMul).IntPart()
 	}
+
 	return &Order{
-		Exchange:              g.ExchangeType().String(),
-		AccountType:           req.AccountType,
-		Symbol:                res.Data.Contract,
-		IsMargin:              req.IsMargin,
-		IsIsolated:            req.IsIsolated,
-		OrderId:               decimal.NewFromInt(res.Data.Id).String(),
-		ClientOrderId:         res.Data.Text,
-		Price:                 res.Data.Price,
-		Quantity:              decimal.NewFromInt(res.Data.Size).String(),
-		ExecutedQty:           executedQty,
-		CumQuoteQty:           "",
-		AvgPrice:              res.Data.Price,
-		Status:                g.gateConverter.FromGateOrderStatus(res.Data.Status),
-		Type:                  req.OrderType,
-		Side:                  req.OrderSide,
-		PositionSide:          positionSide,
-		TimeInForce:           g.gateConverter.FromGateTimeInForce(res.Data.Tif),
-		FeeAmount:             "",
-		FeeCcy:                "",
-		ReduceOnly:            false,
-		CreateTime:            decimal.NewFromFloat(res.Data.CreateTime).IntPart(),
-		UpdateTime:            updateTime,
-		RealizedPnl:           "",
-		AttachTpTriggerPrice:  "",
-		AttachTpOrdPrice:      "",
-		AttachSlTriggerPrice:  "",
+		Exchange:             g.ExchangeType().String(),
+		AccountType:          req.AccountType,
+		Symbol:               res.Data.Contract,
+		IsMargin:             req.IsMargin,
+		IsIsolated:           req.IsIsolated,
+		OrderId:              decimal.NewFromInt(res.Data.Id).String(),
+		ClientOrderId:        res.Data.Text,
+		Price:                res.Data.Price,
+		Quantity:             decimal.NewFromInt(res.Data.Size).String(),
+		ExecutedQty:          executedQty,
+		CumQuoteQty:          "",
+		AvgPrice:             res.Data.Price,
+		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
+		Type:                 req.OrderType,
+		Side:                 req.OrderSide,
+		PositionSide:         positionSide,
+		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
+		FeeAmount:            "",
+		FeeCcy:               "",
+		ReduceOnly:           false,
+		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
+		UpdateTime:           updateTime,
+		RealizedPnl:          "",
+		AttachTpTriggerPrice: "",
+		AttachTpOrdPrice:     "",
+		AttachSlTriggerPrice: "",
+
 		AttachSlOrdPrice:      "",
 		IsAlgo:                req.IsAlgo,
 		OrderAlgoType:         "",
@@ -399,14 +414,15 @@ func (g *GateTradeEngine) handleOrdersFromSpotOpenOrders(req *QueryOrderParam, r
 				ExecutedQty:   order.FilledAmount,
 				CumQuoteQty:   order.FilledTotal,
 				AvgPrice:      order.AvgDealPrice,
-				Status:        g.gateConverter.FromGateOrderStatus(order.Status),
+				Status:        g.gateConverter.FromGateSpotOrderStatus(order.Status),
 				Type:          g.gateConverter.FromGateOrderType(order.Type),
 				Side:          g.gateConverter.FromGateOrderSide(order.Side),
 				TimeInForce:   g.gateConverter.FromGateTimeInForce(order.TimeInForce),
 				FeeAmount:     order.Fee,
-				FeeCcy:        order.FeeCurrency,
-				CreateTime:    stringToInt64(order.CreateTime),
-				UpdateTime:    stringToInt64(order.UpdateTime),
+
+				FeeCcy:     order.FeeCurrency,
+				CreateTime: stringToInt64(order.CreateTime),
+				UpdateTime: stringToInt64(order.UpdateTime),
 			})
 		}
 	}
@@ -416,12 +432,13 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOpenOrders(req *QueryOrderParam
 	var orders []*Order
 	for _, order := range res.Data {
 		executedQty := decimal.NewFromInt(order.Size).Sub(decimal.NewFromInt(order.Left))
-		cumQuoteQty := executedQty.Mul(decimal.RequireFromString(order.FillPrice))
+		fillPrice, _ := decimal.NewFromString(order.FillPrice)
+		cumQuoteQty := executedQty.Mul(fillPrice)
 		var updateTime int64
 		if decimal.NewFromFloat(order.FinishTime).IsZero() {
-			updateTime = decimal.NewFromFloat(order.CreateTime).IntPart()
+			updateTime = decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart()
 		} else {
-			updateTime = decimal.NewFromFloat(order.FinishTime).IntPart()
+			updateTime = decimal.NewFromFloat(order.FinishTime).Mul(gateTimeMul).IntPart()
 		}
 
 		var orderType OrderType
@@ -439,32 +456,33 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOpenOrders(req *QueryOrderParam
 		}
 
 		orders = append(orders, &Order{
-			Exchange:              g.ExchangeType().String(),
-			AccountType:           req.AccountType,
-			Symbol:                order.Contract,
-			IsMargin:              req.IsMargin,
-			IsIsolated:            req.IsIsolated,
-			OrderId:               strconv.FormatInt(order.Id, 10),
-			ClientOrderId:         order.Text,
-			Price:                 order.Price,
-			Quantity:              strconv.FormatInt(order.Size, 10),
-			ExecutedQty:           executedQty.String(),
-			CumQuoteQty:           cumQuoteQty.String(),
-			AvgPrice:              order.FillPrice,
-			Status:                g.gateConverter.FromGateOrderStatus(order.Status),
-			Type:                  orderType,
-			Side:                  orderSide,
-			PositionSide:          "",
-			TimeInForce:           g.gateConverter.FromGateTimeInForce(order.Tif),
-			FeeAmount:             "",
-			FeeCcy:                "",
-			ReduceOnly:            false,
-			CreateTime:            decimal.NewFromFloat(order.CreateTime).IntPart(),
-			UpdateTime:            updateTime,
-			RealizedPnl:           "",
-			AttachTpTriggerPrice:  "",
-			AttachTpOrdPrice:      "",
-			AttachSlTriggerPrice:  "",
+			Exchange:             g.ExchangeType().String(),
+			AccountType:          req.AccountType,
+			Symbol:               order.Contract,
+			IsMargin:             req.IsMargin,
+			IsIsolated:           req.IsIsolated,
+			OrderId:              strconv.FormatInt(order.Id, 10),
+			ClientOrderId:        order.Text,
+			Price:                order.Price,
+			Quantity:             strconv.FormatInt(order.Size, 10),
+			ExecutedQty:          executedQty.String(),
+			CumQuoteQty:          cumQuoteQty.String(),
+			AvgPrice:             order.FillPrice,
+			Status:               g.gateConverter.FromGateContractOrderStatus(order.Status, order.FinishAs),
+			Type:                 orderType,
+			Side:                 orderSide,
+			PositionSide:         "",
+			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.Tif),
+			FeeAmount:            "",
+			FeeCcy:               "",
+			ReduceOnly:           false,
+			CreateTime:           decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart(),
+			UpdateTime:           updateTime,
+			RealizedPnl:          "",
+			AttachTpTriggerPrice: "",
+			AttachTpOrdPrice:     "",
+			AttachSlTriggerPrice: "",
+
 			AttachSlOrdPrice:      "",
 			IsAlgo:                req.IsAlgo,
 			OrderAlgoType:         "",
@@ -490,12 +508,14 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOpenOrders(req *QueryOrderPara
 	var orders []*Order
 	for _, order := range res.Data {
 		executedQty := decimal.NewFromInt(order.Size).Sub(decimal.NewFromInt(order.Left))
-		cumQuoteQty := executedQty.Mul(decimal.RequireFromString(order.FillPrice))
+		fillPrice, _ := decimal.NewFromString(order.FillPrice)
+		cumQuoteQty := executedQty.Mul(fillPrice)
 		var updateTime int64
+
 		if decimal.NewFromFloat(order.FinishTime).IsZero() {
-			updateTime = decimal.NewFromFloat(order.CreateTime).IntPart()
+			updateTime = decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart()
 		} else {
-			updateTime = decimal.NewFromFloat(order.FinishTime).IntPart()
+			updateTime = decimal.NewFromFloat(order.FinishTime).Mul(gateTimeMul).IntPart()
 		}
 
 		var orderType OrderType
@@ -513,32 +533,33 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOpenOrders(req *QueryOrderPara
 		}
 
 		orders = append(orders, &Order{
-			Exchange:              g.ExchangeType().String(),
-			AccountType:           req.AccountType,
-			Symbol:                order.Contract,
-			IsMargin:              req.IsMargin,
-			IsIsolated:            req.IsIsolated,
-			OrderId:               strconv.FormatInt(order.Id, 10),
-			ClientOrderId:         order.Text,
-			Price:                 order.Price,
-			Quantity:              strconv.FormatInt(order.Size, 10),
-			ExecutedQty:           executedQty.String(),
-			CumQuoteQty:           cumQuoteQty.String(),
-			AvgPrice:              order.FillPrice,
-			Status:                g.gateConverter.FromGateOrderStatus(order.Status),
-			Type:                  orderType,
-			Side:                  orderSide,
-			PositionSide:          "",
-			TimeInForce:           g.gateConverter.FromGateTimeInForce(order.Tif),
-			FeeAmount:             "",
-			FeeCcy:                "",
-			ReduceOnly:            false,
-			CreateTime:            decimal.NewFromFloat(order.CreateTime).IntPart(),
-			UpdateTime:            updateTime,
-			RealizedPnl:           "",
-			AttachTpTriggerPrice:  "",
-			AttachTpOrdPrice:      "",
-			AttachSlTriggerPrice:  "",
+			Exchange:             g.ExchangeType().String(),
+			AccountType:          req.AccountType,
+			Symbol:               order.Contract,
+			IsMargin:             req.IsMargin,
+			IsIsolated:           req.IsIsolated,
+			OrderId:              strconv.FormatInt(order.Id, 10),
+			ClientOrderId:        order.Text,
+			Price:                order.Price,
+			Quantity:             strconv.FormatInt(order.Size, 10),
+			ExecutedQty:          executedQty.String(),
+			CumQuoteQty:          cumQuoteQty.String(),
+			AvgPrice:             order.FillPrice,
+			Status:               g.gateConverter.FromGateContractOrderStatus(order.Status, order.FinishAs),
+			Type:                 orderType,
+			Side:                 orderSide,
+			PositionSide:         "",
+			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.Tif),
+			FeeAmount:            "",
+			FeeCcy:               "",
+			ReduceOnly:           false,
+			CreateTime:           decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart(),
+			UpdateTime:           updateTime,
+			RealizedPnl:          "",
+			AttachTpTriggerPrice: "",
+			AttachTpOrdPrice:     "",
+			AttachSlTriggerPrice: "",
+
 			AttachSlOrdPrice:      "",
 			IsAlgo:                req.IsAlgo,
 			OrderAlgoType:         "",
@@ -563,22 +584,23 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOpenOrders(req *QueryOrderPara
 
 func (g *GateTradeEngine) handleOrderFromSpotOrderQuery(req *QueryOrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersOrderIdGetRes]) *Order {
 	return &Order{
-		Exchange:              g.ExchangeType().String(),
-		AccountType:           g.gateConverter.FromGateAssetType(res.Data.Account).String(),
-		Symbol:                res.Data.CurrencyPair,
-		IsMargin:              req.IsMargin,
-		IsIsolated:            req.IsIsolated,
-		OrderId:               req.OrderId,
-		ClientOrderId:         req.ClientOrderId,
-		Price:                 res.Data.Price,
-		Quantity:              res.Data.Amount,
-		ExecutedQty:           res.Data.FilledAmount,
-		CumQuoteQty:           res.Data.FilledTotal,
-		AvgPrice:              res.Data.AvgDealPrice,
-		Status:                g.gateConverter.FromGateOrderStatus(res.Data.Status),
-		Type:                  g.gateConverter.FromGateOrderType(res.Data.Type),
-		Side:                  g.gateConverter.FromGateOrderSide(res.Data.Side),
-		PositionSide:          "",
+		Exchange:      g.ExchangeType().String(),
+		AccountType:   g.gateConverter.FromGateAssetType(res.Data.Account).String(),
+		Symbol:        res.Data.CurrencyPair,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
+		OrderId:       req.OrderId,
+		ClientOrderId: req.ClientOrderId,
+		Price:         res.Data.Price,
+		Quantity:      res.Data.Amount,
+		ExecutedQty:   res.Data.FilledAmount,
+		CumQuoteQty:   res.Data.FilledTotal,
+		AvgPrice:      res.Data.AvgDealPrice,
+		Status:        g.gateConverter.FromGateSpotOrderStatus(res.Data.Status),
+		Type:          g.gateConverter.FromGateOrderType(res.Data.Type),
+		Side:          g.gateConverter.FromGateOrderSide(res.Data.Side),
+		PositionSide:  "",
+
 		TimeInForce:           g.gateConverter.FromGateTimeInForce(res.Data.TimeInForce),
 		FeeAmount:             res.Data.Fee,
 		FeeCcy:                res.Data.FeeCurrency,
@@ -609,12 +631,14 @@ func (g *GateTradeEngine) handleOrderFromSpotOrderQuery(req *QueryOrderParam, re
 }
 func (g *GateTradeEngine) handleOrderFromFuturesOrderQuery(req *QueryOrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestFuturesSettleOrdersOrderIdGetRes]) *Order {
 	executedQty := decimal.NewFromInt(res.Data.Size).Sub(decimal.NewFromInt(res.Data.Left))
-	cumQuoteQty := executedQty.Mul(decimal.RequireFromString(res.Data.FillPrice))
+	fillPrice, _ := decimal.NewFromString(res.Data.FillPrice)
+	cumQuoteQty := executedQty.Mul(fillPrice)
 	var updateTime int64
+
 	if decimal.NewFromFloat(res.Data.FinishTime).IsZero() {
-		updateTime = decimal.NewFromFloat(res.Data.CreateTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart()
 	} else {
-		updateTime = decimal.NewFromFloat(res.Data.FinishTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.FinishTime).Mul(gateTimeMul).IntPart()
 	}
 
 	var orderType OrderType
@@ -632,32 +656,34 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderQuery(req *QueryOrderParam,
 	}
 
 	return &Order{
-		Exchange:              g.ExchangeType().String(),
-		AccountType:           req.AccountType,
-		Symbol:                res.Data.Contract,
-		IsMargin:              req.IsMargin,
-		IsIsolated:            req.IsIsolated,
-		OrderId:               decimal.RequireFromString(req.OrderId).String(),
-		ClientOrderId:         res.Data.Text,
-		Price:                 res.Data.Price,
-		Quantity:              decimal.NewFromInt(res.Data.Size).String(),
-		ExecutedQty:           executedQty.String(),
-		CumQuoteQty:           cumQuoteQty.String(),
-		AvgPrice:              res.Data.Price,
-		Status:                g.gateConverter.FromGateOrderStatus(res.Data.Status),
-		Type:                  orderType,
-		Side:                  orderSide,
-		PositionSide:          "",
-		TimeInForce:           "",
-		FeeAmount:             "",
-		FeeCcy:                "",
-		ReduceOnly:            false,
-		CreateTime:            decimal.NewFromFloat(res.Data.CreateTime).IntPart(),
-		UpdateTime:            updateTime,
-		RealizedPnl:           "",
-		AttachTpTriggerPrice:  "",
-		AttachTpOrdPrice:      "",
-		AttachSlTriggerPrice:  "",
+		Exchange:      g.ExchangeType().String(),
+		AccountType:   req.AccountType,
+		Symbol:        res.Data.Contract,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
+		OrderId:       strconv.FormatInt(res.Data.Id, 10),
+		ClientOrderId: res.Data.Text,
+		Price:         res.Data.Price,
+		Quantity:      decimal.NewFromInt(res.Data.Size).String(),
+
+		ExecutedQty:          executedQty.String(),
+		CumQuoteQty:          cumQuoteQty.String(),
+		AvgPrice:             res.Data.Price,
+		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
+		Type:                 orderType,
+		Side:                 orderSide,
+		PositionSide:         "",
+		TimeInForce:          "",
+		FeeAmount:            "",
+		FeeCcy:               "",
+		ReduceOnly:           false,
+		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
+		UpdateTime:           updateTime,
+		RealizedPnl:          "",
+		AttachTpTriggerPrice: "",
+		AttachTpOrdPrice:     "",
+		AttachSlTriggerPrice: "",
+
 		AttachSlOrdPrice:      "",
 		IsAlgo:                req.IsAlgo,
 		OrderAlgoType:         "",
@@ -678,12 +704,14 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderQuery(req *QueryOrderParam,
 }
 func (g *GateTradeEngine) handleOrderFromDeliveryOrderQuery(req *QueryOrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestDeliverySettleOrdersOrderIdGetRes]) *Order {
 	executedQty := decimal.NewFromInt(res.Data.Size).Sub(decimal.NewFromInt(res.Data.Left))
-	cumQuoteQty := executedQty.Mul(decimal.RequireFromString(res.Data.FillPrice))
+	fillPrice, _ := decimal.NewFromString(res.Data.FillPrice)
+	cumQuoteQty := executedQty.Mul(fillPrice)
 	var updateTime int64
+
 	if decimal.NewFromFloat(res.Data.FinishTime).IsZero() {
-		updateTime = decimal.NewFromFloat(res.Data.CreateTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart()
 	} else {
-		updateTime = decimal.NewFromFloat(res.Data.FinishTime).IntPart()
+		updateTime = decimal.NewFromFloat(res.Data.FinishTime).Mul(gateTimeMul).IntPart()
 	}
 
 	var orderType OrderType
@@ -701,32 +729,34 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderQuery(req *QueryOrderParam
 	}
 
 	return &Order{
-		Exchange:              g.ExchangeType().String(),
-		AccountType:           req.AccountType,
-		Symbol:                res.Data.Contract,
-		IsMargin:              req.IsMargin,
-		IsIsolated:            req.IsIsolated,
-		OrderId:               decimal.RequireFromString(req.OrderId).String(),
-		ClientOrderId:         res.Data.Text,
-		Price:                 res.Data.Price,
-		Quantity:              decimal.NewFromInt(res.Data.Size).String(),
-		ExecutedQty:           executedQty.String(),
-		CumQuoteQty:           cumQuoteQty.String(),
-		AvgPrice:              res.Data.Price,
-		Status:                g.gateConverter.FromGateOrderStatus(res.Data.Status),
-		Type:                  orderType,
-		Side:                  orderSide,
-		PositionSide:          "",
-		TimeInForce:           "",
-		FeeAmount:             "",
-		FeeCcy:                "",
-		ReduceOnly:            false,
-		CreateTime:            decimal.NewFromFloat(res.Data.CreateTime).IntPart(),
-		UpdateTime:            updateTime,
-		RealizedPnl:           "",
-		AttachTpTriggerPrice:  "",
-		AttachTpOrdPrice:      "",
-		AttachSlTriggerPrice:  "",
+		Exchange:      g.ExchangeType().String(),
+		AccountType:   req.AccountType,
+		Symbol:        res.Data.Contract,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
+		OrderId:       strconv.FormatInt(res.Data.Id, 10),
+		ClientOrderId: res.Data.Text,
+		Price:         res.Data.Price,
+		Quantity:      decimal.NewFromInt(res.Data.Size).String(),
+
+		ExecutedQty:          executedQty.String(),
+		CumQuoteQty:          cumQuoteQty.String(),
+		AvgPrice:             res.Data.Price,
+		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
+		Type:                 orderType,
+		Side:                 orderSide,
+		PositionSide:         "",
+		TimeInForce:          "",
+		FeeAmount:            "",
+		FeeCcy:               "",
+		ReduceOnly:           false,
+		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
+		UpdateTime:           updateTime,
+		RealizedPnl:          "",
+		AttachTpTriggerPrice: "",
+		AttachTpOrdPrice:     "",
+		AttachSlTriggerPrice: "",
+
 		AttachSlOrdPrice:      "",
 		IsAlgo:                req.IsAlgo,
 		OrderAlgoType:         "",
@@ -750,32 +780,34 @@ func (g *GateTradeEngine) handleOrdersFromSpotOrdersQuery(req *QueryOrderParam, 
 	var orders []*Order
 	for _, order := range res.Data {
 		orders = append(orders, &Order{
-			Exchange:              g.ExchangeType().String(),
-			AccountType:           g.gateConverter.FromGateAssetType(order.Account).String(),
-			Symbol:                order.CurrencyPair,
-			IsMargin:              req.IsMargin,
-			IsIsolated:            req.IsIsolated,
-			OrderId:               order.ID,
-			ClientOrderId:         order.Text,
-			Price:                 order.Price,
-			Quantity:              order.Amount,
-			ExecutedQty:           order.FilledAmount,
-			CumQuoteQty:           order.FilledTotal,
-			AvgPrice:              order.AvgDealPrice,
-			Status:                g.gateConverter.FromGateOrderStatus(order.Status),
-			Type:                  g.gateConverter.FromGateOrderType(order.Type),
-			Side:                  g.gateConverter.FromGateOrderSide(order.Side),
-			PositionSide:          "",
-			TimeInForce:           g.gateConverter.FromGateTimeInForce(order.TimeInForce),
-			FeeAmount:             order.Fee,
-			FeeCcy:                order.FeeCurrency,
-			ReduceOnly:            false,
-			CreateTime:            stringToInt64(order.CreateTime),
-			UpdateTime:            stringToInt64(order.UpdateTime),
-			RealizedPnl:           "",
-			AttachTpTriggerPrice:  "",
-			AttachTpOrdPrice:      "",
-			AttachSlTriggerPrice:  "",
+			Exchange:      g.ExchangeType().String(),
+			AccountType:   g.gateConverter.FromGateAssetType(order.Account).String(),
+			Symbol:        order.CurrencyPair,
+			IsMargin:      req.IsMargin,
+			IsIsolated:    req.IsIsolated,
+			OrderId:       order.ID,
+			ClientOrderId: order.Text,
+			Price:         order.Price,
+			Quantity:      order.Amount,
+			ExecutedQty:   order.FilledAmount,
+			CumQuoteQty:   order.FilledTotal,
+			AvgPrice:      order.AvgDealPrice,
+			Status:        g.gateConverter.FromGateSpotOrderStatus(order.Status),
+			Type:          g.gateConverter.FromGateOrderType(order.Type),
+			Side:          g.gateConverter.FromGateOrderSide(order.Side),
+			PositionSide:  "",
+
+			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.TimeInForce),
+			FeeAmount:            order.Fee,
+			FeeCcy:               order.FeeCurrency,
+			ReduceOnly:           false,
+			CreateTime:           int64(order.CreateTimeMs),
+			UpdateTime:           int64(order.UpdateTimeMs),
+			RealizedPnl:          "",
+			AttachTpTriggerPrice: "",
+			AttachTpOrdPrice:     "",
+			AttachSlTriggerPrice: "",
+
 			AttachSlOrdPrice:      "",
 			IsAlgo:                req.IsAlgo,
 			OrderAlgoType:         "",
@@ -801,12 +833,14 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOrdersQuery(req *QueryOrderPara
 	var orders []*Order
 	for _, order := range res.Data {
 		executedQty := decimal.NewFromInt(order.Size).Sub(decimal.NewFromInt(order.Left))
-		cumQuoteQty := executedQty.Mul(decimal.RequireFromString(order.FillPrice))
+		fillPrice, _ := decimal.NewFromString(order.FillPrice)
+		cumQuoteQty := executedQty.Mul(fillPrice)
 		var updateTime int64
+
 		if decimal.NewFromFloat(order.FinishTime).IsZero() {
-			updateTime = decimal.NewFromFloat(order.CreateTime).IntPart()
+			updateTime = decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart()
 		} else {
-			updateTime = decimal.NewFromFloat(order.FinishTime).IntPart()
+			updateTime = decimal.NewFromFloat(order.FinishTime).Mul(gateTimeMul).IntPart()
 		}
 
 		var orderType OrderType
@@ -829,14 +863,14 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOrdersQuery(req *QueryOrderPara
 			Symbol:                order.Contract,
 			IsMargin:              req.IsMargin,
 			IsIsolated:            req.IsIsolated,
-			OrderId:               decimal.RequireFromString(req.OrderId).String(),
+			OrderId:               strconv.FormatInt(order.Id, 10),
 			ClientOrderId:         order.Text,
 			Price:                 order.Price,
 			Quantity:              decimal.NewFromInt(order.Size).String(),
 			ExecutedQty:           executedQty.String(),
 			CumQuoteQty:           cumQuoteQty.String(),
 			AvgPrice:              order.Price,
-			Status:                g.gateConverter.FromGateOrderStatus(order.Status),
+			Status:                g.gateConverter.FromGateContractOrderStatus(order.Status, order.FinishAs),
 			Type:                  orderType,
 			Side:                  orderSide,
 			PositionSide:          "",
@@ -844,7 +878,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOrdersQuery(req *QueryOrderPara
 			FeeAmount:             "",
 			FeeCcy:                "",
 			ReduceOnly:            false,
-			CreateTime:            decimal.NewFromFloat(order.CreateTime).IntPart(),
+			CreateTime:            decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart(),
 			UpdateTime:            updateTime,
 			RealizedPnl:           "",
 			AttachTpTriggerPrice:  "",
@@ -875,12 +909,13 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOrdersQuery(req *QueryOrderPar
 	var orders []*Order
 	for _, order := range res.Data {
 		executedQty := decimal.NewFromInt(order.Size).Sub(decimal.NewFromInt(order.Left))
-		cumQuoteQty := executedQty.Mul(decimal.RequireFromString(order.FillPrice))
+		fillPrice, _ := decimal.NewFromString(order.FillPrice)
+		cumQuoteQty := executedQty.Mul(fillPrice)
 		var updateTime int64
 		if decimal.NewFromFloat(order.FinishTime).IsZero() {
-			updateTime = decimal.NewFromFloat(order.CreateTime).IntPart()
+			updateTime = decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart()
 		} else {
-			updateTime = decimal.NewFromFloat(order.FinishTime).IntPart()
+			updateTime = decimal.NewFromFloat(order.FinishTime).Mul(gateTimeMul).IntPart()
 		}
 
 		var orderType OrderType
@@ -898,32 +933,33 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOrdersQuery(req *QueryOrderPar
 		}
 
 		orders = append(orders, &Order{
-			Exchange:              g.ExchangeType().String(),
-			AccountType:           req.AccountType,
-			Symbol:                order.Contract,
-			IsMargin:              req.IsMargin,
-			IsIsolated:            req.IsIsolated,
-			OrderId:               decimal.RequireFromString(req.OrderId).String(),
-			ClientOrderId:         order.Text,
-			Price:                 order.Price,
-			Quantity:              decimal.NewFromInt(order.Size).String(),
-			ExecutedQty:           executedQty.String(),
-			CumQuoteQty:           cumQuoteQty.String(),
-			AvgPrice:              order.Price,
-			Status:                g.gateConverter.FromGateOrderStatus(order.Status),
-			Type:                  orderType,
-			Side:                  orderSide,
-			PositionSide:          "",
-			TimeInForce:           "",
-			FeeAmount:             "",
-			FeeCcy:                "",
-			ReduceOnly:            false,
-			CreateTime:            decimal.NewFromFloat(order.CreateTime).IntPart(),
-			UpdateTime:            updateTime,
-			RealizedPnl:           "",
-			AttachTpTriggerPrice:  "",
-			AttachTpOrdPrice:      "",
-			AttachSlTriggerPrice:  "",
+			Exchange:             g.ExchangeType().String(),
+			AccountType:          req.AccountType,
+			Symbol:               order.Contract,
+			IsMargin:             req.IsMargin,
+			IsIsolated:           req.IsIsolated,
+			OrderId:              strconv.FormatInt(order.Id, 10),
+			ClientOrderId:        order.Text,
+			Price:                order.Price,
+			Quantity:             decimal.NewFromInt(order.Size).String(),
+			ExecutedQty:          executedQty.String(),
+			CumQuoteQty:          cumQuoteQty.String(),
+			AvgPrice:             order.Price,
+			Status:               g.gateConverter.FromGateContractOrderStatus(order.Status, order.FinishAs),
+			Type:                 orderType,
+			Side:                 orderSide,
+			PositionSide:         "",
+			TimeInForce:          "",
+			FeeAmount:            "",
+			FeeCcy:               "",
+			ReduceOnly:           false,
+			CreateTime:           decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart(),
+			UpdateTime:           updateTime,
+			RealizedPnl:          "",
+			AttachTpTriggerPrice: "",
+			AttachTpOrdPrice:     "",
+			AttachSlTriggerPrice: "",
+
 			AttachSlOrdPrice:      "",
 			IsAlgo:                req.IsAlgo,
 			OrderAlgoType:         "",
@@ -949,7 +985,9 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOrdersQuery(req *QueryOrderPar
 func (g *GateTradeEngine) handleTradesFromSpotTradesQuery(req *QueryTradeParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotMyTradesRes]) []*Trade {
 	var trades []*Trade
 	for _, trade := range res.Data {
-		quoteQty := decimal.RequireFromString(trade.Price).Mul(decimal.RequireFromString(trade.Amount))
+		price, _ := decimal.NewFromString(trade.Price)
+		amt, _ := decimal.NewFromString(trade.Amount)
+		quoteQty := price.Mul(amt)
 
 		isMaker := false
 		if trade.Role == "maker" {
@@ -972,15 +1010,18 @@ func (g *GateTradeEngine) handleTradesFromSpotTradesQuery(req *QueryTradeParam, 
 			FeeCcy:        trade.FeeCurrency,
 			RealizedPnl:   "",
 			IsMaker:       isMaker,
-			Timestamp:     stringToInt64(trade.CreateTime),
+			Timestamp:     stringToInt64(trade.CreateTimeMs),
 		})
 	}
+
 	return trades
 }
 func (g *GateTradeEngine) handleTradesFromFuturesTradesQuery(req *QueryTradeParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestFuturesSettleMyTradesRes]) []*Trade {
 	var trades []*Trade
 	for _, trade := range res.Data {
-		quoteQty := decimal.RequireFromString(trade.Price).Mul(decimal.NewFromInt(trade.Size))
+		price, _ := decimal.NewFromString(trade.Price)
+		amt := decimal.NewFromInt(trade.Size)
+		quoteQty := price.Mul(amt)
 
 		isMaker := false
 		if trade.Role == "maker" {
@@ -1011,7 +1052,7 @@ func (g *GateTradeEngine) handleTradesFromFuturesTradesQuery(req *QueryTradePara
 			FeeCcy:        feeCcy,
 			RealizedPnl:   "",
 			IsMaker:       isMaker,
-			Timestamp:     decimal.NewFromFloat(trade.CreateTime).IntPart(),
+			Timestamp:     decimal.NewFromFloat(trade.CreateTime).Mul(gateTimeMul).IntPart(),
 		})
 	}
 	return trades
@@ -1019,7 +1060,9 @@ func (g *GateTradeEngine) handleTradesFromFuturesTradesQuery(req *QueryTradePara
 func (g *GateTradeEngine) handleTradesFromDeliveryTradesQuery(req *QueryTradeParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestDeliverySettleMyTradesRes]) []*Trade {
 	var trades []*Trade
 	for _, trade := range res.Data {
-		quoteQty := decimal.RequireFromString(trade.Price).Mul(decimal.NewFromInt(trade.Size))
+		price, _ := decimal.NewFromString(trade.Price)
+		amt := decimal.NewFromInt(trade.Size)
+		quoteQty := price.Mul(amt)
 
 		isMaker := false
 		if trade.Role == "maker" {
@@ -1050,7 +1093,7 @@ func (g *GateTradeEngine) handleTradesFromDeliveryTradesQuery(req *QueryTradePar
 			FeeCcy:        feeCcy,
 			RealizedPnl:   "",
 			IsMaker:       isMaker,
-			Timestamp:     decimal.NewFromFloat(trade.CreateTime).IntPart(),
+			Timestamp:     decimal.NewFromFloat(trade.CreateTime).Mul(gateTimeMul).IntPart(),
 		})
 	}
 	return trades

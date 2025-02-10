@@ -1,12 +1,13 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mybinanceapi"
-	"github.com/shopspring/decimal"
-	"golang.org/x/sync/errgroup"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Hongssd/mybinanceapi"
+	"github.com/shopspring/decimal"
+	"golang.org/x/sync/errgroup"
 )
 
 type BinanceTradeAccount struct {
@@ -338,7 +339,7 @@ func (b BinanceTradeAccount) SetPositionMode(accountType, symbol string, mode Po
 }
 
 func (b BinanceTradeAccount) SetLeverage(accountType, symbol string,
-	marginMode MarginMode, positionMode PositionMode, positionSide PositionSide,
+	marginMode MarginMode, positionSide PositionSide,
 	leverage decimal.Decimal) error {
 	switch BinanceAccountType(accountType) {
 	case BN_AC_SPOT:

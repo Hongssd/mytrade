@@ -13,13 +13,10 @@ type TradeExchange interface {
 	TradeExchangeType
 	//获取交易规范
 	NewExchangeInfo() TradeExchangeInfo
-
 	//获取市场数据
 	NewMarketData() TradeMarketData
-
 	//获取交易引擎
 	NewTradeEngine(apiKey, secretKey, passphrase string) TradeEngine
-
 	//获取账户信息
 	NewTradeAccount(apiKey, secretKey, passphrase string) TradeAccount
 }
@@ -41,39 +38,63 @@ type TradeExchangeInfo interface {
 type TradeSymbolInfo interface {
 	//基础规范
 	Exchange() string
-	AccountType() string           //账户类型
-	Symbol() string                //交易对名字
-	BaseCoin() string              //交易币种
-	QuoteCoin() string             //计价币种
-	IsTrading() bool               //是否交易中
-	IsContract() bool              //是否合约
-	IsContractAmt() bool           //是否合约张数计量
-	ContractSize() decimal.Decimal //合约面值
-	ContractCoin() string          //合约面值计价币种
-	ContractType() string          //合约类型
+	//账户类型
+	AccountType() string
+	//交易对名字
+	Symbol() string
+	//交易币种
+	BaseCoin() string
+	//计价币种
+	QuoteCoin() string
+	//是否交易中
+	IsTrading() bool
+	//是否合约
+	IsContract() bool
+	//是否合约张数计量
+	IsContractAmt() bool
+	//合约面值
+	ContractSize() decimal.Decimal
+	//合约面值计价币种
+	ContractCoin() string
+	//合约类型
+	ContractType() string
 
 	//精度
-	PricePrecision() int //价格精度
-	AmtPrecision() int   //数量精度
+	//价格精度
+	PricePrecision() int
+	//数量精度
+	AmtPrecision() int
 
 	//价格规范
-	TickSize() decimal.Decimal //下单价格精度
-	MinPrice() decimal.Decimal //最小下单价格
-	MaxPrice() decimal.Decimal //最大下单价格
+	//下单价格精度
+	TickSize() decimal.Decimal
+	//最小下单价格
+	MinPrice() decimal.Decimal
+	//最大下单价格
+	MaxPrice() decimal.Decimal
 
 	//数量规范
 	//当合约张数计量时为张的数量
-	LotSize() decimal.Decimal   //下单数量精度
-	MinAmt() decimal.Decimal    //最小下单数量
-	MaxLmtAmt() decimal.Decimal //最大限价单下单数量
-	MaxMktAmt() decimal.Decimal //最大市价单下单数量
+	//下单数量精度
+	LotSize() decimal.Decimal
+	//最小下单数量
+	MinAmt() decimal.Decimal
+	//最大限价单下单数量
+	MaxLmtAmt() decimal.Decimal
+	//最大市价单下单数量
+	MaxMktAmt() decimal.Decimal
 
 	//其他规范
-	MaxLeverage() decimal.Decimal  //最大杠杆
-	MinLeverage() decimal.Decimal  //最大杠杆
-	StepLeverage() decimal.Decimal //最大杠杆
-	MaxOrderNum() int              //最大订单数
-	MinNotional() decimal.Decimal  //最小名义价值
+	//最大杠杆
+	MaxLeverage() decimal.Decimal
+	//最小杠杆
+	MinLeverage() decimal.Decimal
+	//杠杆步长
+	StepLeverage() decimal.Decimal
+	//最大订单数
+	MaxOrderNum() int
+	//最小名义价值
+	MinNotional() decimal.Decimal
 
 	MarshalJson() ([]byte, error)
 	MarshalJsonIndent(prefix, indent string) ([]byte, error)
@@ -151,25 +172,38 @@ type TradeEngine interface {
 
 // 交易账户接口
 type TradeAccount interface {
-	GetAccountMode() (AccountMode, error)                                                    //获取账户模式 无保证金/单币种保证金/多币种保证金/组合保证金
-	GetMarginMode(accountType, symbol string, positionSide PositionSide) (MarginMode, error) //获取保证金模式 全仓/逐仓
-	GetPositionMode(accountType, symbol string) (PositionMode, error)                        //获取持仓模式 单向/多向
+	//获取账户模式 无保证金/单币种保证金/多币种保证金/组合保证金
+	GetAccountMode() (AccountMode, error)
+	//获取保证金模式 全仓/逐仓
+	GetMarginMode(accountType, symbol string, positionSide PositionSide) (MarginMode, error)
+	//获取持仓模式 单向/多向
+	GetPositionMode(accountType, symbol string) (PositionMode, error)
+	//获取杠杆
 	GetLeverage(accountType, symbol string,
-		marginMode MarginMode, positionSide PositionSide) (decimal.Decimal, error) //获取杠杆
+		marginMode MarginMode, positionSide PositionSide) (decimal.Decimal, error)
 
-	GetFeeRate(accountType, symbol string) (*FeeRate, error)                 //获取手续费率,taker maker
-	GetPositions(accountType string, symbols ...string) ([]*Position, error) //获取持仓
-	GetAssets(accountType string, currencies ...string) ([]*Asset, error)    //获取资产
+	//获取手续费率,taker maker
+	GetFeeRate(accountType, symbol string) (*FeeRate, error)
+	//获取持仓
+	GetPositions(accountType string, symbols ...string) ([]*Position, error)
+	//获取资产
+	GetAssets(accountType string, currencies ...string) ([]*Asset, error)
 
-	SetAccountMode(mode AccountMode) error                               //设置账户模式
-	SetMarginMode(accountType, symbol string, mode MarginMode) error     //设置保证金模式
-	SetPositionMode(accountType, symbol string, mode PositionMode) error //设置持仓模式
+	//设置账户模式
+	SetAccountMode(mode AccountMode) error
+	//设置保证金模式
+	SetMarginMode(accountType, symbol string, mode MarginMode) error
+	//设置持仓模式
+	SetPositionMode(accountType, symbol string, mode PositionMode) error
+	//设置杠杆
 	SetLeverage(accountType, symbol string,
-		marginMode MarginMode, positionMode PositionMode, positionSide PositionSide,
-		leverage decimal.Decimal) error //设置杠杆
+		marginMode MarginMode, positionSide PositionSide,
+		leverage decimal.Decimal) error
 
-	AssetTransfer(AssetTransferParams *AssetTransferParams) ([]*AssetTransfer, error) //资金划转
-	QueryAssetTransfer(req *QueryAssetTransferParams) ([]*QueryAssetTransfer, error)  //查询资金划转历史
+	//资金划转
+	AssetTransfer(AssetTransferParams *AssetTransferParams) ([]*AssetTransfer, error)
+	//查询资金划转历史
+	QueryAssetTransfer(req *QueryAssetTransferParams) ([]*QueryAssetTransfer, error)
 }
 
 type TradeSubscribe[T any] interface {

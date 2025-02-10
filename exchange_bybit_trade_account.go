@@ -1,11 +1,12 @@
 package mytrade
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/Hongssd/mybybitapi"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
-	"strconv"
-	"strings"
 )
 
 type BybitTradeAccount struct {
@@ -175,8 +176,7 @@ func (b BybitTradeAccount) SetPositionMode(accountType, symbol string, mode Posi
 }
 
 func (b BybitTradeAccount) SetLeverage(accountType, symbol string,
-	marginMode MarginMode, positionMode PositionMode,
-	positionSide PositionSide, leverage decimal.Decimal) error {
+	marginMode MarginMode, positionSide PositionSide, leverage decimal.Decimal) error {
 
 	// spot cross leverage
 	if accountType == BYBIT_AC_SPOT.String() {

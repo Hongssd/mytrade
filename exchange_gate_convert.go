@@ -3,24 +3,53 @@ package mytrade
 // 枚举转换器
 type GateEnumConverter struct{}
 
-func (c *GateEnumConverter) FromGateAccountMode(t int) AccountMode {
+func (c *GateEnumConverter) FromGateAccountMode(t string) AccountMode {
 	switch t {
-	case GATE_ACCOUNT_MODE_FREE_MARGIN:
+	case GATE_ACCOUNT_MODE_CLASSIC:
 		return ACCOUNT_MODE_FREE_MARGIN
+	case GATE_ACCOUNT_MODE_SINGLE_MARGIN:
+		return ACCOUNT_MODE_SINGLE_MARGIN
 	case GATE_ACCOUNT_MODE_MULTI_MARGIN:
 		return ACCOUNT_MODE_MULTI_MARGIN
+	case GATE_ACCOUNT_MODE_PORTFOLIO:
+		return ACCOUNT_MODE_PORTFOLIO
 	}
 	return ACCOUNT_MODE_UNKNOWN
 }
 
-func (c *GateEnumConverter) FromGatePositionMode(t string) PositionMode {
+func (c *GateEnumConverter) ToGateAccountMode(t AccountMode) string {
+	switch t {
+	case ACCOUNT_MODE_FREE_MARGIN:
+		return GATE_ACCOUNT_MODE_CLASSIC
+	case ACCOUNT_MODE_SINGLE_MARGIN:
+		return GATE_ACCOUNT_MODE_SINGLE_MARGIN
+	case ACCOUNT_MODE_MULTI_MARGIN:
+		return GATE_ACCOUNT_MODE_MULTI_MARGIN
+	case ACCOUNT_MODE_PORTFOLIO:
+		return GATE_ACCOUNT_MODE_PORTFOLIO
+	}
+	return ""
+}
+
+func (c *GateEnumConverter) FromGatePositionMode(t bool) PositionMode {
 	switch t {
 	case GATE_POSITION_MODE_ONEWAY:
+
 		return POSITION_MODE_ONEWAY
-	case GATE_POSITION_MODE_HEDGE_LONG, GATE_POSITION_MODE_HEDGE_SHORT:
+	case GATE_POSITION_MODE_HEDGE:
 		return POSITION_MODE_HEDGE
 	}
 	return POSITION_MODE_UNKNOWN
+}
+
+func (c *GateEnumConverter) ToGatePositionMode(t PositionMode) bool {
+	switch t {
+	case POSITION_MODE_ONEWAY:
+		return GATE_POSITION_MODE_ONEWAY
+	case POSITION_MODE_HEDGE:
+		return GATE_POSITION_MODE_HEDGE
+	}
+	return GATE_POSITION_MODE_ONEWAY
 }
 
 func (c *GateEnumConverter) ToGateAssetType(t AssetType) string {
@@ -99,28 +128,48 @@ func (c *GateEnumConverter) FromGateTimeInForce(t string) TimeInForce {
 	return TIME_IN_FORCE_UNKNOWN
 }
 
-func (c *GateEnumConverter) FromGateOrderStatus(t string) OrderStatus {
+func (c *GateEnumConverter) FromGateSpotOrderStatus(t string) OrderStatus {
 	switch t {
-	case GATE_ORDER_STATUS_NEW:
+	case GATE_ORDER_SPOT_STATUS_NEW:
 		return ORDER_STATUS_NEW
-	case GATE_ORDER_STATUS_FILLED:
+	case GATE_ORDER_SPOT_STATUS_FILLED:
 		return ORDER_STATUS_FILLED
-	case GATE_ORDER_STATUS_CANCELLED:
+	case GATE_ORDER_SPOT_STATUS_CANCELLED:
 		return ORDER_STATUS_CANCELED
 	}
 	return ORDER_STATUS_UNKNOWN
 }
 
-func (c *GateEnumConverter) ToGateOrderStatus(t OrderStatus) string {
+func (c *GateEnumConverter) ToGateSpotOrderStatus(t OrderStatus) string {
 	switch t {
 	case ORDER_STATUS_NEW:
-		return GATE_ORDER_STATUS_NEW
+		return GATE_ORDER_SPOT_STATUS_NEW
 	case ORDER_STATUS_FILLED:
-		return GATE_ORDER_STATUS_FILLED
+		return GATE_ORDER_SPOT_STATUS_FILLED
 	case ORDER_STATUS_CANCELED:
-		return GATE_ORDER_STATUS_CANCELLED
+		return GATE_ORDER_SPOT_STATUS_CANCELLED
 	}
 	return ""
+}
+
+func (c *GateEnumConverter) FromGateContractOrderStatus(t, fas string) OrderStatus {
+	switch t {
+	case GATE_ORDER_CONTRACT_STATUS_OPEN:
+		return ORDER_STATUS_NEW
+	case GATE_ORDER_CONTRACT_STATUS_FINISHED:
+		switch fas {
+		case GATE_ORDER_CONTRACT_FINISH_AS_FILLED:
+			return ORDER_STATUS_FILLED
+		case GATE_ORDER_CONTRACT_FINISH_AS_CANCELLED,
+			GATE_ORDER_CONTRACT_FINISH_AS_LIQUIDATED,
+			GATE_ORDER_CONTRACT_FINISH_AS_IOC,
+			GATE_ORDER_CONTRACT_FINISH_AS_AUTO_DELEVERAGED,
+			GATE_ORDER_CONTRACT_FINISH_AS_REDUCE_ONLY:
+			return ORDER_STATUS_CANCELED
+		}
+		return ORDER_STATUS_FILLED
+	}
+	return ORDER_STATUS_UNKNOWN
 }
 
 func (c *GateEnumConverter) FromGateOrderType(t string) OrderType {
@@ -131,4 +180,28 @@ func (c *GateEnumConverter) FromGateOrderType(t string) OrderType {
 		return ORDER_TYPE_MARKET
 	}
 	return ORDER_TYPE_UNKNOWN
+}
+
+func (c *GateEnumConverter) ToGatePositionSide(t PositionSide) string {
+	switch t {
+	case POSITION_SIDE_LONG:
+		return GATE_POSITION_SIDE_LONG
+	case POSITION_SIDE_SHORT:
+		return GATE_POSITION_SIDE_SHORT
+	case POSITION_SIDE_BOTH:
+		return GATE_POSITION_SIDE_BOTH
+	}
+	return ""
+}
+
+func (c *GateEnumConverter) FromGatePositionSide(t string) PositionSide {
+	switch t {
+	case GATE_POSITION_SIDE_BOTH:
+		return POSITION_SIDE_BOTH
+	case GATE_POSITION_SIDE_LONG:
+		return POSITION_SIDE_LONG
+	case GATE_POSITION_SIDE_SHORT:
+		return POSITION_SIDE_SHORT
+	}
+	return POSITION_SIDE_UNKNOWN
 }

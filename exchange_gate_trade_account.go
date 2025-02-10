@@ -2,12 +2,13 @@ package mytrade
 
 import (
 	"errors"
-	"github.com/Hongssd/mygateapi"
-	"github.com/shopspring/decimal"
-	"golang.org/x/sync/errgroup"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Hongssd/mygateapi"
+	"github.com/shopspring/decimal"
+	"golang.org/x/sync/errgroup"
 )
 
 type GateTradeAccount struct {
@@ -21,20 +22,31 @@ type GateTradeAccount struct {
 
 func (a GateTradeAccount) GetAccountMode() (AccountMode, error) {
 	res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).
-		PrivateRestClient().
-		NewPrivateRestAccountDetail().Do()
+		PrivateRestClient().NewPrivateRestUnifiedUnifiedModeGet().Do()
 	if err != nil {
 		return ACCOUNT_MODE_UNKNOWN, err
 	}
-	return a.gateConverter.FromGateAccountMode(res.Data.Key.Mode), nil
+	return a.gateConverter.FromGateAccountMode(res.Data.Mode), nil
 }
 
 func (a GateTradeAccount) GetMarginMode(accountType, symbol string, positionSide PositionSide) (MarginMode, error) {
-	return MARGIN_MODE_CROSSED, nil
+	positions, err := a.GetPositions(accountType, symbol)
+	if err != nil {
+		return MARGIN_MODE_UNKNOWN, err
+	}
+	marginMode := MARGIN_MODE_UNKNOWN
+	for _, p := range positions {
+		if p.PositionSide == positionSide {
+			marginMode = p.MarginMode
+		}
+	}
+
+	return marginMode, nil
 }
 
 func (a GateTradeAccount) GetPositionMode(accountType, symbol string) (PositionMode, error) {
-	switch a.gateConverter.ToGateAssetType(AssetType(accountType)) {
+
+	switch accountType {
 	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
 		return POSITION_MODE_ONEWAY, nil
 	case GATE_ACCOUNT_TYPE_FUTURES:
@@ -44,15 +56,11 @@ func (a GateTradeAccount) GetPositionMode(accountType, symbol string) (PositionM
 		}
 		settle := strings.ToLower(split[1])
 		res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().
-			NewPrivateRestFuturesSettleAccounts().Settle(strings.ToLower(settle)).Do()
+			NewPrivateRestFuturesSettleAccounts().Settle(settle).Do()
 		if err != nil {
 			return POSITION_MODE_UNKNOWN, err
 		}
-		if res.Data.InDualMode {
-			return POSITION_MODE_HEDGE, nil
-		} else {
-			return POSITION_MODE_ONEWAY, nil
-		}
+		return a.gateConverter.FromGatePositionMode(res.Data.InDualMode), nil
 	case GATE_ACCOUNT_TYPE_DELIVERY:
 		split := strings.Split(symbol, "_")
 		if len(split) < 3 {
@@ -64,11 +72,7 @@ func (a GateTradeAccount) GetPositionMode(accountType, symbol string) (PositionM
 		if err != nil {
 			return POSITION_MODE_UNKNOWN, err
 		}
-		if res.Data.InDualMode {
-			return POSITION_MODE_HEDGE, nil
-		} else {
-			return POSITION_MODE_ONEWAY, nil
-		}
+		return a.gateConverter.FromGatePositionMode(res.Data.InDualMode), nil
 	}
 
 	return POSITION_MODE_UNKNOWN, nil
@@ -78,7 +82,7 @@ func (a GateTradeAccount) GetLeverage(accountType, symbol string, marginMode Mar
 	if symbol == "" {
 		return decimal.Zero, errors.New("symbol error")
 	}
-	switch a.gateConverter.ToGateAssetType(AssetType(accountType)) {
+	switch accountType {
 	case GATE_ACCOUNT_TYPE_SPOT:
 		return decimal.Zero, ErrorNotSupport
 	case GATE_ACCOUNT_TYPE_MARGIN:
@@ -138,17 +142,60 @@ func (a GateTradeAccount) GetLeverage(accountType, symbol string, marginMode Mar
 }
 
 func (a GateTradeAccount) SetAccountMode(mode AccountMode) error {
-	return ErrorNotSupport
+	currentAccountMode, err := a.GetAccountMode()	
+	if err != nil {
+		return err
+	}
+	if currentAccountMode == mode {
+		return nil
+	}
+	_, err = mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().
+		NewPrivateRestUnifiedUnifiedModePut().
+		Mode(a.gateConverter.ToGateAccountMode(mode)).Do()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (a GateTradeAccount) SetMarginMode(accountType, symbol string, mode MarginMode) error {
-	return ErrorNotSupport
+
+	//获取仓位模式，设置仓位方向
+	positionMode, err := a.GetPositionMode(accountType, symbol)
+	if err != nil {
+		return err
+	}
+	positionSide := POSITION_SIDE_BOTH
+	switch positionMode {
+	case POSITION_MODE_ONEWAY:
+		positionSide = POSITION_SIDE_BOTH
+	case POSITION_MODE_HEDGE:
+		positionSide = POSITION_SIDE_LONG
+	}
+
+	//获取当前仓位方向的保证金模式
+	currentMarginMode, err := a.GetMarginMode(accountType, symbol, positionSide)
+	if err != nil {
+		return err
+	}
+
+	//新旧保证金模式相同，无需修改
+	if currentMarginMode == mode {
+		return nil
+	}
+
+	//获取当前仓位方向的杠杆倍数，设置新保证金模式下的杠杆倍数
+	leverage, err := a.GetLeverage(accountType, symbol, currentMarginMode, positionSide)
+	if err != nil {
+		return err
+	}
+	return a.SetLeverage(accountType, symbol, mode, positionSide, leverage)
 }
 
 func (a GateTradeAccount) SetPositionMode(accountType, symbol string, mode PositionMode) error {
 	// 仅支持永续合约
-	log.Info(a.gateConverter.ToGateAssetType(AssetType(accountType)))
-	switch a.gateConverter.ToGateAssetType(AssetType(accountType)) {
+	log.Info(accountType)
+	switch accountType {
 	case GATE_ACCOUNT_TYPE_FUTURES:
 		split := strings.Split(symbol, "_")
 		if len(split) < 2 {
@@ -157,33 +204,39 @@ func (a GateTradeAccount) SetPositionMode(accountType, symbol string, mode Posit
 		settle := strings.ToLower(split[1])
 		_, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().
 			NewPrivateRestFuturesSettleDualMode().Settle(settle).
-			DualMode(mode == POSITION_MODE_HEDGE).Do()
+			DualMode(a.gateConverter.ToGatePositionMode(mode)).Do()
 		if err != nil {
 			return err
 		}
+
 		return nil
 	default:
 		return ErrorNotSupport
 	}
 }
 
-func (a GateTradeAccount) SetLeverage(accountType, symbol string, marginMode MarginMode, positionMode PositionMode, positionSide PositionSide, leverage decimal.Decimal) error {
-	switch a.gateConverter.ToGateAssetType(AssetType(accountType)) {
+func (a GateTradeAccount) SetLeverage(accountType, symbol string, marginMode MarginMode, positionSide PositionSide, leverage decimal.Decimal) error {
+	switch accountType {
 	case GATE_ACCOUNT_TYPE_FUTURES:
 		split := strings.Split(symbol, "_")
 		if len(split) < 2 {
 			return errors.New("symbol error")
 		}
 		settle := strings.ToLower(split[1])
+		positionMode, err := a.GetPositionMode(accountType, symbol)
+		if err != nil {
+			return err
+		}
 		switch positionMode {
 		case POSITION_MODE_ONEWAY:
 			api := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().
-				NewPrivateRestFuturesSettlePositionsContractLeverage().Settle(settle).Contract(symbol).Leverage(leverage.String())
+				NewPrivateRestFuturesSettlePositionsContractLeverage().Settle(settle).Contract(symbol)
 
-			// 全仓模式下的杠杆倍数（即 leverage 为 0 时）
 			if marginMode == MARGIN_MODE_CROSSED {
 				api.Leverage("0")
 				api.CrossLeverageLimit(leverage.String())
+			} else {
+				api.Leverage(leverage.String())
 			}
 			_, err := api.Do()
 			if err != nil {
@@ -193,11 +246,13 @@ func (a GateTradeAccount) SetLeverage(accountType, symbol string, marginMode Mar
 
 		case POSITION_MODE_HEDGE:
 			api := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().
-				NewPrivateRestFuturesSettleDualCompPositionsContractLeverage().Settle(settle).Contract(symbol).Leverage(leverage.String())
+				NewPrivateRestFuturesSettleDualCompPositionsContractLeverage().Settle(settle).Contract(symbol)
 
-			// 全仓模式下的杠杆倍数（即 leverage 为 0 时）
 			if marginMode == MARGIN_MODE_CROSSED {
+				api.Leverage("0")
 				api.CrossLeverageLimit(leverage.String())
+			} else {
+				api.Leverage(leverage.String())
 			}
 			_, err := api.Do()
 			if err != nil {
@@ -247,51 +302,42 @@ func (a GateTradeAccount) GetPositions(accountType string, symbols ...string) ([
 			errG.Go(func() error {
 				res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().NewPrivateRestFuturesSettlePositions().Settle(settle).Do()
 				if err != nil {
-					return err
+					return nil
 				}
 				for _, p := range res.Data {
-					for _, symbol := range symbols {
-						if p.Contract == symbol {
-							var marginMode MarginMode
-							var leverage string
-							if p.Leverage == "0" {
-								marginMode = MARGIN_MODE_CROSSED
-								leverage = p.CrossLeverageLimit
-							} else {
-								marginMode = MARGIN_MODE_ISOLATED
-								leverage = p.Leverage
-							}
-
-							var positionSide PositionSide
-							if p.EntryPrice > p.LiqPrice {
-								positionSide = POSITION_SIDE_LONG
-							} else {
-								positionSide = POSITION_SIDE_SHORT
-							}
-
-							positions = append(positions, &Position{
-								Exchange:               a.ExchangeType().String(),
-								AccountType:            accountType,
-								Symbol:                 p.Contract,
-								MarginCcy:              settle,
-								InitialMargin:          p.InitialMargin,
-								MaintMargin:            p.MaintenanceMargin,
-								UnrealizedProfit:       p.UnrealisedPnl,
-								PositionInitialMargin:  p.InitialMargin,
-								OpenOrderInitialMargin: p.InitialMargin,
-								Leverage:               leverage,
-								MarginMode:             marginMode,
-								EntryPrice:             p.EntryPrice,
-								MaxNotional:            "0",
-								PositionSide:           positionSide,
-								PositionAmt:            decimal.NewFromInt(p.Size).String(),
-								MarkPrice:              p.MarkPrice,
-								LiquidationPrice:       p.LiqPrice,
-								MarginRatio:            p.MaintenanceRate,
-								UpdateTime:             p.UpdateTime,
-							})
-						}
+					var marginMode MarginMode
+					var leverage string
+					if p.Leverage == "0" {
+						marginMode = MARGIN_MODE_CROSSED
+						leverage = p.CrossLeverageLimit
+					} else {
+						marginMode = MARGIN_MODE_ISOLATED
+						leverage = p.Leverage
 					}
+
+					positionSide := a.gateConverter.FromGatePositionSide(p.Mode)
+
+					positions = append(positions, &Position{
+						Exchange:               a.ExchangeType().String(),
+						AccountType:            accountType,
+						Symbol:                 p.Contract,
+						MarginCcy:              settle,
+						InitialMargin:          p.InitialMargin,
+						MaintMargin:            p.MaintenanceMargin,
+						UnrealizedProfit:       p.UnrealisedPnl,
+						PositionInitialMargin:  p.InitialMargin,
+						OpenOrderInitialMargin: p.InitialMargin,
+						Leverage:               leverage,
+						MarginMode:             marginMode,
+						EntryPrice:             p.EntryPrice,
+						MaxNotional:            "0",
+						PositionSide:           positionSide,
+						PositionAmt:            decimal.NewFromInt(p.Size).String(),
+						MarkPrice:              p.MarkPrice,
+						LiquidationPrice:       p.LiqPrice,
+						MarginRatio:            p.MaintenanceRate,
+						UpdateTime:             p.UpdateTime,
+					})
 				}
 				return nil
 			})
@@ -311,52 +357,63 @@ func (a GateTradeAccount) GetPositions(accountType string, symbols ...string) ([
 			}
 
 			for _, p := range res.Data {
-				for _, symbol := range symbols {
-					if p.Contract == symbol {
-						var marginMode MarginMode
-						var leverage string
-						if p.Leverage == "0" {
-							marginMode = MARGIN_MODE_CROSSED
-							leverage = p.CrossLeverageLimit
-						} else {
-							marginMode = MARGIN_MODE_ISOLATED
-							leverage = p.Leverage
-						}
 
-						var positionSide PositionSide
-						if p.EntryPrice > p.LiqPrice {
-							positionSide = POSITION_SIDE_LONG
-						} else {
-							positionSide = POSITION_SIDE_SHORT
-						}
-
-						positions = append(positions, &Position{
-							Exchange:               a.ExchangeType().String(),
-							AccountType:            accountType,
-							Symbol:                 p.Contract,
-							MarginCcy:              settle,
-							InitialMargin:          p.InitialMargin,
-							MaintMargin:            p.MaintenanceMargin,
-							UnrealizedProfit:       p.UnrealisedPnl,
-							PositionInitialMargin:  p.InitialMargin,
-							OpenOrderInitialMargin: p.InitialMargin,
-							Leverage:               leverage,
-							MarginMode:             marginMode,
-							EntryPrice:             p.EntryPrice,
-							MaxNotional:            "0",
-							PositionSide:           positionSide,
-							PositionAmt:            decimal.NewFromInt(p.Size).String(),
-							MarkPrice:              p.MarkPrice,
-							LiquidationPrice:       p.LiqPrice,
-							MarginRatio:            p.MaintenanceRate,
-							UpdateTime:             p.UpdateTime,
-						})
-					}
+				var marginMode MarginMode
+				var leverage string
+				if p.Leverage == "0" {
+					marginMode = MARGIN_MODE_CROSSED
+					leverage = p.CrossLeverageLimit
+				} else {
+					marginMode = MARGIN_MODE_ISOLATED
+					leverage = p.Leverage
 				}
+
+				positionSide := a.gateConverter.FromGatePositionSide(p.Mode)
+
+				positions = append(positions, &Position{
+					Exchange:               a.ExchangeType().String(),
+					AccountType:            accountType,
+					Symbol:                 p.Contract,
+					MarginCcy:              settle,
+					InitialMargin:          p.InitialMargin,
+					MaintMargin:            p.MaintenanceMargin,
+					UnrealizedProfit:       p.UnrealisedPnl,
+					PositionInitialMargin:  p.InitialMargin,
+					OpenOrderInitialMargin: p.InitialMargin,
+					Leverage:               leverage,
+					MarginMode:             marginMode,
+					EntryPrice:             p.EntryPrice,
+					MaxNotional:            "0",
+					PositionSide:           positionSide,
+					PositionAmt:            decimal.NewFromInt(p.Size).String(),
+					MarkPrice:              p.MarkPrice,
+					LiquidationPrice:       p.LiqPrice,
+					MarginRatio:            p.MaintenanceRate,
+					UpdateTime:             int64(p.UpdateTime * 1000),
+				})
+
 			}
 		}
 	default:
 		return nil, ErrorPositionNotFound
+	}
+
+	filterPositions := []*Position{}
+	if len(symbols) > 0 {
+		for _, p := range positions {
+			// log.Warn(p.Symbol, symbols)
+			isExist := false
+			for _, symbol := range symbols {
+				if p.Symbol == symbol {
+					isExist = true
+					break
+				}
+			}
+			if isExist {
+				filterPositions = append(filterPositions, p)
+			}
+		}
+		return filterPositions, nil
 	}
 	return positions, nil
 }
@@ -365,7 +422,7 @@ func (a GateTradeAccount) GetAssets(accountType string, currencies ...string) ([
 	var assets []*Asset
 
 	// 现货资产
-	switch a.gateConverter.ToGateAssetType(AssetType(accountType)) {
+	switch accountType {
 	case GATE_ACCOUNT_TYPE_SPOT:
 		res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().NewPrivateRestSpotInstruments().Do()
 		if err != nil {
@@ -392,7 +449,7 @@ func (a GateTradeAccount) GetAssets(accountType string, currencies ...string) ([
 				AvailableBalance:       d.Available,
 				MaxWithdrawAmount:      "0",
 				MarginAvailable:        false,
-				UpdateTime:             time.Now().Unix(),
+				UpdateTime:             time.Now().UnixMilli(),
 			})
 		}
 	case GATE_ACCOUNT_TYPE_MARGIN:
@@ -407,7 +464,7 @@ func (a GateTradeAccount) GetAssets(accountType string, currencies ...string) ([
 				res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().
 					NewPrivateRestFuturesSettleAccounts().Settle(settle).Do()
 				if err != nil {
-					log.Error(err)
+					// log.Error(err)
 					return nil
 				}
 
@@ -488,8 +545,10 @@ func (a GateTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTrans
 	api.From(from).To(to)
 
 	// margin
-	if from == GATE_ACCOUNT_TYPE_MARGIN || to == GATE_ACCOUNT_TYPE_MARGIN {
-		api.CurrencyPair(req.CurrencyPair)
+	if from == GATE_ACCOUNT_TYPE_MARGIN {
+		api.CurrencyPair(req.FromSymbol)
+	} else if to == GATE_ACCOUNT_TYPE_MARGIN {
+		api.CurrencyPair(req.ToSymbol)
 	}
 
 	// futures or delivery
