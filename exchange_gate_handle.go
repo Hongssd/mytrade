@@ -11,9 +11,7 @@ import (
 var gateTimeMul = decimal.NewFromInt(1000)
 
 func (g *GateTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersPostRes]) *Order {
-
 	accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotAccountType(GateAccountType(res.Data.Account))
-
 	return &Order{
 		Exchange:      g.ExchangeType().String(),
 		AccountType:   accountType.String(),
@@ -171,12 +169,13 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCreate(req *OrderParam, re
 }
 
 func (g *GateTradeEngine) handleOrderFromSpotOrderAmend(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersOrderIdPatchRes]) *Order {
+	accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotAccountType(GateAccountType(res.Data.Account))
 	return &Order{
 		Exchange:      g.ExchangeType().String(),
-		AccountType:   res.Data.Account,
+		AccountType:   accountType.String(),
 		Symbol:        res.Data.CurrencyPair,
-		IsMargin:      req.IsMargin,
-		IsIsolated:    req.IsIsolated,
+		IsMargin:      isMargin,
+		IsIsolated:    isIsolated,
 		OrderId:       res.Data.ID,
 		ClientOrderId: res.Data.Text,
 		Price:         res.Data.Price,
@@ -252,13 +251,13 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderAmend(req *OrderParam, res 
 }
 
 func (g *GateTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersOrderIdDeleteRes]) *Order {
-
+	accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotAccountType(GateAccountType(res.Data.Account))
 	return &Order{
 		Exchange:      g.ExchangeType().String(),
-		AccountType:   res.Data.Account,
+		AccountType:   accountType.String(),
 		Symbol:        res.Data.CurrencyPair,
-		IsMargin:      req.IsMargin,
-		IsIsolated:    req.IsIsolated,
+		IsMargin:      isMargin,
+		IsIsolated:    isIsolated,
 		OrderId:       res.Data.ID,
 		ClientOrderId: res.Data.Text,
 		Price:         res.Data.Price,
@@ -421,12 +420,13 @@ func (g *GateTradeEngine) handleOrdersFromSpotOpenOrders(req *QueryOrderParam, r
 
 	for _, symbol := range res.Data {
 		for _, order := range symbol.Orders {
+			accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotAccountType(GateAccountType(order.Account))
 			orders = append(orders, &Order{
 				Exchange:      g.ExchangeType().String(),
-				AccountType:   order.Account,
+				AccountType:   accountType.String(),
 				Symbol:        order.CurrencyPair,
-				IsMargin:      req.IsMargin,
-				IsIsolated:    req.IsIsolated,
+				IsMargin:      isMargin,
+				IsIsolated:    isIsolated,
 				OrderId:       order.ID,
 				ClientOrderId: order.Text,
 				Price:         order.Price,
@@ -603,12 +603,13 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOpenOrders(req *QueryOrderPara
 }
 
 func (g *GateTradeEngine) handleOrderFromSpotOrderQuery(req *QueryOrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersOrderIdGetRes]) *Order {
+	accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotAccountType(GateAccountType(res.Data.Account))
 	return &Order{
 		Exchange:      g.ExchangeType().String(),
-		AccountType:   res.Data.Account,
+		AccountType:   accountType.String(),
 		Symbol:        res.Data.CurrencyPair,
-		IsMargin:      req.IsMargin,
-		IsIsolated:    req.IsIsolated,
+		IsMargin:      isMargin,
+		IsIsolated:    isIsolated,
 		OrderId:       req.OrderId,
 		ClientOrderId: req.ClientOrderId,
 		Price:         res.Data.Price,
@@ -799,12 +800,13 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderQuery(req *QueryOrderParam
 func (g *GateTradeEngine) handleOrdersFromSpotOrdersQuery(req *QueryOrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersGetRes]) []*Order {
 	var orders []*Order
 	for _, order := range res.Data {
+		accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotAccountType(GateAccountType(order.Account))
 		orders = append(orders, &Order{
 			Exchange:      g.ExchangeType().String(),
-			AccountType:   order.Account,
+			AccountType:   accountType.String(),
 			Symbol:        order.CurrencyPair,
-			IsMargin:      req.IsMargin,
-			IsIsolated:    req.IsIsolated,
+			IsMargin:      isMargin,
+			IsIsolated:    isIsolated,
 			OrderId:       order.ID,
 			ClientOrderId: order.Text,
 			Price:         order.Price,
