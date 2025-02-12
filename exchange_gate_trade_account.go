@@ -46,8 +46,8 @@ func (a GateTradeAccount) GetMarginMode(accountType, symbol string, positionSide
 
 func (a GateTradeAccount) GetPositionMode(accountType, symbol string) (PositionMode, error) {
 
-	switch accountType {
-	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+	switch GateAccountType(accountType) {
+	case GATE_ACCOUNT_TYPE_SPOT:
 		return POSITION_MODE_ONEWAY, nil
 	case GATE_ACCOUNT_TYPE_FUTURES:
 		split := strings.Split(symbol, "_")
@@ -82,7 +82,7 @@ func (a GateTradeAccount) GetLeverage(accountType, symbol string, marginMode Mar
 	if symbol == "" {
 		return decimal.Zero, errors.New("symbol error")
 	}
-	switch accountType {
+	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_SPOT:
 		return decimal.Zero, ErrorNotSupport
 	case GATE_ACCOUNT_TYPE_MARGIN:
@@ -142,7 +142,7 @@ func (a GateTradeAccount) GetLeverage(accountType, symbol string, marginMode Mar
 }
 
 func (a GateTradeAccount) SetAccountMode(mode AccountMode) error {
-	currentAccountMode, err := a.GetAccountMode()	
+	currentAccountMode, err := a.GetAccountMode()
 	if err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func (a GateTradeAccount) SetMarginMode(accountType, symbol string, mode MarginM
 func (a GateTradeAccount) SetPositionMode(accountType, symbol string, mode PositionMode) error {
 	// 仅支持永续合约
 	log.Info(accountType)
-	switch accountType {
+	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_FUTURES:
 		split := strings.Split(symbol, "_")
 		if len(split) < 2 {
@@ -216,7 +216,7 @@ func (a GateTradeAccount) SetPositionMode(accountType, symbol string, mode Posit
 }
 
 func (a GateTradeAccount) SetLeverage(accountType, symbol string, marginMode MarginMode, positionSide PositionSide, leverage decimal.Decimal) error {
-	switch accountType {
+	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_FUTURES:
 		split := strings.Split(symbol, "_")
 		if len(split) < 2 {
@@ -268,7 +268,7 @@ func (a GateTradeAccount) SetLeverage(accountType, symbol string, marginMode Mar
 func (a GateTradeAccount) GetFeeRate(accountType, symbol string) (*FeeRate, error) {
 	var feeRate FeeRate
 	api := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().NewPrivateRestWalletFee().CurrencyPair(symbol)
-	if accountType == GATE_ACCOUNT_TYPE_FUTURES || accountType == GATE_ACCOUNT_TYPE_DELIVERY {
+	if GateAccountType(accountType) == GATE_ACCOUNT_TYPE_FUTURES || GateAccountType(accountType) == GATE_ACCOUNT_TYPE_DELIVERY {
 		split := strings.Split(symbol, "_")
 		settle := strings.ToLower(split[1])
 		api.Settle(settle)
@@ -277,7 +277,7 @@ func (a GateTradeAccount) GetFeeRate(accountType, symbol string) (*FeeRate, erro
 	if err != nil {
 		return nil, err
 	}
-	switch accountType {
+	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
 		feeRate.Maker = decimal.RequireFromString(res.Data.MakerFee)
 		feeRate.Taker = decimal.RequireFromString(res.Data.TakerFee)
@@ -293,7 +293,7 @@ func (a GateTradeAccount) GetFeeRate(accountType, symbol string) (*FeeRate, erro
 
 func (a GateTradeAccount) GetPositions(accountType string, symbols ...string) ([]*Position, error) {
 	var positions []*Position
-	switch accountType {
+	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_FUTURES:
 		var errG errgroup.Group
 		settles := []string{"usdt", "btc"}
@@ -336,7 +336,7 @@ func (a GateTradeAccount) GetPositions(accountType string, symbols ...string) ([
 						MarkPrice:              p.MarkPrice,
 						LiquidationPrice:       p.LiqPrice,
 						MarginRatio:            p.MaintenanceRate,
-						UpdateTime:             p.UpdateTime,
+						UpdateTime:             p.UpdateTime * 1000,
 					})
 				}
 				return nil
@@ -389,7 +389,7 @@ func (a GateTradeAccount) GetPositions(accountType string, symbols ...string) ([
 					MarkPrice:              p.MarkPrice,
 					LiquidationPrice:       p.LiqPrice,
 					MarginRatio:            p.MaintenanceRate,
-					UpdateTime:             int64(p.UpdateTime * 1000),
+					UpdateTime:             p.UpdateTime * 1000,
 				})
 
 			}
@@ -422,7 +422,7 @@ func (a GateTradeAccount) GetAssets(accountType string, currencies ...string) ([
 	var assets []*Asset
 
 	// 现货资产
-	switch accountType {
+	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_SPOT:
 		res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().NewPrivateRestSpotInstruments().Do()
 		if err != nil {
@@ -545,14 +545,14 @@ func (a GateTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTrans
 	api.From(from).To(to)
 
 	// margin
-	if from == GATE_ACCOUNT_TYPE_MARGIN {
+	if from == GATE_ASSET_TYPE_MARGIN {
 		api.CurrencyPair(req.FromSymbol)
-	} else if to == GATE_ACCOUNT_TYPE_MARGIN {
+	} else if to == GATE_ASSET_TYPE_MARGIN {
 		api.CurrencyPair(req.ToSymbol)
 	}
 
 	// futures or delivery
-	if from == GATE_ACCOUNT_TYPE_FUTURES || to == GATE_ACCOUNT_TYPE_FUTURES || from == GATE_ACCOUNT_TYPE_DELIVERY || to == GATE_ACCOUNT_TYPE_DELIVERY {
+	if from == GATE_ASSET_TYPE_FUTURES || to == GATE_ASSET_TYPE_FUTURES || from == GATE_ASSET_TYPE_DELIVERY || to == GATE_ASSET_TYPE_DELIVERY {
 		api.Settle(req.Settle)
 	}
 

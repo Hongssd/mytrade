@@ -6,13 +6,13 @@ func (b GateAccountType) String() string {
 	return string(b)
 }
 
-const (
-	GATE_AC_SPOT     GateAccountType = "SPOT"     //现货
-	GATE_AC_MARGIN   GateAccountType = "MARGIN"   //现货杠杆
-	GATE_AC_UNIFIED  GateAccountType = "UNIFIED"  //统一账户
-	GATE_AC_FUTURES  GateAccountType = "FUTURES"  //合约
-	GATE_AC_DELIVERY GateAccountType = "DELIVERY" //交割
-)
+// const (
+// 	GATE_ACCOUNT_TYPE_SPOT     GateAccountType = "SPOT"     //现货
+// 	GATE_ACCOUNT_TYPE_MARGIN   GateAccountType = "MARGIN"   //现货杠杆
+// 	GATE_ACCOUNT_TYPE_UNIFIED  GateAccountType = "UNIFIED"  //统一账户
+// 	GATE_ACCOUNT_TYPE_FUTURES  GateAccountType = "FUTURES"  //合约
+// 	GATE_ACCOUNT_TYPE_DELIVERY GateAccountType = "DELIVERY" //交割
+// )
 
 // 参数	值
 // interval	10s
@@ -105,12 +105,14 @@ const (
 )
 
 const (
-	GATE_ACCOUNT_TYPE_SPOT     = "spot"     //现货
-	GATE_ACCOUNT_TYPE_MARGIN   = "margin"   //现货杠杆
-	GATE_ACCOUNT_TYPE_FUTURES  = "futures"  //合约
-	GATE_ACCOUNT_TYPE_DELIVERY = "delivery" //交割
-	GATE_ACCOUNT_TYPE_UNIFIED  = "unified"  //统一账户
-	GATE_ACCOUNT_TYPE_UNKNOWN  = ""         //未知
+	GATE_ACCOUNT_TYPE_SPOT         GateAccountType = "spot"         //现货
+	GATE_ACCOUNT_TYPE_MARGIN       GateAccountType = "margin"       //现货逐仓杠杆
+	GATE_ACCOUNT_TYPE_CROSS_MARGIN GateAccountType = "cross_margin" //现货全仓杠杆
+	GATE_ACCOUNT_TYPE_FUTURES      GateAccountType = "futures"      //合约
+	GATE_ACCOUNT_TYPE_DELIVERY     GateAccountType = "delivery"     //交割
+	GATE_ACCOUNT_TYPE_UNIFIED      GateAccountType = "unified"      //统一账户
+	GATE_ACCOUNT_TYPE_UNKNOWN      GateAccountType = ""             //未知
+
 )
 
 const (

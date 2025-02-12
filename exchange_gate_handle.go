@@ -11,12 +11,15 @@ import (
 var gateTimeMul = decimal.NewFromInt(1000)
 
 func (g *GateTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersPostRes]) *Order {
+
+	accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotAccountType(GateAccountType(res.Data.Account))
+
 	return &Order{
 		Exchange:      g.ExchangeType().String(),
-		AccountType:   g.gateConverter.FromGateAssetType(res.Data.Account).String(),
+		AccountType:   accountType.String(),
 		Symbol:        res.Data.CurrencyPair,
-		IsMargin:      req.IsMargin,
-		IsIsolated:    req.IsIsolated,
+		IsMargin:      isMargin,
+		IsIsolated:    isIsolated,
 		OrderId:       res.Data.ID,
 		ClientOrderId: res.Data.Text,
 		Price:         res.Data.Price,
@@ -35,7 +38,15 @@ func (g *GateTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *m
 	}
 }
 func (g *GateTradeEngine) handleOrderFromFuturesOrderCreate(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestFuturesSettleOrdersPostRes]) *Order {
-	executedQty := decimal.NewFromInt(res.Data.Size).Sub(decimal.NewFromInt(res.Data.Left))
+	executedQty := decimal.NewFromInt(res.Data.Size).Sub(decimal.NewFromInt(res.Data.Left)).Abs()
+	fillPrice, _ := decimal.NewFromString(res.Data.FillPrice)
+
+	symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, res.Data.Contract)
+	if err != nil {
+		log.Error(err)
+	}
+	cumQuoteQty := executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
+
 	var updateTime int64
 	if decimal.NewFromFloat(res.Data.FinishTime).IsZero() {
 		updateTime = decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart()
@@ -52,10 +63,10 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCreate(req *OrderParam, res
 		OrderId:       decimal.NewFromInt(res.Data.Id).String(),
 		ClientOrderId: res.Data.Text,
 		Price:         res.Data.Price,
-		Quantity:      decimal.NewFromInt(res.Data.Size).String(),
+		Quantity:      decimal.NewFromInt(res.Data.Size).Abs().String(),
 		ExecutedQty:   executedQty.String(),
-		CumQuoteQty:   "",
-		AvgPrice:      res.Data.Price,
+		CumQuoteQty:   cumQuoteQty.String(),
+		AvgPrice:      res.Data.FillPrice,
 		Status:        g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:          req.OrderType,
 		Side:          req.OrderSide,
@@ -64,7 +75,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCreate(req *OrderParam, res
 		TimeInForce:           g.gateConverter.FromGateTimeInForce(res.Data.Tif),
 		FeeAmount:             "",
 		FeeCcy:                "",
-		ReduceOnly:            false,
+		ReduceOnly:            res.Data.IsReduceOnly,
 		CreateTime:            decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:            updateTime,
 		RealizedPnl:           "",
@@ -91,6 +102,14 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCreate(req *OrderParam, res
 }
 func (g *GateTradeEngine) handleOrderFromDeliveryOrderCreate(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestDeliverySettleOrdersPostRes]) *Order {
 	executedQty := decimal.NewFromInt(res.Data.Size).Sub(decimal.NewFromInt(res.Data.Left))
+	fillPrice, _ := decimal.NewFromString(res.Data.FillPrice)
+
+	symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, res.Data.Contract)
+	if err != nil {
+		log.Error(err)
+	}
+	cumQuoteQty := executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
+
 	var positionSide PositionSide
 	if res.Data.Size > 0 {
 		positionSide = POSITION_SIDE_LONG
@@ -115,8 +134,8 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCreate(req *OrderParam, re
 		Price:                res.Data.Price,
 		Quantity:             decimal.NewFromInt(res.Data.Size).String(),
 		ExecutedQty:          executedQty.String(),
-		CumQuoteQty:          "",
-		AvgPrice:             res.Data.Price,
+		CumQuoteQty:          cumQuoteQty.String(),
+		AvgPrice:             res.Data.FillPrice,
 		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 req.OrderType,
 		Side:                 req.OrderSide,
@@ -124,7 +143,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCreate(req *OrderParam, re
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
-		ReduceOnly:           false,
+		ReduceOnly:           res.Data.IsReduceOnly,
 		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:           updateTime,
 		RealizedPnl:          "",
@@ -154,7 +173,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCreate(req *OrderParam, re
 func (g *GateTradeEngine) handleOrderFromSpotOrderAmend(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersOrderIdPatchRes]) *Order {
 	return &Order{
 		Exchange:      g.ExchangeType().String(),
-		AccountType:   g.gateConverter.FromGateAssetType(res.Data.Account).String(),
+		AccountType:   res.Data.Account,
 		Symbol:        res.Data.CurrencyPair,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
@@ -197,7 +216,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderAmend(req *OrderParam, res 
 		Quantity:             decimal.NewFromInt(res.Data.Size).String(),
 		ExecutedQty:          executedQty,
 		CumQuoteQty:          "",
-		AvgPrice:             res.Data.Price,
+		AvgPrice:             res.Data.FillPrice,
 		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 req.OrderType,
 		Side:                 req.OrderSide,
@@ -233,9 +252,10 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderAmend(req *OrderParam, res 
 }
 
 func (g *GateTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersOrderIdDeleteRes]) *Order {
+
 	return &Order{
 		Exchange:      g.ExchangeType().String(),
-		AccountType:   g.gateConverter.FromGateAssetType(res.Data.Account).String(),
+		AccountType:   res.Data.Account,
 		Symbol:        res.Data.CurrencyPair,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
@@ -247,8 +267,8 @@ func (g *GateTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res *m
 		CumQuoteQty:   res.Data.FilledTotal,
 		AvgPrice:      res.Data.AvgDealPrice,
 		Status:        g.gateConverter.FromGateSpotOrderStatus(res.Data.Status),
-		Type:          req.OrderType,
-		Side:          req.OrderSide,
+		Type:          g.gateConverter.FromGateOrderType(res.Data.Type),
+		Side:          g.gateConverter.FromGateOrderSide(res.Data.Side),
 		PositionSide:  "",
 
 		TimeInForce:           g.gateConverter.FromGateTimeInForce(res.Data.TimeInForce),
@@ -300,7 +320,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCancel(req *OrderParam, res
 		Quantity:             decimal.NewFromInt(res.Data.Size).String(),
 		ExecutedQty:          executedQty,
 		CumQuoteQty:          "",
-		AvgPrice:             res.Data.Price,
+		AvgPrice:             res.Data.FillPrice,
 		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 req.OrderType,
 		Side:                 req.OrderSide,
@@ -361,7 +381,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCancel(req *OrderParam, re
 		Quantity:             decimal.NewFromInt(res.Data.Size).String(),
 		ExecutedQty:          executedQty,
 		CumQuoteQty:          "",
-		AvgPrice:             res.Data.Price,
+		AvgPrice:             res.Data.FillPrice,
 		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 req.OrderType,
 		Side:                 req.OrderSide,
@@ -403,7 +423,7 @@ func (g *GateTradeEngine) handleOrdersFromSpotOpenOrders(req *QueryOrderParam, r
 		for _, order := range symbol.Orders {
 			orders = append(orders, &Order{
 				Exchange:      g.ExchangeType().String(),
-				AccountType:   g.gateConverter.FromGateAssetType(order.Account).String(),
+				AccountType:   order.Account,
 				Symbol:        order.CurrencyPair,
 				IsMargin:      req.IsMargin,
 				IsIsolated:    req.IsIsolated,
@@ -585,7 +605,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOpenOrders(req *QueryOrderPara
 func (g *GateTradeEngine) handleOrderFromSpotOrderQuery(req *QueryOrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotOrdersOrderIdGetRes]) *Order {
 	return &Order{
 		Exchange:      g.ExchangeType().String(),
-		AccountType:   g.gateConverter.FromGateAssetType(res.Data.Account).String(),
+		AccountType:   res.Data.Account,
 		Symbol:        res.Data.CurrencyPair,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
@@ -668,7 +688,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderQuery(req *QueryOrderParam,
 
 		ExecutedQty:          executedQty.String(),
 		CumQuoteQty:          cumQuoteQty.String(),
-		AvgPrice:             res.Data.Price,
+		AvgPrice:             res.Data.FillPrice,
 		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 orderType,
 		Side:                 orderSide,
@@ -741,7 +761,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderQuery(req *QueryOrderParam
 
 		ExecutedQty:          executedQty.String(),
 		CumQuoteQty:          cumQuoteQty.String(),
-		AvgPrice:             res.Data.Price,
+		AvgPrice:             res.Data.FillPrice,
 		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 orderType,
 		Side:                 orderSide,
@@ -781,7 +801,7 @@ func (g *GateTradeEngine) handleOrdersFromSpotOrdersQuery(req *QueryOrderParam, 
 	for _, order := range res.Data {
 		orders = append(orders, &Order{
 			Exchange:      g.ExchangeType().String(),
-			AccountType:   g.gateConverter.FromGateAssetType(order.Account).String(),
+			AccountType:   order.Account,
 			Symbol:        order.CurrencyPair,
 			IsMargin:      req.IsMargin,
 			IsIsolated:    req.IsIsolated,
@@ -832,15 +852,27 @@ func (g *GateTradeEngine) handleOrdersFromSpotOrdersQuery(req *QueryOrderParam, 
 func (g *GateTradeEngine) handleOrdersFromFuturesOrdersQuery(req *QueryOrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestFuturesSettleOrdersGetRes]) []*Order {
 	var orders []*Order
 	for _, order := range res.Data {
-		executedQty := decimal.NewFromInt(order.Size).Sub(decimal.NewFromInt(order.Left))
+		executedQty := decimal.NewFromInt(order.Size).Sub(decimal.NewFromInt(order.Left)).Abs()
 		fillPrice, _ := decimal.NewFromString(order.FillPrice)
-		cumQuoteQty := executedQty.Mul(fillPrice)
+		cumQuoteQty := decimal.Zero
+		symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, order.Contract)
+		if err != nil {
+			log.Error(err)
+		}
+
+		// log.Info(order.Id, ":", order.IsClose)
+
+		if symbolInfo != nil && symbolInfo.IsContract() && symbolInfo.IsContractAmt() {
+			cumQuoteQty = executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
+		}
+
 		var updateTime int64
 
-		if decimal.NewFromFloat(order.FinishTime).IsZero() {
+		finishTime := decimal.NewFromFloat(order.FinishTime)
+		if finishTime.IsZero() {
 			updateTime = decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart()
 		} else {
-			updateTime = decimal.NewFromFloat(order.FinishTime).Mul(gateTimeMul).IntPart()
+			updateTime = finishTime.Mul(gateTimeMul).IntPart()
 		}
 
 		var orderType OrderType
@@ -866,15 +898,15 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOrdersQuery(req *QueryOrderPara
 			OrderId:               strconv.FormatInt(order.Id, 10),
 			ClientOrderId:         order.Text,
 			Price:                 order.Price,
-			Quantity:              decimal.NewFromInt(order.Size).String(),
+			Quantity:              decimal.NewFromInt(order.Size).Abs().String(),
 			ExecutedQty:           executedQty.String(),
 			CumQuoteQty:           cumQuoteQty.String(),
-			AvgPrice:              order.Price,
+			AvgPrice:              order.FillPrice,
 			Status:                g.gateConverter.FromGateContractOrderStatus(order.Status, order.FinishAs),
 			Type:                  orderType,
 			Side:                  orderSide,
 			PositionSide:          "",
-			TimeInForce:           "",
+			TimeInForce:           g.gateConverter.FromGateTimeInForce(order.Tif),
 			FeeAmount:             "",
 			FeeCcy:                "",
 			ReduceOnly:            false,
@@ -1016,12 +1048,21 @@ func (g *GateTradeEngine) handleTradesFromSpotTradesQuery(req *QueryTradeParam, 
 
 	return trades
 }
+
 func (g *GateTradeEngine) handleTradesFromFuturesTradesQuery(req *QueryTradeParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestFuturesSettleMyTradesRes]) []*Trade {
 	var trades []*Trade
 	for _, trade := range res.Data {
 		price, _ := decimal.NewFromString(trade.Price)
 		amt := decimal.NewFromInt(trade.Size)
-		quoteQty := price.Mul(amt)
+
+		quoteQty := decimal.Zero
+		symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, trade.Contract)
+		if err != nil {
+			log.Error(err)
+		}
+		if symbolInfo != nil && symbolInfo.IsContract() && symbolInfo.IsContractAmt() {
+			quoteQty = amt.Abs().Mul(symbolInfo.ContractSize()).Mul(price)
+		}
 
 		isMaker := false
 		if trade.Role == "maker" {
@@ -1044,7 +1085,7 @@ func (g *GateTradeEngine) handleTradesFromFuturesTradesQuery(req *QueryTradePara
 			OrderId:       trade.OrderId,
 			ClientOrderId: trade.Text,
 			Price:         trade.Price,
-			Quantity:      strconv.FormatInt(trade.Size, 10),
+			Quantity:      amt.Abs().String(),
 			QuoteQty:      quoteQty.String(),
 			Side:          side,
 			PositionSide:  "",

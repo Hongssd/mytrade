@@ -68,22 +68,54 @@ func (c *GateEnumConverter) ToGateAssetType(t AssetType) string {
 	return ""
 }
 
-func (c *GateEnumConverter) FromGateAssetType(t string) AssetType {
+// func (c *GateEnumConverter) FromGateAssetType(t string) AssetType {
+// 	switch t {
+// 	case GATE_ASSET_TYPE_SPOT:
+// 		return ASSET_TYPE_FUND
+// 	case GATE_ASSET_TYPE_MARGIN:
+// 		return ASSET_TYPE_MARGIN
+// 	case GATE_ASSET_TYPE_FUTURES:
+// 		return ASSET_TYPE_UMFUTURE
+// 	case GATE_ASSET_TYPE_DELIVERY:
+// 		return ASSET_TYPE_DELIVERY
+// 	case GATE_ASSET_TYPE_UNFIED:
+// 		return ASSET_TYPE_UNIFIED
+// 	}
+// 	return ""
+// }
+
+func (c *GateEnumConverter) FromOrderSpotAccountType(t GateAccountType) (GateAccountType, bool, bool) {
+	//return accountType, isMargin, isIsolated
 	switch t {
-	case GATE_ASSET_TYPE_SPOT:
-		return ASSET_TYPE_FUND
-	case GATE_ASSET_TYPE_MARGIN:
-		return ASSET_TYPE_MARGIN
-	case GATE_ASSET_TYPE_FUTURES:
-		return ASSET_TYPE_UMFUTURE
-	case GATE_ASSET_TYPE_DELIVERY:
-		return ASSET_TYPE_DELIVERY
-	case GATE_ASSET_TYPE_UNFIED:
-		return ASSET_TYPE_UNIFIED
+	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_UNIFIED:
+		return GATE_ACCOUNT_TYPE_SPOT, false, false
+	case GATE_ACCOUNT_TYPE_MARGIN:
+		return GATE_ACCOUNT_TYPE_SPOT, true, true
+	case GATE_ACCOUNT_TYPE_CROSS_MARGIN:
+		return GATE_ACCOUNT_TYPE_SPOT, true, false
+	}
+	return GATE_ACCOUNT_TYPE_UNKNOWN, false, false
+}
+
+func (c *GateEnumConverter) ToGateOrderType(t OrderType) string {
+	switch t {
+	case ORDER_TYPE_LIMIT:
+		return GATE_ORDER_TYPE_LIMIT
+	case ORDER_TYPE_MARKET:
+		return GATE_ORDER_TYPE_MARKET
 	}
 	return ""
 }
 
+func (c *GateEnumConverter) FromGateOrderType(t string) OrderType {
+	switch t {
+	case GATE_ORDER_TYPE_LIMIT:
+		return ORDER_TYPE_LIMIT
+	case GATE_ORDER_TYPE_MARKET:
+		return ORDER_TYPE_MARKET
+	}
+	return ORDER_TYPE_UNKNOWN
+}
 func (c *GateEnumConverter) ToGateOrderSide(t OrderSide) string {
 	switch t {
 	case ORDER_SIDE_BUY:
@@ -127,19 +159,6 @@ func (c *GateEnumConverter) FromGateTimeInForce(t string) TimeInForce {
 	}
 	return TIME_IN_FORCE_UNKNOWN
 }
-
-func (c *GateEnumConverter) FromGateSpotOrderStatus(t string) OrderStatus {
-	switch t {
-	case GATE_ORDER_SPOT_STATUS_NEW:
-		return ORDER_STATUS_NEW
-	case GATE_ORDER_SPOT_STATUS_FILLED:
-		return ORDER_STATUS_FILLED
-	case GATE_ORDER_SPOT_STATUS_CANCELLED:
-		return ORDER_STATUS_CANCELED
-	}
-	return ORDER_STATUS_UNKNOWN
-}
-
 func (c *GateEnumConverter) ToGateSpotOrderStatus(t OrderStatus) string {
 	switch t {
 	case ORDER_STATUS_NEW:
@@ -150,6 +169,17 @@ func (c *GateEnumConverter) ToGateSpotOrderStatus(t OrderStatus) string {
 		return GATE_ORDER_SPOT_STATUS_CANCELLED
 	}
 	return ""
+}
+func (c *GateEnumConverter) FromGateSpotOrderStatus(t string) OrderStatus {
+	switch t {
+	case GATE_ORDER_SPOT_STATUS_NEW:
+		return ORDER_STATUS_NEW
+	case GATE_ORDER_SPOT_STATUS_FILLED:
+		return ORDER_STATUS_FILLED
+	case GATE_ORDER_SPOT_STATUS_CANCELLED:
+		return ORDER_STATUS_CANCELED
+	}
+	return ORDER_STATUS_UNKNOWN
 }
 
 func (c *GateEnumConverter) FromGateContractOrderStatus(t, fas string) OrderStatus {
@@ -170,16 +200,6 @@ func (c *GateEnumConverter) FromGateContractOrderStatus(t, fas string) OrderStat
 		return ORDER_STATUS_FILLED
 	}
 	return ORDER_STATUS_UNKNOWN
-}
-
-func (c *GateEnumConverter) FromGateOrderType(t string) OrderType {
-	switch t {
-	case GATE_ORDER_TYPE_LIMIT:
-		return ORDER_TYPE_LIMIT
-	case GATE_ORDER_TYPE_MARKET:
-		return ORDER_TYPE_MARKET
-	}
-	return ORDER_TYPE_UNKNOWN
 }
 
 func (c *GateEnumConverter) ToGatePositionSide(t PositionSide) string {

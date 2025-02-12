@@ -9,12 +9,20 @@ import (
 )
 
 func (g *GateTradeEngine) apiSpotOrderCreate(req *OrderParam) *mygateapi.PrivateRestSpotOrdersPostAPI {
-	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotOrdersPost().
-		Account(g.gateConverter.ToGateAssetType(AssetType(req.AccountType))).
-		CurrencyPair(req.Symbol).Side(g.gateConverter.ToGateOrderSide(req.OrderSide)).Amount(req.Quantity)
+	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().
+		NewPrivateRestSpotOrdersPost().
+		Account(req.AccountType).
+		CurrencyPair(req.Symbol).
+		Type(g.gateConverter.ToGateOrderType(req.OrderType)).
+		Side(g.gateConverter.ToGateOrderSide(req.OrderSide)).
+		Amount(req.Quantity)
+
 	if req.OrderType == ORDER_TYPE_LIMIT {
-		api.Type(GATE_ORDER_TYPE_LIMIT).Price(req.Price)
+		if !req.Price.IsZero() {
+			api.Price(req.Price)
+		}
 	}
+
 	// 自定义订单id
 	if req.ClientOrderId != "" {
 		api.Text(req.ClientOrderId)
@@ -38,8 +46,16 @@ func (g *GateTradeEngine) apiFuturesOrderCreate(req *OrderParam) *mygateapi.Priv
 
 	if req.OrderSide == ORDER_SIDE_BUY {
 		api.Size(req.Quantity.Abs().IntPart())
+		if req.PositionSide == POSITION_SIDE_SHORT {
+			//BUY SHORT 只平仓
+			api.ReduceOnly(true)
+		}
 	} else {
 		api.Size(req.Quantity.Abs().Neg().IntPart())
+		if req.PositionSide == POSITION_SIDE_LONG {
+			//SELL LONG 只平仓
+			api.ReduceOnly(true)
+		}
 	}
 
 	if req.TimeInForce != "" {
@@ -59,7 +75,6 @@ func (g *GateTradeEngine) apiFuturesOrderCreate(req *OrderParam) *mygateapi.Priv
 	if req.ReduceOnly {
 		api.ReduceOnly(req.ReduceOnly)
 	}
-
 	if req.ClientOrderId != "" {
 		api.Text(req.ClientOrderId)
 	}
@@ -75,6 +90,19 @@ func (g *GateTradeEngine) apiDeliveryOrderCreate(req *OrderParam) *mygateapi.Pri
 	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestDeliverySettleOrdersPost().
 		Settle(settle).Contract(req.Symbol).Size(req.Quantity.IntPart()).Price(req.Price.String())
+	if req.OrderSide == ORDER_SIDE_BUY {
+		api.Size(req.Quantity.Abs().IntPart())
+		if req.PositionSide == POSITION_SIDE_SHORT {
+			//BUY SHORT 只平仓
+			api.ReduceOnly(true)
+		}
+	} else {
+		api.Size(req.Quantity.Abs().Neg().IntPart())
+		if req.PositionSide == POSITION_SIDE_LONG {
+			//SELL LONG 只平仓
+			api.ReduceOnly(true)
+		}
+	}
 
 	if req.TimeInForce != "" {
 		api.Tif(g.gateConverter.ToGateTimeInForce(req.TimeInForce))
@@ -90,6 +118,9 @@ func (g *GateTradeEngine) apiDeliveryOrderCreate(req *OrderParam) *mygateapi.Pri
 		api.Close(true)
 	}
 
+	if req.ReduceOnly {
+		api.ReduceOnly(req.ReduceOnly)
+	}
 	if req.ClientOrderId != "" {
 		api.Text(req.ClientOrderId)
 	}
@@ -106,7 +137,7 @@ func (g *GateTradeEngine) apiSpotOrderAmend(req *OrderParam) *mygateapi.PrivateR
 	}
 
 	if req.AccountType != "" {
-		api.Account(g.gateConverter.ToGateAssetType(AssetType(req.AccountType)))
+		api.Account(req.AccountType)
 	}
 
 	if !req.Quantity.IsZero() {
@@ -160,7 +191,7 @@ func (g *GateTradeEngine) apiSpotOrderCancel(req *OrderParam) *mygateapi.Private
 	}
 
 	if req.AccountType != "" {
-		api.Account(g.gateConverter.ToGateAssetType(AssetType(req.AccountType)))
+		api.Account(req.AccountType)
 	}
 
 	return api
@@ -210,7 +241,7 @@ func (g *GateTradeEngine) apiSpotOpenOrders(req *QueryOrderParam) *mygateapi.Pri
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotOpenOrders()
 
 	if req.AccountType != "" {
-		api.Account(g.gateConverter.ToGateAssetType(AssetType(req.AccountType)))
+		api.Account(req.AccountType)
 	}
 
 	if req.Limit != 0 {
@@ -256,7 +287,7 @@ func (g *GateTradeEngine) apiSpotOrderQuery(req *QueryOrderParam) *mygateapi.Pri
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotOrdersOrderIdGet()
 
 	if req.AccountType != "" {
-		api.Account(g.gateConverter.ToGateAssetType(AssetType(req.AccountType)))
+		api.Account(req.AccountType)
 	}
 
 	if req.Symbol != "" {
@@ -315,11 +346,16 @@ func (g *GateTradeEngine) apiDeliveryOrderQuery(req *QueryOrderParam) *mygateapi
 }
 
 func (g *GateTradeEngine) apiSpotOrdersQuery(req *QueryOrderParam) *mygateapi.PrivateRestSpotOrdersGetAPI {
-	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotOrdersGet().
-		Status(g.gateConverter.ToGateSpotOrderStatus(req.Status))
+	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotOrdersGet()
+
+	if req.Status != "" {
+		api.Status(g.gateConverter.ToGateSpotOrderStatus(req.Status))
+	} else {
+		api.Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
+	}
 
 	if req.AccountType != "" {
-		api.Account(g.gateConverter.ToGateAssetType(AssetType(req.AccountType)))
+		api.Account(req.AccountType)
 	}
 
 	if req.Symbol != "" {
@@ -334,14 +370,19 @@ func (g *GateTradeEngine) apiSpotOrdersQuery(req *QueryOrderParam) *mygateapi.Pr
 	return api
 }
 func (g *GateTradeEngine) apiFuturesOrdersQuery(req *QueryOrderParam) *mygateapi.PrivateRestFuturesSettleOrdersGetAPI {
-	split := strings.Split(req.Symbol, "_")
-	if len(split) != 2 {
-		log.Error("symbol error")
-		return nil
+	settle := "usdt"
+	if req.Symbol != "" {
+		split := strings.Split(req.Symbol, "_")
+		if len(split) != 2 {
+			log.Error("symbol error")
+			return nil
+		}
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
-	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestFuturesSettleOrdersGet().Settle(settle).
-		Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
+
+	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().
+		NewPrivateRestFuturesSettleOrdersGet().
+		Settle(settle).Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
 
 	if req.Limit != 0 {
 		api.Limit(req.Limit)
@@ -351,12 +392,15 @@ func (g *GateTradeEngine) apiFuturesOrdersQuery(req *QueryOrderParam) *mygateapi
 	return api
 }
 func (g *GateTradeEngine) apiDeliveryOrdersQuery(req *QueryOrderParam) *mygateapi.PrivateRestDeliverySettleOrdersGetAPI {
-	split := strings.Split(req.Symbol, "_")
-	if len(split) != 3 {
-		log.Error("symbol error")
-		return nil
+	settle := "usdt"
+	if req.Symbol != "" {
+		split := strings.Split(req.Symbol, "_")
+		if len(split) != 3 {
+			log.Error("symbol error")
+			return nil
+		}
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestDeliverySettleOrdersGet().Settle(settle).
 		Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
 
@@ -372,7 +416,7 @@ func (g *GateTradeEngine) apiSpotTradesQuery(req *QueryTradeParam) *mygateapi.Pr
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotMyTrades()
 
 	if req.AccountType != "" {
-		api.Account(g.gateConverter.ToGateAssetType(AssetType(req.AccountType)))
+		api.Account(req.AccountType)
 	}
 
 	if req.Symbol != "" {

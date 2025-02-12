@@ -1,9 +1,10 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mygateapi"
 	"strconv"
 	"time"
+
+	"github.com/Hongssd/mygateapi"
 )
 
 type GateMarketData struct {
@@ -24,7 +25,7 @@ func (m *GateMarketData) GetKline(req *KlineParam) (*[]Kline, error) {
 
 	client := mygateapi.NewRestClient("", "").PublicRestClient()
 	switch GateAccountType(req.AccountType) {
-	case GATE_AC_SPOT:
+	case GATE_ACCOUNT_TYPE_SPOT:
 		api := client.NewPublicRestSpotCandlesticks().CurrencyPair(req.Symbol).Interval(req.Interval)
 
 		if req.StartTime != 0 {
@@ -41,7 +42,7 @@ func (m *GateMarketData) GetKline(req *KlineParam) (*[]Kline, error) {
 			return nil, err
 		}
 		return m.convertToSpotKline(req.AccountType, req.Symbol, req.Interval, &data.Data), nil
-	case GATE_AC_FUTURES:
+	case GATE_ACCOUNT_TYPE_FUTURES:
 		api := client.NewPublicRestFuturesSettleCandlesticks().Settle("usdt").Contract(req.Symbol).Interval(req.Interval)
 		if req.StartTime != 0 {
 			api.From(req.StartTime)
@@ -58,7 +59,7 @@ func (m *GateMarketData) GetKline(req *KlineParam) (*[]Kline, error) {
 		}
 		return m.convertToFuturesKline(req.AccountType, req.Symbol, req.Interval, &data.Data), nil
 
-	case GATE_AC_DELIVERY:
+	case GATE_ACCOUNT_TYPE_DELIVERY:
 		api := client.NewPublicRestDeliverySettleCandlesticks().Settle("usdt").Contract(req.Symbol).Interval(req.Interval)
 		if req.StartTime != 0 {
 			api.From(req.StartTime)
@@ -85,7 +86,7 @@ func (m *GateMarketData) GetBook(req *BookParam) (*OrderBook, error) {
 
 	client := mygateapi.NewRestClient("", "").PublicRestClient()
 	switch GateAccountType(req.AccountType) {
-	case GATE_AC_SPOT:
+	case GATE_ACCOUNT_TYPE_SPOT:
 		api := client.NewPublicRestSpotOrderBook().CurrencyPair(req.Symbol)
 		if req.Level != 0 {
 			api.Limit(req.Level)
@@ -95,7 +96,7 @@ func (m *GateMarketData) GetBook(req *BookParam) (*OrderBook, error) {
 			return nil, err
 		}
 		return m.convertToSpotOrderBook(req.AccountType, req.Symbol, &data.Data), nil
-	case GATE_AC_FUTURES:
+	case GATE_ACCOUNT_TYPE_FUTURES:
 		api := client.NewPublicRestFuturesSettleOrderBook().Settle("usdt").Contract(req.Symbol)
 		if req.Level != 0 {
 			api.Limit(req.Level)
@@ -105,7 +106,7 @@ func (m *GateMarketData) GetBook(req *BookParam) (*OrderBook, error) {
 			return nil, err
 		}
 		return m.convertToFuturesOrderBook(req.AccountType, req.Symbol, &data.Data), nil
-	case GATE_AC_DELIVERY:
+	case GATE_ACCOUNT_TYPE_DELIVERY:
 		api := client.NewPublicRestDeliverySettleOrderBook().Settle("usdt").Contract(req.Symbol)
 		if req.Level != 0 {
 			api.Limit(req.Level)

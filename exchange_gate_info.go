@@ -1,10 +1,11 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mygateapi"
-	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
+
+	"github.com/Hongssd/mygateapi"
+	"github.com/shopspring/decimal"
 )
 
 type GateExchangeInfo struct {
@@ -91,7 +92,7 @@ func (e *GateExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Tra
 	var isTrading bool
 
 	switch GateAccountType(accountType) {
-	case GATE_AC_SPOT:
+	case GATE_ACCOUNT_TYPE_SPOT:
 		v, ok := e.spotSymbolMap.Load(symbol)
 		if !ok {
 			return nil, ErrorSymbolNotFound
@@ -119,7 +120,7 @@ func (e *GateExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Tra
 			isTrading = true
 		}
 
-	case GATE_AC_FUTURES:
+	case GATE_ACCOUNT_TYPE_FUTURES:
 		v, ok := e.futuresSymbolMap.Load(symbol)
 		if !ok {
 			return nil, ErrorSymbolNotFound
@@ -158,7 +159,7 @@ func (e *GateExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Tra
 		maxLmtAmt = strconv.FormatInt(v.OrderSizeMax, 10)
 
 		isTrading = true
-	case GATE_AC_DELIVERY:
+	case GATE_ACCOUNT_TYPE_DELIVERY:
 		v, ok := e.deliverySymbolMap.Load(symbol)
 		if !ok {
 			return nil, ErrorSymbolNotFound
@@ -240,7 +241,7 @@ func (e *GateExchangeInfo) GetAllSymbolInfo(accountType string) ([]TradeSymbolIn
 
 	var symbolInfoList []TradeSymbolInfo
 	switch GateAccountType(accountType) {
-	case GATE_AC_SPOT:
+	case GATE_ACCOUNT_TYPE_SPOT:
 		e.spotSymbolMap.Range(func(key string, value *mygateapi.PublicRestSpotCurrencyPairCommon) bool {
 			symbolInfo, err := e.GetSymbolInfo(accountType, key)
 			if err != nil {
@@ -249,7 +250,7 @@ func (e *GateExchangeInfo) GetAllSymbolInfo(accountType string) ([]TradeSymbolIn
 			symbolInfoList = append(symbolInfoList, symbolInfo)
 			return true
 		})
-	case GATE_AC_FUTURES:
+	case GATE_ACCOUNT_TYPE_FUTURES:
 		e.futuresSymbolMap.Range(func(key string, value *mygateapi.ContractCommon) bool {
 			symbolInfo, err := e.GetSymbolInfo(accountType, key)
 			if err != nil {
@@ -258,7 +259,7 @@ func (e *GateExchangeInfo) GetAllSymbolInfo(accountType string) ([]TradeSymbolIn
 			symbolInfoList = append(symbolInfoList, symbolInfo)
 			return true
 		})
-	case GATE_AC_DELIVERY:
+	case GATE_ACCOUNT_TYPE_DELIVERY:
 		e.deliverySymbolMap.Range(func(key string, value *mygateapi.DeliveryContractCommon) bool {
 			symbolInfo, err := e.GetSymbolInfo(accountType, key)
 			if err != nil {

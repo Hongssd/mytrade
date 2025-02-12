@@ -40,6 +40,8 @@ func NewExchangeManager() *ExchangeManager {
 	return e
 }
 
+var InnerExchangeManager *ExchangeManager = NewExchangeManager()
+
 // 获取交易所规范
 func (e *ExchangeManager) getTradeExchangeInfo(exchange string) (TradeExchangeInfo, error) {
 	tradeExchange, ok := e.ExchangeMap.Load(exchange)

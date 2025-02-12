@@ -33,8 +33,8 @@ func (g *GateTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 }
 
 func (g *GateTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
-	switch req.AccountType {
-	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+	switch GateAccountType(req.AccountType) {
+	case GATE_ACCOUNT_TYPE_SPOT:
 		api := g.apiSpotOpenOrders(req)
 		res, err := api.Do()
 		if err != nil {
@@ -61,16 +61,13 @@ func (g *GateTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error
 			return nil, err
 		}
 		return g.handleOrdersFromDeliveryOpenOrders(req, res), nil
-	case GATE_ACCOUNT_TYPE_UNIFIED:
-		// TODO
-		return nil, ErrorNotSupport
 	default:
 		return nil, ErrorAccountType
 	}
 }
 func (g *GateTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
-	switch req.AccountType {
-	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+	switch GateAccountType(req.AccountType) {
+	case GATE_ACCOUNT_TYPE_SPOT:
 		api := g.apiSpotOrderQuery(req)
 		res, err := api.Do()
 		if err != nil {
@@ -97,16 +94,13 @@ func (g *GateTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 			return nil, err
 		}
 		return g.handleOrderFromDeliveryOrderQuery(req, res), nil
-	case GATE_ACCOUNT_TYPE_UNIFIED:
-		// TODO
-		return nil, ErrorNotSupport
 	default:
 		return nil, ErrorAccountType
 	}
 }
 func (g *GateTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
-	switch req.AccountType {
-	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+	switch GateAccountType(req.AccountType) {
+	case GATE_ACCOUNT_TYPE_SPOT:
 		api := g.apiSpotOrdersQuery(req)
 		res, err := api.Do()
 		if err != nil {
@@ -133,17 +127,14 @@ func (g *GateTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
 			return nil, err
 		}
 		return g.handleOrdersFromDeliveryOrdersQuery(req, res), nil
-	case GATE_ACCOUNT_TYPE_UNIFIED:
-		// TODO
-		return nil, ErrorNotSupport
 	default:
 		return nil, ErrorAccountType
 	}
 }
 
 func (g *GateTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
-	switch req.AccountType {
-	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+	switch GateAccountType(req.AccountType) {
+	case GATE_ACCOUNT_TYPE_SPOT:
 		api := g.apiSpotTradesQuery(req)
 		res, err := api.Do()
 		if err != nil {
@@ -170,18 +161,14 @@ func (g *GateTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
 			return nil, err
 		}
 		return g.handleTradesFromDeliveryTradesQuery(req, res), nil
-	case GATE_ACCOUNT_TYPE_UNIFIED:
-		// TODO
-		return nil, ErrorNotSupport
 	default:
 		return nil, ErrorAccountType
 	}
 }
 
 func (g *GateTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
-	switch req.AccountType {
-	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
-		log.Info("CreateOrder", req.Symbol)
+	switch GateAccountType(req.AccountType) {
+	case GATE_ACCOUNT_TYPE_SPOT:
 		api := g.apiSpotOrderCreate(req)
 		res, err := api.Do()
 		if err != nil {
@@ -208,16 +195,13 @@ func (g *GateTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 			return nil, err
 		}
 		return g.handleOrderFromDeliveryOrderCreate(req, res), nil
-	case GATE_ACCOUNT_TYPE_UNIFIED:
-		// TODO
-		return nil, ErrorNotSupport
 	default:
 		return nil, ErrorAccountType
 	}
 }
 func (g *GateTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
-	switch req.AccountType {
-	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+	switch GateAccountType(req.AccountType) {
+	case GATE_ACCOUNT_TYPE_SPOT:
 		api := g.apiSpotOrderAmend(req)
 		res, err := api.Do()
 		if err != nil {
@@ -236,16 +220,14 @@ func (g *GateTradeEngine) AmendOrder(req *OrderParam) (*Order, error) {
 		return g.handleOrderFromFuturesOrderAmend(req, res), nil
 	case GATE_ACCOUNT_TYPE_DELIVERY:
 		return nil, ErrorNotSupport
-	case GATE_ACCOUNT_TYPE_UNIFIED:
-		return nil, ErrorNotSupport
 	default:
 		return nil, ErrorAccountType
 	}
 }
 func (g *GateTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	var order *Order
-	switch req.AccountType {
-	case GATE_ACCOUNT_TYPE_SPOT, GATE_ACCOUNT_TYPE_MARGIN:
+	switch GateAccountType(req.AccountType) {
+	case GATE_ACCOUNT_TYPE_SPOT:
 		api := g.apiSpotOrderCancel(req)
 		res, err := api.Do()
 		if err != nil {
@@ -272,8 +254,6 @@ func (g *GateTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 			return nil, err
 		}
 		order = g.handleOrderFromDeliveryOrderCancel(req, res)
-	//case GATE_ACCOUNT_TYPE_UNIFIED:
-	// TODO
 	default:
 		return nil, ErrorAccountType
 	}
