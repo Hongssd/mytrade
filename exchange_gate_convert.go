@@ -56,8 +56,10 @@ func (c *GateEnumConverter) ToGateAssetType(t AssetType) string {
 	switch t {
 	case ASSET_TYPE_FUND:
 		return GATE_ASSET_TYPE_SPOT
-	case ASSET_TYPE_MARGIN:
-		return GATE_ASSET_TYPE_MARGIN
+	case ASSET_TYPE_MARGIN, ASSET_TYPE_MARGIN_CROSSED:
+		return GATE_ASSET_TYPE_ISOLATED_MARGIN
+	case ASSET_TYPE_MARGIN_ISOLATED:
+		return GATE_ASSET_TYPE_CROSS_MARGIN
 	case ASSET_TYPE_UMFUTURE:
 		return GATE_ASSET_TYPE_FUTURES
 	case ASSET_TYPE_DELIVERY:
@@ -68,21 +70,23 @@ func (c *GateEnumConverter) ToGateAssetType(t AssetType) string {
 	return ""
 }
 
-// func (c *GateEnumConverter) FromGateAssetType(t string) AssetType {
-// 	switch t {
-// 	case GATE_ASSET_TYPE_SPOT:
-// 		return ASSET_TYPE_FUND
-// 	case GATE_ASSET_TYPE_MARGIN:
-// 		return ASSET_TYPE_MARGIN
-// 	case GATE_ASSET_TYPE_FUTURES:
-// 		return ASSET_TYPE_UMFUTURE
-// 	case GATE_ASSET_TYPE_DELIVERY:
-// 		return ASSET_TYPE_DELIVERY
-// 	case GATE_ASSET_TYPE_UNFIED:
-// 		return ASSET_TYPE_UNIFIED
-// 	}
-// 	return ""
-// }
+func (c *GateEnumConverter) FromGateAssetType(t string) AssetType {
+	switch t {
+	case GATE_ASSET_TYPE_SPOT:
+		return ASSET_TYPE_FUND
+	case GATE_ASSET_TYPE_ISOLATED_MARGIN:
+		return ASSET_TYPE_MARGIN_ISOLATED
+	case GATE_ASSET_TYPE_CROSS_MARGIN:
+		return ASSET_TYPE_MARGIN_CROSSED
+	case GATE_ASSET_TYPE_FUTURES:
+		return ASSET_TYPE_UMFUTURE
+	case GATE_ASSET_TYPE_DELIVERY:
+		return ASSET_TYPE_DELIVERY
+	case GATE_ASSET_TYPE_UNFIED:
+		return ASSET_TYPE_UNIFIED
+	}
+	return ""
+}
 func (c *GateEnumConverter) ToOrderSpotAccountType(t GateAccountType, isMargin, isIsolated bool) GateAccountType {
 	if t == GATE_ACCOUNT_TYPE_SPOT {
 		if isMargin {

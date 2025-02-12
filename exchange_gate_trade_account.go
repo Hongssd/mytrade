@@ -422,8 +422,8 @@ func (a GateTradeAccount) GetAssets(accountType string, currencies ...string) ([
 	var assets []*Asset
 
 	// 现货资产
-	switch GateAccountType(accountType) {
-	case GATE_ACCOUNT_TYPE_SPOT:
+	switch accountType {
+	case GATE_ASSET_TYPE_SPOT:
 		res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().NewPrivateRestSpotInstruments().Do()
 		if err != nil {
 			return nil, err
@@ -452,10 +452,84 @@ func (a GateTradeAccount) GetAssets(accountType string, currencies ...string) ([
 				UpdateTime:             time.Now().UnixMilli(),
 			})
 		}
-	case GATE_ACCOUNT_TYPE_MARGIN:
-		//TODO
-		return nil, ErrorNotSupport
-	case GATE_ACCOUNT_TYPE_FUTURES:
+	case GATE_ASSET_TYPE_UNFIED:
+		res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).
+			PrivateRestClient().NewPrivateRestUnifiedAccounts().Do()
+		if err != nil {
+			return nil, err
+		}
+		for asset, b := range res.Data.Balances {
+			free, _ := decimal.NewFromString(b.Available)
+			locked, _ := decimal.NewFromString(b.Freeze)
+			walletBalance := free.Add(locked)
+			assets = append(assets, &Asset{
+				Exchange:      a.ExchangeType().String(), //交易所
+				AccountType:   accountType,               //账户类型
+				Asset:         asset,                     //资产
+				WalletBalance: walletBalance.String(),    //钱包余额
+				Free:          b.Available,               //可用余额
+				Locked:        b.Freeze,                  //冻结余额
+				Borrowed:      b.TotalLiab,               //已借
+				UpdateTime:    time.Now().UnixMilli(),
+			})
+		}
+	case GATE_ASSET_TYPE_ISOLATED_MARGIN:
+		res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).
+			PrivateRestClient().NewPrivateRestMarginAccounts().Do()
+		if err != nil {
+			return nil, err
+		}
+		for _, d := range res.Data {
+			assetBase := d.CurrencyPair + "/" + d.Base.Currency
+			assetQuote := d.CurrencyPair + "/" + d.Quote.Currency
+
+			baseBorrowed, _ := decimal.NewFromString(d.Base.Borrowed)
+			baseInterest, _ := decimal.NewFromString(d.Base.Interest)
+
+			quoteBorrowed, _ := decimal.NewFromString(d.Quote.Borrowed)
+			quoteInterest, _ := decimal.NewFromString(d.Quote.Interest)
+
+			baseFree, _ := decimal.NewFromString(d.Base.Available)
+			quoteFree, _ := decimal.NewFromString(d.Quote.Available)
+
+			baseLocked, _ := decimal.NewFromString(d.Base.Locked)
+			quoteLocked, _ := decimal.NewFromString(d.Quote.Locked)
+
+			//钱包余额=free+locked
+			baseWalletBalance := baseFree.Add(baseLocked)
+			quoteWalletBalance := quoteFree.Add(quoteLocked)
+
+			//最大可转=free-borrowed-interest
+			baseMaxWithdrawAmount := baseFree.Sub(baseBorrowed).Sub(baseInterest)
+			quoteMaxWithdrawAmount := quoteFree.Sub(quoteBorrowed).Sub(quoteInterest)
+
+			assets = append(assets, &Asset{
+				Exchange:          a.ExchangeType().String(),      //交易所
+				AccountType:       accountType,                    //账户类型
+				Asset:             assetBase,                      //资产
+				Borrowed:          d.Base.Borrowed,                //已借
+				Interest:          d.Base.Interest,                //利息
+				Free:              d.Base.Available,               //可用余额
+				Locked:            d.Base.Locked,                  //冻结余额
+				WalletBalance:     baseWalletBalance.String(),     //钱包余额
+				MaxWithdrawAmount: baseMaxWithdrawAmount.String(), //最大可转出余额
+				UpdateTime:        time.Now().UnixMilli(),
+			})
+
+			assets = append(assets, &Asset{
+				Exchange:          a.ExchangeType().String(),       //交易所
+				AccountType:       accountType,                     //账户类型
+				Asset:             assetQuote,                      //资产
+				Borrowed:          d.Quote.Borrowed,                //已借
+				Interest:          d.Quote.Interest,                //利息
+				Free:              d.Quote.Available,               //可用余额
+				Locked:            d.Quote.Locked,                  //冻结余额
+				WalletBalance:     quoteWalletBalance.String(),     //钱包余额
+				MaxWithdrawAmount: quoteMaxWithdrawAmount.String(), //最大可转出余额
+				UpdateTime:        time.Now().UnixMilli(),
+			})
+		}
+	case GATE_ASSET_TYPE_FUTURES:
 		settles := []string{"usdt", "btc"}
 		var errG errgroup.Group
 		for _, settle := range settles {
@@ -499,7 +573,7 @@ func (a GateTradeAccount) GetAssets(accountType string, currencies ...string) ([
 		if err := errG.Wait(); err != nil {
 			return nil, err
 		}
-	case GATE_ACCOUNT_TYPE_DELIVERY:
+	case GATE_ASSET_TYPE_DELIVERY:
 		res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().NewPrivateRestDeliverySettleAccounts().
 			Settle("usdt").Do()
 		if err != nil {
@@ -544,10 +618,10 @@ func (a GateTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTrans
 	to := a.gateConverter.ToGateAssetType(req.To)
 	api.From(from).To(to)
 
-	// margin
-	if from == GATE_ASSET_TYPE_MARGIN {
+	// 逐仓杠杆
+	if from == GATE_ASSET_TYPE_ISOLATED_MARGIN {
 		api.CurrencyPair(req.FromSymbol)
-	} else if to == GATE_ASSET_TYPE_MARGIN {
+	} else if to == GATE_ASSET_TYPE_ISOLATED_MARGIN {
 		api.CurrencyPair(req.ToSymbol)
 	}
 

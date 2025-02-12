@@ -240,10 +240,13 @@ func (g *GateTradeEngine) apiDeliveryOrderCancel(req *OrderParam) *mygateapi.Pri
 }
 
 func (g *GateTradeEngine) apiSpotOpenOrders(req *QueryOrderParam) *mygateapi.PrivateRestSpotOpenOrdersAPI {
-	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotOpenOrders()
+	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().
+		NewPrivateRestSpotOpenOrders()
 
 	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
-	api.Account(account.String())
+	if account != GATE_ACCOUNT_TYPE_SPOT {
+		api.Account(account.String())
+	}
 
 	if req.Limit != 0 {
 		api.Limit(req.Limit)
