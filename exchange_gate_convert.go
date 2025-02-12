@@ -83,7 +83,20 @@ func (c *GateEnumConverter) ToGateAssetType(t AssetType) string {
 // 	}
 // 	return ""
 // }
-
+func (c *GateEnumConverter) ToOrderSpotAccountType(t GateAccountType, isMargin, isIsolated bool) GateAccountType {
+	if t == GATE_ACCOUNT_TYPE_SPOT {
+		if isMargin {
+			if isIsolated {
+				return GATE_ACCOUNT_TYPE_MARGIN //逐仓杠杆
+			} else {
+				return GATE_ACCOUNT_TYPE_CROSS_MARGIN //全倉杠杆
+			}
+		} else {
+			return GATE_ACCOUNT_TYPE_SPOT //现货
+		}
+	}
+	return GATE_ACCOUNT_TYPE_UNKNOWN
+}
 func (c *GateEnumConverter) FromOrderSpotAccountType(t GateAccountType) (GateAccountType, bool, bool) {
 	//return accountType, isMargin, isIsolated
 	switch t {

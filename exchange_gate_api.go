@@ -11,11 +11,14 @@ import (
 func (g *GateTradeEngine) apiSpotOrderCreate(req *OrderParam) *mygateapi.PrivateRestSpotOrdersPostAPI {
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().
 		NewPrivateRestSpotOrdersPost().
-		Account(req.AccountType).
+		// Account(req.AccountType).
 		CurrencyPair(req.Symbol).
 		Type(g.gateConverter.ToGateOrderType(req.OrderType)).
 		Side(g.gateConverter.ToGateOrderSide(req.OrderSide)).
 		Amount(req.Quantity)
+
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	api.Account(account.String())
 
 	if req.OrderType == ORDER_TYPE_LIMIT {
 		if !req.Price.IsZero() {
@@ -129,16 +132,16 @@ func (g *GateTradeEngine) apiDeliveryOrderCreate(req *OrderParam) *mygateapi.Pri
 }
 
 func (g *GateTradeEngine) apiSpotOrderAmend(req *OrderParam) *mygateapi.PrivateRestSpotOrdersOrderIdPatchAPI {
-	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotOrdersOrderIdPatch().
+	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().
+		NewPrivateRestSpotOrdersOrderIdPatch().
 		OrderId(req.OrderId)
 
 	if req.Symbol != "" {
 		api.CurrencyPair(req.Symbol)
 	}
 
-	if req.AccountType != "" {
-		api.Account(req.AccountType)
-	}
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	api.Account(account.String())
 
 	if !req.Quantity.IsZero() {
 		api.Amount(req.Quantity)
@@ -190,9 +193,8 @@ func (g *GateTradeEngine) apiSpotOrderCancel(req *OrderParam) *mygateapi.Private
 		api.OrderId(req.ClientOrderId)
 	}
 
-	if req.AccountType != "" {
-		api.Account(req.AccountType)
-	}
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	api.Account(account.String())
 
 	return api
 }
@@ -240,9 +242,8 @@ func (g *GateTradeEngine) apiDeliveryOrderCancel(req *OrderParam) *mygateapi.Pri
 func (g *GateTradeEngine) apiSpotOpenOrders(req *QueryOrderParam) *mygateapi.PrivateRestSpotOpenOrdersAPI {
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotOpenOrders()
 
-	if req.AccountType != "" {
-		api.Account(req.AccountType)
-	}
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	api.Account(account.String())
 
 	if req.Limit != 0 {
 		api.Limit(req.Limit)
@@ -286,9 +287,8 @@ func (g *GateTradeEngine) apiDeliveryOpenOrders(req *QueryOrderParam) *mygateapi
 func (g *GateTradeEngine) apiSpotOrderQuery(req *QueryOrderParam) *mygateapi.PrivateRestSpotOrdersOrderIdGetAPI {
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotOrdersOrderIdGet()
 
-	if req.AccountType != "" {
-		api.Account(req.AccountType)
-	}
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	api.Account(account.String())
 
 	if req.Symbol != "" {
 		api.CurrencyPair(req.Symbol)
@@ -354,9 +354,8 @@ func (g *GateTradeEngine) apiSpotOrdersQuery(req *QueryOrderParam) *mygateapi.Pr
 		api.Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
 	}
 
-	if req.AccountType != "" {
-		api.Account(req.AccountType)
-	}
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	api.Account(account.String())
 
 	if req.Symbol != "" {
 		api.CurrencyPair(req.Symbol)
@@ -415,9 +414,8 @@ func (g *GateTradeEngine) apiDeliveryOrdersQuery(req *QueryOrderParam) *mygateap
 func (g *GateTradeEngine) apiSpotTradesQuery(req *QueryTradeParam) *mygateapi.PrivateRestSpotMyTradesAPI {
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotMyTrades()
 
-	if req.AccountType != "" {
-		api.Account(req.AccountType)
-	}
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	api.Account(account.String())
 
 	if req.Symbol != "" {
 		api.CurrencyPair(req.Symbol)
