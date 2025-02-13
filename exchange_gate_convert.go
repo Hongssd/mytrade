@@ -242,3 +242,51 @@ func (c *GateEnumConverter) FromGatePositionSide(t string) PositionSide {
 	}
 	return POSITION_SIDE_UNKNOWN
 }
+
+func (c *GateEnumConverter) ToGateTriggerRule(t OrderTriggerType, s OrderSide) string {
+	switch t {
+	case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+		switch s {
+		case ORDER_SIDE_BUY:
+			return "<="
+		case ORDER_SIDE_SELL:
+			return ">="
+		}
+	case ORDER_TRIGGER_TYPE_STOP_LOSS:
+		switch s {
+		case ORDER_SIDE_BUY:
+			return ">="
+		case ORDER_SIDE_SELL:
+			return "<="
+		}
+	}
+	return ""
+}
+
+func (c *GateEnumConverter) FromGateSpotPriceOrderStatus(t string) OrderStatus {
+	switch t {
+	case GATE_ORDER_SPOT_PRICE_STATUS_OPEN:
+		return ORDER_STATUS_NEW
+	case GATE_ORDER_SPOT_PRICE_STATUS_CANCELLED:
+		return ORDER_STATUS_CANCELED
+	case GATE_ORDER_SPOT_PRICE_STATUS_FINISHED:
+		return ORDER_STATUS_FILLED
+	case GATE_ORDER_SPOT_PRICE_STATUS_FAILED:
+		return ORDER_STATUS_CANCELED
+	case GATE_ORDER_SPOT_PRICE_STATUS_EXPIRED:
+		return ORDER_STATUS_CANCELED
+	}
+	return ORDER_STATUS_UNKNOWN
+}
+
+func (c *GateEnumConverter) ToGateSpotPriceOrderAccount(t GateAccountType) string {
+	switch t {
+	case GATE_ACCOUNT_TYPE_SPOT:
+		return GATE_SPOT_PRICE_ORDER_ACCOUNT_NORMAL
+	case GATE_ACCOUNT_TYPE_MARGIN:
+		return GATE_SPOT_PRICE_ORDER_ACCOUNT_MARGIN
+	case GATE_ACCOUNT_TYPE_CROSS_MARGIN:
+		return GATE_SPOT_PRICE_ORDER_ACCOUNT_CROSSED_MARGIN
+	}
+	return ""
+}

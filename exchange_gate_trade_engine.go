@@ -169,6 +169,14 @@ func (g *GateTradeEngine) QueryTrades(req *QueryTradeParam) ([]*Trade, error) {
 func (g *GateTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 	switch GateAccountType(req.AccountType) {
 	case GATE_ACCOUNT_TYPE_SPOT:
+		if req.IsAlgo {
+			api := g.apiSpotPriceOrderCreate(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrderFromSpotPriceOrderCreate(req, res), nil
+		}
 		api := g.apiSpotOrderCreate(req)
 		res, err := api.Do()
 		if err != nil {
@@ -228,6 +236,14 @@ func (g *GateTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	var order *Order
 	switch GateAccountType(req.AccountType) {
 	case GATE_ACCOUNT_TYPE_SPOT:
+		if req.IsAlgo {
+			api := g.apiSpotPriceOrderCancel(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrderFromSpotPriceOrderCancel(req, res), nil
+		}
 		api := g.apiSpotOrderCancel(req)
 		res, err := api.Do()
 		if err != nil {

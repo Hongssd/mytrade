@@ -162,6 +162,20 @@ const (
 	GATE_ORDER_CONTRACT_STATUS_FINISHED = "finished"
 )
 
+const (
+	GATE_ORDER_SPOT_PRICE_STATUS_OPEN      = "open"      // 正在运行
+	GATE_ORDER_SPOT_PRICE_STATUS_CANCELLED = "cancelled" // 被取消
+	GATE_ORDER_SPOT_PRICE_STATUS_FINISHED  = "finish"    // 成功结束
+	GATE_ORDER_SPOT_PRICE_STATUS_FAILED    = "failed"    // 失败
+	GATE_ORDER_SPOT_PRICE_STATUS_EXPIRED   = "expired"   // 过期
+)
+
+const (
+	GATE_SPOT_PRICE_ORDER_ACCOUNT_NORMAL         = "normal"       // 现货交易
+	GATE_SPOT_PRICE_ORDER_ACCOUNT_MARGIN         = "margin"       // 杠杆交易
+	GATE_SPOT_PRICE_ORDER_ACCOUNT_CROSSED_MARGIN = "cross_margin" // 全仓杠杆交易
+)
+
 // gate合约订单
 // 结束方式，包括：
 // - filled: 完全成交

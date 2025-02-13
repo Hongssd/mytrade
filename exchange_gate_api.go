@@ -37,6 +37,42 @@ func (g *GateTradeEngine) apiSpotOrderCreate(req *OrderParam) *mygateapi.Private
 
 	return api
 }
+func (g *GateTradeEngine) apiSpotPriceOrderCreate(req *OrderParam) *mygateapi.PrivateRestSpotPriceOrdersPostAPI {
+	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotPriceOrdersPost().
+		Market(req.Symbol)
+
+	var expiration int
+	if req.Expiration != 0 {
+		expiration = req.Expiration
+	}
+	api.Trigger(mygateapi.PrivateRestSpotPriceOrdersPostTriggerReq{
+		Price:      GetPointer(req.TriggerPrice.String()),
+		Rule:       GetPointer(g.gateConverter.ToGateTriggerRule(req.TriggerType, req.OrderSide)),
+		Expiration: GetPointer(expiration),
+	})
+
+	var timeInForce string
+	if req.TimeInForce != "" {
+		timeInForce = g.gateConverter.ToGateTimeInForce(req.TimeInForce)
+	}
+
+	var text string
+	if req.ClientOrderId != "" {
+		text = req.ClientOrderId
+	}
+	api.Put(mygateapi.PrivateRestSpotPriceOrdersPostPutReq{
+		Account:     GetPointer(g.gateConverter.ToGateSpotPriceOrderAccount(GateAccountType(req.AccountType))),
+		Type:        GetPointer(g.gateConverter.ToGateOrderType(req.OrderType)),
+		Side:        GetPointer(g.gateConverter.ToGateOrderSide(req.OrderSide)),
+		Amount:      GetPointer(req.Quantity.String()),
+		Price:       GetPointer(req.Price.String()),
+		TimeInForce: GetPointer(timeInForce),
+		Text:        GetPointer(text),
+	})
+
+	return api
+}
+
 func (g *GateTradeEngine) apiFuturesOrderCreate(req *OrderParam) *mygateapi.PrivateRestFuturesSettleOrdersPostAPI {
 	split := strings.Split(req.Symbol, "_")
 	if len(split) != 2 {
@@ -196,6 +232,10 @@ func (g *GateTradeEngine) apiSpotOrderCancel(req *OrderParam) *mygateapi.Private
 	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
 	api.Account(account.String())
 
+	return api
+}
+func (g *GateTradeEngine) apiSpotPriceOrderCancel(req *OrderParam) *mygateapi.PrivateRestSpotPriceOrdersOrderIdDeleteAPI {
+	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotPriceOrdersOrderIdDelete().OrderId(req.OrderId)
 	return api
 }
 func (g *GateTradeEngine) apiFuturesOrderCancel(req *OrderParam) *mygateapi.PrivateRestFuturesSettleOrdersOrderIdDeleteAPI {

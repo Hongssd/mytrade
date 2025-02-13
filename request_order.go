@@ -44,6 +44,9 @@ type Param struct {
 	OcoSlTriggerPx decimal.Decimal //止损触发价
 	OcoSlOrdPx     decimal.Decimal //止损委托价
 	OcoSlOrdType   OrderType       //止损委托类型
+
+	// Gate
+	Expiration int //Price Order过期时间, 0为不过期
 }
 
 type OrderParam Param

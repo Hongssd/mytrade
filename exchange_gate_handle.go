@@ -35,6 +35,47 @@ func (g *GateTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *m
 		UpdateTime:    int64(res.Data.UpdateTimeMs),
 	}
 }
+func (g *GateTradeEngine) handleOrderFromSpotPriceOrderCreate(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotPriceOrdersPostRes]) *Order {
+	accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotAccountType(GateAccountType(req.AccountType))
+	return &Order{
+		Exchange:             g.ExchangeType().String(),
+		AccountType:          accountType.String(),
+		Symbol:               req.Symbol,
+		IsMargin:             isMargin,
+		IsIsolated:           isIsolated,
+		OrderId:              strconv.FormatInt(res.Data.ID, 10),
+		ClientOrderId:        req.ClientOrderId,
+		Price:                req.Price.String(),
+		Quantity:             req.Quantity.String(),
+		ExecutedQty:          "",
+		CumQuoteQty:          "",
+		AvgPrice:             "",
+		Status:               "",
+		Type:                 req.OrderType,
+		Side:                 req.OrderSide,
+		TimeInForce:          req.TimeInForce,
+		FeeAmount:            "",
+		FeeCcy:               "",
+		CreateTime:           0,
+		UpdateTime:           0,
+		RealizedPnl:          "",
+		AttachTpTriggerPrice: "",
+		AttachTpOrdPrice:     "",
+		AttachSlTriggerPrice: "",
+		AttachSlOrdPrice:     "",
+		IsAlgo:               req.IsAlgo,
+		OrderAlgoType:        req.OrderAlgoType,
+		TriggerPrice:         req.TriggerPrice.String(),
+		TriggerType:          req.TriggerType,
+		TriggerConditionType: "",
+		OcoTpTriggerPrice:    "",
+		OcoTpOrdType:         "",
+		OcoTpOrdPrice:        "",
+		OcoSlTriggerPrice:    "",
+		OcoSlOrdType:         "",
+		OcoSlOrdPrice:        "",
+	}
+}
 func (g *GateTradeEngine) handleOrderFromFuturesOrderCreate(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestFuturesSettleOrdersPostRes]) *Order {
 	executedQty := decimal.NewFromInt(res.Data.Size).Sub(decimal.NewFromInt(res.Data.Left)).Abs()
 	fillPrice, _ := decimal.NewFromString(res.Data.FillPrice)
@@ -315,6 +356,46 @@ func (g *GateTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res *m
 		MarginBuyBorrowAsset:  "",
 		ErrorCode:             "",
 		ErrorMsg:              "",
+	}
+}
+func (g *GateTradeEngine) handleOrderFromSpotPriceOrderCancel(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotPriceOrdersOrderIdDeleteRes]) *Order {
+	accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotAccountType(GateAccountType(res.Data.Put.Account))
+
+	return &Order{
+		Exchange:             g.ExchangeType().String(),
+		AccountType:          accountType.String(),
+		Symbol:               res.Data.Market,
+		IsMargin:             isMargin,
+		IsIsolated:           isIsolated,
+		OrderId:              strconv.FormatInt(res.Data.ID, 10),
+		ClientOrderId:        "",
+		Price:                res.Data.Put.Price,
+		Quantity:             res.Data.Put.Amount,
+		ExecutedQty:          "",
+		CumQuoteQty:          "",
+		AvgPrice:             res.Data.Put.Price,
+		Status:               g.gateConverter.FromGateSpotPriceOrderStatus(res.Data.Status),
+		Type:                 OrderType(g.gateConverter.FromGateOrderType(res.Data.Put.Type)),
+		Side:                 OrderSide(g.gateConverter.FromGateOrderSide(res.Data.Put.Side)),
+		PositionSide:         "",
+		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Put.TimeInForce),
+		FeeAmount:            "",
+		FeeCcy:               "",
+		ReduceOnly:           false,
+		CreateTime:           res.Data.Ctime,
+		UpdateTime:           res.Data.Ftime,
+		RealizedPnl:          "",
+		AttachTpTriggerPrice: "",
+		AttachTpOrdPrice:     "",
+		AttachSlTriggerPrice: "",
+		TriggerPrice:         res.Data.Trigger.Price,
+		TriggerType:          "", // 市价无法得知，无法判断止盈止损
+		TriggerConditionType: "",
+		Expiration:           res.Data.Trigger.Expiration,
+		OcoTpTriggerPrice:    "",
+		OcoTpOrdType:         "",
+		OcoTpOrdPrice:        "",
+		OcoSlTriggerPrice:    "",
 	}
 }
 func (g *GateTradeEngine) handleOrderFromFuturesOrderCancel(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestFuturesSettleOrdersOrderIdDeleteRes]) *Order {
