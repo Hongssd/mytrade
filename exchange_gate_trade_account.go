@@ -645,7 +645,8 @@ func (a GateTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTrans
 	}
 
 	// futures or delivery
-	if from == GATE_ASSET_TYPE_FUTURES || to == GATE_ASSET_TYPE_FUTURES || from == GATE_ASSET_TYPE_DELIVERY || to == GATE_ASSET_TYPE_DELIVERY {
+	if from == GATE_ASSET_TYPE_FUTURES || to == GATE_ASSET_TYPE_FUTURES ||
+		from == GATE_ASSET_TYPE_DELIVERY || to == GATE_ASSET_TYPE_DELIVERY {
 		api.Settle(req.Settle)
 	}
 
@@ -664,8 +665,8 @@ func (a GateTradeAccount) AssetTransfer(req *AssetTransferParams) ([]*AssetTrans
 		Amount:     req.Amount.String(),
 		Status:     "",
 		ClientId:   "",
-		FromSymbol: "",
-		ToSymbol:   "",
+		FromSymbol: req.FromSymbol,
+		ToSymbol:   req.ToSymbol,
 	})
 	return assetTransfers, nil
 }
