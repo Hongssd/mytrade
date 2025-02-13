@@ -117,7 +117,7 @@ const (
 
 const (
 	GATE_ASSET_TYPE_SPOT            = "spot"         //现货
-	GATE_ASSET_TYPE_ISOLATED_MARGIN = "margin"       //现货杠杆
+	GATE_ASSET_TYPE_ISOLATED_MARGIN = "margin"       //现货逐仓杠杆
 	GATE_ASSET_TYPE_CROSS_MARGIN    = "cross_margin" //现货全仓杠杆
 	GATE_ASSET_TYPE_FUTURES         = "futures"      //合约
 	GATE_ASSET_TYPE_DELIVERY        = "delivery"     //交割

@@ -178,7 +178,7 @@ type QueryOrderParam struct {
 	Limit         int           //限制返回的订单数量 选填 默认返回100条 最大100
 
 	// Gate
-	Status OrderStatus //订单状态
+	// Status OrderStatus //订单状态
 }
 
 func (q *QueryOrderParam) SetAccountType(accountType string) *QueryOrderParam {

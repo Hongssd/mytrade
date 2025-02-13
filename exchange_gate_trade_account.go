@@ -132,7 +132,7 @@ func (a GateTradeAccount) GetLeverage(accountType, symbol string, marginMode Mar
 				if p.Leverage != "0" && marginMode == MARGIN_MODE_ISOLATED {
 					return decimal.RequireFromString(p.Leverage), nil
 				} else if p.Leverage == "0" && marginMode == MARGIN_MODE_CROSSED {
-					return decimal.RequireFromString(p.CrossLeverageLimit), nil
+					return decimal.RequireFromString(p.LeverageMax), nil
 				}
 			}
 		}
@@ -260,6 +260,25 @@ func (a GateTradeAccount) SetLeverage(accountType, symbol string, marginMode Mar
 			}
 			return nil
 		}
+	case GATE_ACCOUNT_TYPE_DELIVERY:
+		split := strings.Split(symbol, "_")
+		if len(split) < 3 {
+			return errors.New("symbol error")
+		}
+		settle := strings.ToLower(split[1])
+
+		api := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().
+			NewPrivateRestDeliverySettlePositionsContractLeverage().Settle(settle).Contract(symbol)
+		if marginMode == MARGIN_MODE_CROSSED {
+			api.Leverage("0")
+		} else {
+			api.Leverage(leverage.String())
+		}
+		_, err := api.Do()
+		if err != nil {
+			return err
+		}
+		return nil
 
 	}
 	return ErrorNotSupport
@@ -267,7 +286,7 @@ func (a GateTradeAccount) SetLeverage(accountType, symbol string, marginMode Mar
 
 func (a GateTradeAccount) GetFeeRate(accountType, symbol string) (*FeeRate, error) {
 	var feeRate FeeRate
-	api := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().NewPrivateRestWalletFee().CurrencyPair(symbol)
+	api := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().NewPrivateRestWalletFee()
 	if GateAccountType(accountType) == GATE_ACCOUNT_TYPE_FUTURES || GateAccountType(accountType) == GATE_ACCOUNT_TYPE_DELIVERY {
 		split := strings.Split(symbol, "_")
 		settle := strings.ToLower(split[1])

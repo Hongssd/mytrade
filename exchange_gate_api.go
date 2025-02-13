@@ -351,14 +351,10 @@ func (g *GateTradeEngine) apiDeliveryOrderQuery(req *QueryOrderParam) *mygateapi
 func (g *GateTradeEngine) apiSpotOrdersQuery(req *QueryOrderParam) *mygateapi.PrivateRestSpotOrdersGetAPI {
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotOrdersGet()
 
-	if req.Status != "" {
-		api.Status(g.gateConverter.ToGateSpotOrderStatus(req.Status))
-	} else {
-		api.Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
-	}
+	api.Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
 
-	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
-	api.Account(account.String())
+	// account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	// api.Account("unified")
 
 	if req.Symbol != "" {
 		api.CurrencyPair(req.Symbol)
