@@ -38,12 +38,11 @@ func (g *GateTradeEngine) apiSpotOrderCreate(req *OrderParam) *mygateapi.Private
 	return api
 }
 func (g *GateTradeEngine) apiFuturesOrderCreate(req *OrderParam) *mygateapi.PrivateRestFuturesSettleOrdersPostAPI {
+	settle := "usdt"
 	split := strings.Split(req.Symbol, "_")
-	if len(split) != 2 {
-		log.Error("symbol error")
-		return nil
+	if len(split) == 2 {
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestFuturesSettleOrdersPost().
 		Settle(settle).Contract(req.Symbol).Price(req.Price.String())
 
@@ -85,12 +84,11 @@ func (g *GateTradeEngine) apiFuturesOrderCreate(req *OrderParam) *mygateapi.Priv
 	return api
 }
 func (g *GateTradeEngine) apiDeliveryOrderCreate(req *OrderParam) *mygateapi.PrivateRestDeliverySettleOrdersPostAPI {
+	settle := "usdt"
 	split := strings.Split(req.Symbol, "_")
-	if len(split) != 3 {
-		log.Error("symbol error")
-		return nil
+	if len(split) == 3 {
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestDeliverySettleOrdersPost().
 		Settle(settle).Contract(req.Symbol).Size(req.Quantity.IntPart()).Price(req.Price.String())
 	if req.OrderSide == ORDER_SIDE_BUY {
@@ -158,12 +156,11 @@ func (g *GateTradeEngine) apiSpotOrderAmend(req *OrderParam) *mygateapi.PrivateR
 	return api
 }
 func (g *GateTradeEngine) apiFuturesOrderAmend(req *OrderParam) *mygateapi.PrivateRestFuturesSettleOrdersOrderIdPutAPI {
+	settle := "usdt"
 	split := strings.Split(req.Symbol, "_")
-	if len(split) != 2 {
-		log.Error("symbol error")
-		return nil
+	if len(split) == 2 {
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestFuturesSettleOrdersOrderIdPut().
 		Settle(settle).OrderId(req.OrderId)
 
@@ -199,12 +196,11 @@ func (g *GateTradeEngine) apiSpotOrderCancel(req *OrderParam) *mygateapi.Private
 	return api
 }
 func (g *GateTradeEngine) apiFuturesOrderCancel(req *OrderParam) *mygateapi.PrivateRestFuturesSettleOrdersOrderIdDeleteAPI {
+	settle := "usdt"
 	split := strings.Split(req.Symbol, "_")
-	if len(split) != 2 {
-		log.Error("symbol error")
-		return nil
+	if len(split) == 2 {
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestFuturesSettleOrdersOrderIdDelete().
 		Settle(settle)
 
@@ -219,12 +215,11 @@ func (g *GateTradeEngine) apiFuturesOrderCancel(req *OrderParam) *mygateapi.Priv
 	return api
 }
 func (g *GateTradeEngine) apiDeliveryOrderCancel(req *OrderParam) *mygateapi.PrivateRestDeliverySettleOrdersOrderIdDeleteAPI {
+	settle := "usdt"
 	split := strings.Split(req.Symbol, "_")
-	if len(split) != 3 {
-		log.Error("symbol error")
-		return nil
+	if len(split) == 3 {
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestDeliverySettleOrdersOrderIdDelete().
 		Settle(settle)
 
@@ -255,12 +250,12 @@ func (g *GateTradeEngine) apiSpotOpenOrders(req *QueryOrderParam) *mygateapi.Pri
 	return api
 }
 func (g *GateTradeEngine) apiFuturesOpenOrders(req *QueryOrderParam) *mygateapi.PrivateRestFuturesSettleOrdersGetAPI {
+	settle := "usdt"
 	split := strings.Split(req.Symbol, "_")
-	if len(split) != 2 {
-		log.Error("symbol error")
-		return nil
+	if len(split) == 2 {
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
+
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestFuturesSettleOrdersGet().
 		Settle(settle).Status(GATE_ORDER_CONTRACT_STATUS_OPEN)
 
@@ -271,12 +266,11 @@ func (g *GateTradeEngine) apiFuturesOpenOrders(req *QueryOrderParam) *mygateapi.
 	return api
 }
 func (g *GateTradeEngine) apiDeliveryOpenOrders(req *QueryOrderParam) *mygateapi.PrivateRestDeliverySettleOrdersGetAPI {
+	settle := "usdt"
 	split := strings.Split(req.Symbol, "_")
-	if len(split) != 3 {
-		log.Error("symbol error")
-		return nil
+	if len(split) == 3 {
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestDeliverySettleOrdersGet().
 		Settle(settle).Status(GATE_ORDER_CONTRACT_STATUS_OPEN)
 
@@ -308,12 +302,11 @@ func (g *GateTradeEngine) apiSpotOrderQuery(req *QueryOrderParam) *mygateapi.Pri
 	return api
 }
 func (g *GateTradeEngine) apiFuturesOrderQuery(req *QueryOrderParam) *mygateapi.PrivateRestFuturesSettleOrdersOrderIdGetAPI {
+	settle := "usdt"
 	split := strings.Split(req.Symbol, "_")
-	if len(split) != 2 {
-		log.Error("symbol error")
-		return nil
+	if len(split) == 2 {
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestFuturesSettleOrdersOrderIdGet().
 		Settle(settle)
 
@@ -328,12 +321,11 @@ func (g *GateTradeEngine) apiFuturesOrderQuery(req *QueryOrderParam) *mygateapi.
 	return api
 }
 func (g *GateTradeEngine) apiDeliveryOrderQuery(req *QueryOrderParam) *mygateapi.PrivateRestDeliverySettleOrdersOrderIdGetAPI {
+	settle := "usdt"
 	split := strings.Split(req.Symbol, "_")
-	if len(split) != 3 {
-		log.Error("symbol error")
-		return nil
+	if len(split) == 3 {
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestDeliverySettleOrdersOrderIdGet().
 		Settle(settle)
 
@@ -371,11 +363,9 @@ func (g *GateTradeEngine) apiFuturesOrdersQuery(req *QueryOrderParam) *mygateapi
 	settle := "usdt"
 	if req.Symbol != "" {
 		split := strings.Split(req.Symbol, "_")
-		if len(split) != 2 {
-			log.Error("symbol error")
-			return nil
+		if len(split) == 2 {
+			settle = strings.ToLower(split[1])
 		}
-		settle = strings.ToLower(split[1])
 	}
 
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().
@@ -393,13 +383,13 @@ func (g *GateTradeEngine) apiDeliveryOrdersQuery(req *QueryOrderParam) *mygateap
 	settle := "usdt"
 	if req.Symbol != "" {
 		split := strings.Split(req.Symbol, "_")
-		if len(split) != 3 {
-			log.Error("symbol error")
-			return nil
+		if len(split) == 3 {
+			settle = strings.ToLower(split[1])
 		}
-		settle = strings.ToLower(split[1])
 	}
-	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestDeliverySettleOrdersGet().Settle(settle).
+	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().
+		NewPrivateRestDeliverySettleOrdersGet().
+		Settle(settle).
 		Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
 
 	if req.Limit != 0 {
@@ -443,14 +433,17 @@ func (g *GateTradeEngine) apiSpotTradesQuery(req *QueryTradeParam) *mygateapi.Pr
 	return api
 }
 func (g *GateTradeEngine) apiFuturesTradesQuery(req *QueryTradeParam) *mygateapi.PrivateRestFuturesSettleMyTradesAPI {
+	settle := "usdt"
 	split := strings.Split(req.Symbol, "_")
-	if len(split) != 2 {
-		log.Error("symbol error")
-		return nil
+	if len(split) == 2 {
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestFuturesSettleMyTrades().
-		Settle(settle).Contract(req.Symbol)
+		Settle(settle)
+
+	if req.Symbol != "" {
+		api.Contract(req.Symbol)
+	}
 
 	if req.OrderId != "" {
 		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
@@ -464,14 +457,17 @@ func (g *GateTradeEngine) apiFuturesTradesQuery(req *QueryTradeParam) *mygateapi
 	return api
 }
 func (g *GateTradeEngine) apiDeliveryTradesQuery(req *QueryTradeParam) *mygateapi.PrivateRestDeliverySettleMyTradesAPI {
+	settle := "usdt"
 	split := strings.Split(req.Symbol, "_")
-	if len(split) != 3 {
-		log.Error("symbol error")
-		return nil
+	if len(split) == 3 {
+		settle = strings.ToLower(split[1])
 	}
-	settle := strings.ToLower(split[1])
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestDeliverySettleMyTrades().
-		Settle(settle).Contract(req.Symbol)
+		Settle(settle)
+
+	if req.Symbol != "" {
+		api.Contract(req.Symbol)
+	}
 
 	if req.OrderId != "" {
 		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
