@@ -10,10 +10,11 @@ import (
 
 type GateExchangeInfo struct {
 	ExchangeBase
-	isLoaded          bool
-	spotSymbolMap     *MySyncMap[string, *mygateapi.PublicRestSpotCurrencyPairCommon]
-	futuresSymbolMap  *MySyncMap[string, *mygateapi.ContractCommon]
-	deliverySymbolMap *MySyncMap[string, *mygateapi.DeliveryContractCommon]
+	isLoaded                   bool
+	spotSymbolMap              *MySyncMap[string, *mygateapi.PublicRestSpotCurrencyPairCommon]
+	futuresSymbolMap           *MySyncMap[string, *mygateapi.ContractCommon]
+	deliverySymbolMap          *MySyncMap[string, *mygateapi.DeliveryContractCommon]
+	spotIsolatedMarginLeverage *MySyncMap[string, decimal.Decimal]
 
 	spotExchangeInfoMap     *MySyncMap[string, TradeSymbolInfo]
 	futuresExchangeInfoMap  *MySyncMap[string, TradeSymbolInfo]
@@ -28,12 +29,23 @@ func (e *GateExchangeInfo) loadExchangeInfo() error {
 	e.spotSymbolMap = GetPointer(NewMySyncMap[string, *mygateapi.PublicRestSpotCurrencyPairCommon]())
 	e.futuresSymbolMap = GetPointer(NewMySyncMap[string, *mygateapi.ContractCommon]())
 	e.deliverySymbolMap = GetPointer(NewMySyncMap[string, *mygateapi.DeliveryContractCommon]())
+	e.spotIsolatedMarginLeverage = GetPointer(NewMySyncMap[string, decimal.Decimal]())
 
 	var err error
 	spotRes, err := mygateapi.NewRestClient("", "").PublicRestClient().
 		NewPublicRestCurrencyPairsAll().Do()
 	if err != nil {
 		return err
+	}
+
+	spotMarginRes, err := mygateapi.NewRestClient("", "").PublicRestClient().
+		NewPublicRestMarginUniCurrencyPairs().Do()
+	if err != nil {
+		return err
+	}
+
+	for _, v := range spotMarginRes.Data {
+		e.spotIsolatedMarginLeverage.Store(v.CurrencyPair, decimal.RequireFromString(v.Leverage))
 	}
 
 	futuresRes, err := mygateapi.NewRestClient("", "").PublicRestClient().
@@ -100,6 +112,9 @@ func (e *GateExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Tra
 		baseCoin, quoteCoin = v.Base, v.Quote
 		isContract, isContractAmt = false, false
 		contractSize, contractCoin = "0", ""
+		if isolatedMarginLeverage, ok := e.spotIsolatedMarginLeverage.Load(symbol); ok {
+			minLeverage, maxLeverage = isolatedMarginLeverage.String(), isolatedMarginLeverage.String()
+		}
 
 		pricePrecision = v.Precision
 		tickSize = getSizeFromPrecision(v.Precision)

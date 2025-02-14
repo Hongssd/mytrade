@@ -30,18 +30,24 @@ func (a GateTradeAccount) GetAccountMode() (AccountMode, error) {
 }
 
 func (a GateTradeAccount) GetMarginMode(accountType, symbol string, positionSide PositionSide) (MarginMode, error) {
-	positions, err := a.GetPositions(accountType, symbol)
-	if err != nil {
-		return MARGIN_MODE_UNKNOWN, err
-	}
-	marginMode := MARGIN_MODE_UNKNOWN
-	for _, p := range positions {
-		if p.PositionSide == positionSide {
-			marginMode = p.MarginMode
-		}
-	}
 
-	return marginMode, nil
+	switch GateAccountType(accountType) {
+	case GATE_ACCOUNT_TYPE_SPOT:
+		return MARGIN_MODE_ISOLATED, nil
+	case GATE_ACCOUNT_TYPE_FUTURES, GATE_ACCOUNT_TYPE_DELIVERY:
+		positions, err := a.GetPositions(accountType, symbol)
+		if err != nil {
+			return MARGIN_MODE_UNKNOWN, err
+		}
+		marginMode := MARGIN_MODE_UNKNOWN
+		for _, p := range positions {
+			if p.PositionSide == positionSide {
+				marginMode = p.MarginMode
+			}
+		}
+		return marginMode, nil
+	}
+	return MARGIN_MODE_UNKNOWN, nil
 }
 
 func (a GateTradeAccount) GetPositionMode(accountType, symbol string) (PositionMode, error) {
@@ -84,7 +90,11 @@ func (a GateTradeAccount) GetLeverage(accountType, symbol string, marginMode Mar
 	}
 	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_SPOT:
-		return decimal.Zero, ErrorNotSupport
+		symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), accountType, symbol)
+		if err != nil {
+			return decimal.Zero, err
+		}
+		return symbolInfo.MaxLeverage(), nil
 	case GATE_ACCOUNT_TYPE_MARGIN:
 		res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).PublicRestClient().NewPublicRestMarginUniCurrencyPairsCurrencyPair().
 			CurrencyPair(symbol).Do()
@@ -159,6 +169,10 @@ func (a GateTradeAccount) SetAccountMode(mode AccountMode) error {
 }
 
 func (a GateTradeAccount) SetMarginMode(accountType, symbol string, mode MarginMode) error {
+
+	if GateAccountType(accountType) == GATE_ACCOUNT_TYPE_SPOT {
+		return ErrorNotSupport
+	}
 
 	//获取仓位模式，设置仓位方向
 	positionMode, err := a.GetPositionMode(accountType, symbol)
