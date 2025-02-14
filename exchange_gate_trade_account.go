@@ -478,18 +478,21 @@ func (a GateTradeAccount) GetAssets(accountType string, currencies ...string) ([
 			return nil, err
 		}
 		for asset, b := range res.Data.Balances {
-			free, _ := decimal.NewFromString(b.Available)
-			locked, _ := decimal.NewFromString(b.Freeze)
-			walletBalance := free.Add(locked)
+
+			walletBalance, _ := decimal.NewFromString(b.Equity)
+
 			assets = append(assets, &Asset{
-				Exchange:      a.ExchangeType().String(), //交易所
-				AccountType:   accountType,               //账户类型
-				Asset:         asset,                     //资产
-				WalletBalance: walletBalance.String(),    //钱包余额
-				Free:          b.Available,               //可用余额
-				Locked:        b.Freeze,                  //冻结余额
-				Borrowed:      b.TotalLiab,               //已借
-				UpdateTime:    time.Now().UnixMilli(),
+				Exchange:          a.ExchangeType().String(), //交易所
+				AccountType:       accountType,               //账户类型
+				Asset:             asset,                     //资产
+				WalletBalance:     walletBalance.String(),    //钱包余额
+				Free:              b.Available,               //可用余额
+				Locked:            b.Freeze,                  //冻结余额
+				Borrowed:          b.TotalLiab,               //已借
+				MarginBalance:     walletBalance.String(),    //保证金余额
+				AvailableBalance:  b.Available,
+				MaxWithdrawAmount: b.Available,
+				UpdateTime:        time.Now().UnixMilli(),
 			})
 		}
 	case GATE_ASSET_TYPE_ISOLATED_MARGIN:
