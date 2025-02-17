@@ -1,9 +1,11 @@
 package mytrade
 
 import (
+	"context"
 	"sync"
 
 	"github.com/Hongssd/mygateapi"
+	"golang.org/x/sync/errgroup"
 )
 
 type GateTradeEngine struct {
@@ -35,6 +37,14 @@ func (g *GateTradeEngine) NewQueryTradeReq() *QueryTradeParam {
 func (g *GateTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error) {
 	switch GateAccountType(req.AccountType) {
 	case GATE_ACCOUNT_TYPE_SPOT:
+		if req.IsAlgo {
+			api := g.apiSpotPriceOpenOrders(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrdersFromSpotPriceOpenOrders(req, res), nil
+		}
 		api := g.apiSpotOpenOrders(req)
 		res, err := api.Do()
 		if err != nil {
@@ -42,6 +52,14 @@ func (g *GateTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error
 		}
 		return g.handleOrdersFromSpotOpenOrders(req, res), nil
 	case GATE_ACCOUNT_TYPE_FUTURES:
+		if req.IsAlgo {
+			api := g.apiFuturesPriceOpenOrders(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrdersFromFuturesPriceOpenOrders(req, res), nil
+		}
 		api := g.apiFuturesOpenOrders(req)
 		if api == nil {
 			return nil, ErrorSymbolNotFound
@@ -52,6 +70,14 @@ func (g *GateTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error
 		}
 		return g.handleOrdersFromFuturesOpenOrders(req, res), nil
 	case GATE_ACCOUNT_TYPE_DELIVERY:
+		if req.IsAlgo {
+			api := g.apiDeliveryPriceOpenOrders(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrdersFromDeliveryPriceOpenOrders(req, res), nil
+		}
 		api := g.apiDeliveryOpenOrders(req)
 		if api == nil {
 			return nil, ErrorSymbolNotFound
@@ -68,6 +94,14 @@ func (g *GateTradeEngine) QueryOpenOrders(req *QueryOrderParam) ([]*Order, error
 func (g *GateTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 	switch GateAccountType(req.AccountType) {
 	case GATE_ACCOUNT_TYPE_SPOT:
+		if req.IsAlgo {
+			api := g.apiSpotPriceOrderQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrderFromSpotPriceOrderQuery(req, res), nil
+		}
 		api := g.apiSpotOrderQuery(req)
 		res, err := api.Do()
 		if err != nil {
@@ -75,6 +109,14 @@ func (g *GateTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 		}
 		return g.handleOrderFromSpotOrderQuery(req, res), nil
 	case GATE_ACCOUNT_TYPE_FUTURES:
+		if req.IsAlgo {
+			api := g.apiFuturesPriceOrderQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrderFromFuturesPriceOrderQuery(req, res), nil
+		}
 		api := g.apiFuturesOrderQuery(req)
 		if api == nil {
 			return nil, ErrorSymbolNotFound
@@ -85,6 +127,14 @@ func (g *GateTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 		}
 		return g.handleOrderFromFuturesOrderQuery(req, res), nil
 	case GATE_ACCOUNT_TYPE_DELIVERY:
+		if req.IsAlgo {
+			api := g.apiDeliveryPriceOrderQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrderFromDeliveryPriceOrderQuery(req, res), nil
+		}
 		api := g.apiDeliveryOrderQuery(req)
 		if api == nil {
 			return nil, ErrorSymbolNotFound
@@ -101,6 +151,14 @@ func (g *GateTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 func (g *GateTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
 	switch GateAccountType(req.AccountType) {
 	case GATE_ACCOUNT_TYPE_SPOT:
+		if req.IsAlgo {
+			api := g.apiSpotPriceOrdersQuery(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrdersFromSpotPriceOrdersQuery(req, res), nil
+		}
 		api := g.apiSpotOrdersQuery(req)
 		res, err := api.Do()
 		if err != nil {
@@ -108,6 +166,33 @@ func (g *GateTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
 		}
 		return g.handleOrdersFromSpotOrdersQuery(req, res), nil
 	case GATE_ACCOUNT_TYPE_FUTURES:
+		if req.IsAlgo {
+			api := g.apiFuturesPriceOrdersQuery(req)
+
+			var orders []*Order
+			var statuses []string = []string{GATE_ORDER_CONTRACT_STATUS_OPEN, GATE_ORDER_CONTRACT_STATUS_FINISHED}
+			// errGroup
+			errG, _ := errgroup.WithContext(context.Background())
+			for _, status := range statuses {
+				status := status
+				errG.Go(func() error {
+					api.Status(status)
+					res, err := api.Do()
+					if err != nil {
+						return err
+					}
+					orders = append(orders, g.handleOrdersFromFuturesPriceOrdersQuery(req, res)...)
+					return nil
+				})
+			}
+
+			err := errG.Wait()
+			if err != nil {
+				return nil, err
+			}
+
+			return orders, nil
+		}
 		api := g.apiFuturesOrdersQuery(req)
 		if api == nil {
 			return nil, ErrorSymbolNotFound
@@ -118,6 +203,33 @@ func (g *GateTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
 		}
 		return g.handleOrdersFromFuturesOrdersQuery(req, res), nil
 	case GATE_ACCOUNT_TYPE_DELIVERY:
+		if req.IsAlgo {
+			api := g.apiDeliveryPriceOrdersQuery(req)
+
+			var orders []*Order
+			var statuses []string = []string{GATE_ORDER_CONTRACT_STATUS_OPEN, GATE_ORDER_CONTRACT_STATUS_FINISHED}
+			// errGroup
+			errG, _ := errgroup.WithContext(context.Background())
+			for _, status := range statuses {
+				status := status
+				errG.Go(func() error {
+					api.Status(status)
+					res, err := api.Do()
+					if err != nil {
+						return err
+					}
+					orders = append(orders, g.handleOrdersFromDeliveryPriceOrdersQuery(req, res)...)
+					return nil
+				})
+			}
+
+			err := errG.Wait()
+			if err != nil {
+				return nil, err
+			}
+
+			return orders, nil
+		}
 		api := g.apiDeliveryOrdersQuery(req)
 		if api == nil {
 			return nil, ErrorSymbolNotFound
@@ -184,6 +296,14 @@ func (g *GateTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 		}
 		return g.handleOrderFromSpotOrderCreate(req, res), nil
 	case GATE_ACCOUNT_TYPE_FUTURES:
+		if req.IsAlgo {
+			api := g.apiFuturesPriceOrderCreate(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrderFromFuturesPriceOrderCreate(req, res), nil
+		}
 		api := g.apiFuturesOrderCreate(req)
 		if api == nil {
 			return nil, ErrorSymbolNotFound
@@ -194,6 +314,14 @@ func (g *GateTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 		}
 		return g.handleOrderFromFuturesOrderCreate(req, res), nil
 	case GATE_ACCOUNT_TYPE_DELIVERY:
+		if req.IsAlgo {
+			api := g.apiDeliveryPriceOrderCreate(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrderFromDeliveryPriceOrderCreate(req, res), nil
+		}
 		api := g.apiDeliveryOrderCreate(req)
 		if api == nil {
 			return nil, ErrorSymbolNotFound
@@ -251,6 +379,14 @@ func (g *GateTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 		}
 		order = g.handleOrderFromSpotOrderCancel(req, res)
 	case GATE_ACCOUNT_TYPE_FUTURES:
+		if req.IsAlgo {
+			api := g.apiFuturesPriceOrderCancel(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrderFromFuturesPriceOrderCancel(req, res), nil
+		}
 		api := g.apiFuturesOrderCancel(req)
 		if api == nil {
 			return nil, ErrorSymbolNotFound
@@ -261,6 +397,14 @@ func (g *GateTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 		}
 		order = g.handleOrderFromFuturesOrderCancel(req, res)
 	case GATE_ACCOUNT_TYPE_DELIVERY:
+		if req.IsAlgo {
+			api := g.apiDeliveryPriceOrderCancel(req)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			return g.handleOrderFromDeliveryPriceOrderCancel(req, res), nil
+		}
 		api := g.apiDeliveryOrderCancel(req)
 		if api == nil {
 			return nil, ErrorSymbolNotFound

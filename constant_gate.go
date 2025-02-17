@@ -163,11 +163,11 @@ const (
 )
 
 const (
-	GATE_ORDER_SPOT_PRICE_STATUS_OPEN      = "open"      // 正在运行
-	GATE_ORDER_SPOT_PRICE_STATUS_CANCELLED = "cancelled" // 被取消
-	GATE_ORDER_SPOT_PRICE_STATUS_FINISHED  = "finish"    // 成功结束
-	GATE_ORDER_SPOT_PRICE_STATUS_FAILED    = "failed"    // 失败
-	GATE_ORDER_SPOT_PRICE_STATUS_EXPIRED   = "expired"   // 过期
+	GATE_ORDER_SPOT_PRICE_STATUS_OPEN     = "open"     // 正在运行
+	GATE_ORDER_SPOT_PRICE_STATUS_CANCELED = "canceled" // 被取消
+	GATE_ORDER_SPOT_PRICE_STATUS_FINISHED = "finish"   // 成功结束
+	GATE_ORDER_SPOT_PRICE_STATUS_FAILED   = "failed"   // 失败
+	GATE_ORDER_SPOT_PRICE_STATUS_EXPIRED  = "expired"  // 过期
 )
 
 const (
@@ -194,4 +194,23 @@ const (
 	GATE_ORDER_CONTRACT_FINISH_AS_IOC              = "ioc"
 	GATE_ORDER_CONTRACT_FINISH_AS_AUTO_DELEVERAGED = "auto_deleveraged"
 	GATE_ORDER_CONTRACT_FINISH_AS_REDUCE_ONLY      = "reduce_only"
+)
+
+const (
+	GATE_SPOT_PRICE_ORDER_TRIGGER_RULE_LTE = "<="
+	GATE_SPOT_PRICE_ORDER_TRIGGER_RULE_GTE = ">="
+)
+
+const (
+	GATE_FUTURES_PRICE_ORDER_TRIGGER_RULE_GTE = 1
+	GATE_FUTURES_PRICE_ORDER_TRIGGER_RULE_LTE = 2
+)
+
+const (
+	GATE_PRICE_ORDER_TYPE_CLOSE_LONG_ORDER          = "close-long-order"
+	GATE_PRICE_ORDER_TYPE_CLOSE_SHORT_ORDER         = "close-short-order"
+	GATE_PRICE_ORDER_TYPE_CLOSE_LONG_POSITION       = "close-long-position"
+	GATE_PRICE_ORDER_TYPE_CLOSE_SHORT_POSITION      = "close-short-position"
+	GATE_PRICE_ORDER_TYPE_PLAN_CLOSE_LONG_POSITION  = "plan-close-long-position"
+	GATE_PRICE_ORDER_TYPE_PLAN_CLOSE_SHORT_POSITION = "plan-close-short-position"
 )
