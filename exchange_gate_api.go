@@ -15,16 +15,10 @@ func (g *GateTradeEngine) apiSpotOrderCreate(req *OrderParam) *mygateapi.Private
 		CurrencyPair(req.Symbol).
 		Type(g.gateConverter.ToGateOrderType(req.OrderType)).
 		Side(g.gateConverter.ToGateOrderSide(req.OrderSide)).
-		Amount(req.Quantity)
+		Amount(req.Quantity).Price(req.Price)
 
 	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
 	api.Account(account.String())
-
-	if req.OrderType == ORDER_TYPE_LIMIT {
-		if !req.Price.IsZero() {
-			api.Price(req.Price)
-		}
-	}
 
 	// 自定义订单id
 	if req.ClientOrderId != "" {
@@ -34,6 +28,8 @@ func (g *GateTradeEngine) apiSpotOrderCreate(req *OrderParam) *mygateapi.Private
 	if req.TimeInForce != "" {
 		api.TimeInForce(g.gateConverter.ToGateTimeInForce(req.TimeInForce))
 	}
+	
+	
 
 	return api
 }
