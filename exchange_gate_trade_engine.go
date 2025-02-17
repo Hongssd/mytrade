@@ -153,11 +153,27 @@ func (g *GateTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
 	case GATE_ACCOUNT_TYPE_SPOT:
 		if req.IsAlgo {
 			api := g.apiSpotPriceOrdersQuery(req)
-			res, err := api.Do()
+			
+			var orders []*Order
+			var statuses []string = []string{GATE_ORDER_CONTRACT_STATUS_OPEN, GATE_ORDER_CONTRACT_STATUS_FINISHED}
+			// errGroup
+			errG, _ := errgroup.WithContext(context.Background())
+			for _, status := range statuses {
+				status := status
+				errG.Go(func() error {
+					api.Status(status)
+					res, err := api.Do()
+					if err != nil {
+						return err
+					}
+					orders = append(orders, g.handleOrdersFromSpotPriceOrdersQuery(req, res)...)
+					return nil
+				})
+			}
+			err := errG.Wait()
 			if err != nil {
 				return nil, err
 			}
-			return g.handleOrdersFromSpotPriceOrdersQuery(req, res), nil
 		}
 		api := g.apiSpotOrdersQuery(req)
 		res, err := api.Do()

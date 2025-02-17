@@ -605,6 +605,10 @@ func (g *GateTradeEngine) apiSpotPriceOrdersQuery(req *QueryOrderParam) *mygatea
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotPriceOrdersGet().
 		Account(g.gateConverter.ToGateSpotPriceOrderAccount(GateAccountType(req.AccountType)))
 
+	if req.Symbol != "" {
+		api.Market(req.Symbol)
+	}
+
 	if req.Limit != 0 {
 		api.Limit(req.Limit)
 	}
