@@ -46,6 +46,8 @@ type Order struct {
 	MarginBuyBorrowAmount string `json:"marginBuyBorrowAmount"` //下单后没有发生借款则不返回该字段（杠杆）
 	MarginBuyBorrowAsset  string `json:"marginBuyBorrowAsset"`  //下单后没有发生借款则不返回该字段（杠杆）
 
+	Expiration int64 `json:"expiration"` //Gate Price Order订单过期时间
+
 	ErrorCode string `json:"errorCode"` //错误码
 	ErrorMsg  string `json:"errorMsg"`  //错误信息
 }

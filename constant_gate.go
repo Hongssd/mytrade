@@ -162,6 +162,20 @@ const (
 	GATE_ORDER_CONTRACT_STATUS_FINISHED = "finished"
 )
 
+const (
+	GATE_ORDER_SPOT_PRICE_STATUS_OPEN     = "open"     // 正在运行
+	GATE_ORDER_SPOT_PRICE_STATUS_CANCELED = "canceled" // 被取消
+	GATE_ORDER_SPOT_PRICE_STATUS_FINISHED = "finish"   // 成功结束
+	GATE_ORDER_SPOT_PRICE_STATUS_FAILED   = "failed"   // 失败
+	GATE_ORDER_SPOT_PRICE_STATUS_EXPIRED  = "expired"  // 过期
+)
+
+const (
+	GATE_SPOT_PRICE_ORDER_ACCOUNT_NORMAL         = "normal"       // 现货交易
+	GATE_SPOT_PRICE_ORDER_ACCOUNT_MARGIN         = "margin"       // 杠杆交易
+	GATE_SPOT_PRICE_ORDER_ACCOUNT_CROSSED_MARGIN = "cross_margin" // 全仓杠杆交易
+)
+
 // gate合约订单
 // 结束方式，包括：
 // - filled: 完全成交
@@ -180,4 +194,23 @@ const (
 	GATE_ORDER_CONTRACT_FINISH_AS_IOC              = "ioc"
 	GATE_ORDER_CONTRACT_FINISH_AS_AUTO_DELEVERAGED = "auto_deleveraged"
 	GATE_ORDER_CONTRACT_FINISH_AS_REDUCE_ONLY      = "reduce_only"
+)
+
+const (
+	GATE_SPOT_PRICE_ORDER_TRIGGER_RULE_LTE = "<="
+	GATE_SPOT_PRICE_ORDER_TRIGGER_RULE_GTE = ">="
+)
+
+const (
+	GATE_FUTURES_PRICE_ORDER_TRIGGER_RULE_GTE = 1
+	GATE_FUTURES_PRICE_ORDER_TRIGGER_RULE_LTE = 2
+)
+
+const (
+	GATE_PRICE_ORDER_TYPE_CLOSE_LONG_ORDER          = "close-long-order"
+	GATE_PRICE_ORDER_TYPE_CLOSE_SHORT_ORDER         = "close-short-order"
+	GATE_PRICE_ORDER_TYPE_CLOSE_LONG_POSITION       = "close-long-position"
+	GATE_PRICE_ORDER_TYPE_CLOSE_SHORT_POSITION      = "close-short-position"
+	GATE_PRICE_ORDER_TYPE_PLAN_CLOSE_LONG_POSITION  = "plan-close-long-position"
+	GATE_PRICE_ORDER_TYPE_PLAN_CLOSE_SHORT_POSITION = "plan-close-short-position"
 )

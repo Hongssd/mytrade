@@ -44,6 +44,12 @@ type Param struct {
 	OcoSlTriggerPx decimal.Decimal //止损触发价
 	OcoSlOrdPx     decimal.Decimal //止损委托价
 	OcoSlOrdType   OrderType       //止损委托类型
+
+	// Gate
+	Expiration         int    //Price Order过期时间, 0为不过期
+	Close              bool   //设置为true的时候执行平仓操作
+	GatePriceOrderType string //Price Order类型
+	GateAutoSize       string //双仓模式下用于设置平仓的方向，close_long 平多头， close_short 平空头，需要同时设置 size 为 0
 }
 
 type OrderParam Param
