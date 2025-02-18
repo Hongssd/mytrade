@@ -253,7 +253,12 @@ func (e *GateExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Tra
 }
 
 func (e *GateExchangeInfo) GetAllSymbolInfo(accountType string) ([]TradeSymbolInfo, error) {
-
+	if !e.isLoaded {
+		err := e.Refresh()
+		if err != nil {
+			return nil, err
+		}
+	}
 	var symbolInfoList []TradeSymbolInfo
 	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_SPOT:

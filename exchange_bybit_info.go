@@ -244,7 +244,12 @@ func (b *BybitExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Tr
 }
 
 func (b *BybitExchangeInfo) GetAllSymbolInfo(accountType string) ([]TradeSymbolInfo, error) {
-
+	if !b.isLoaded {
+		err := b.Refresh()
+		if err != nil {
+			return nil, err
+		}
+	}
 	var symbolInfoList []TradeSymbolInfo
 	switch BybitAccountType(accountType) {
 	case BYBIT_AC_SPOT:

@@ -167,7 +167,12 @@ func (e *OkxExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Trad
 }
 
 func (e *OkxExchangeInfo) GetAllSymbolInfo(accountType string) ([]TradeSymbolInfo, error) {
-
+	if !e.isLoaded {
+		err := e.Refresh()
+		if err != nil {
+			return nil, err
+		}
+	}
 	var symbolInfoList []TradeSymbolInfo
 	switch OkxAccountType(accountType) {
 	case OKX_AC_SPOT:

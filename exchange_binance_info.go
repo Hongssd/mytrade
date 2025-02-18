@@ -1,8 +1,9 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mybinanceapi"
 	"strconv"
+
+	"github.com/Hongssd/mybinanceapi"
 )
 
 type BinanceExchangeInfo struct {
@@ -209,6 +210,13 @@ func (b *BinanceExchangeInfo) GetSymbolInfo(accountType string, symbol string) (
 }
 
 func (b *BinanceExchangeInfo) GetAllSymbolInfo(accountType string) ([]TradeSymbolInfo, error) {
+
+	if !b.isLoaded {
+		err := b.Refresh()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	var symbolInfoList []TradeSymbolInfo
 
