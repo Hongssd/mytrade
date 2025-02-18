@@ -37,13 +37,12 @@ func (g *GateTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *m
 	}
 }
 func (g *GateTradeEngine) handleOrderFromSpotPriceOrderCreate(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotPriceOrdersPostRes]) *Order {
-	accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotPriceAccountType(req.AccountType)
 	return &Order{
 		Exchange:             g.ExchangeType().String(),
-		AccountType:          accountType.String(),
+		AccountType:          req.AccountType,
 		Symbol:               req.Symbol,
-		IsMargin:             isMargin,
-		IsIsolated:           isIsolated,
+		IsMargin:             req.IsMargin,
+		IsIsolated:           req.IsIsolated,
 		OrderId:              strconv.FormatInt(res.Data.ID, 10),
 		ClientOrderId:        req.ClientOrderId,
 		Price:                req.Price.String(),
@@ -51,7 +50,7 @@ func (g *GateTradeEngine) handleOrderFromSpotPriceOrderCreate(req *OrderParam, r
 		ExecutedQty:          "",
 		CumQuoteQty:          "",
 		AvgPrice:             "",
-		Status:               "",
+		Status:               ORDER_STATUS_UN_TRIGGERED,
 		Type:                 req.OrderType,
 		Side:                 req.OrderSide,
 		TimeInForce:          req.TimeInForce,
@@ -441,7 +440,7 @@ func (g *GateTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res *m
 }
 func (g *GateTradeEngine) handleOrderFromSpotPriceOrderCancel(req *OrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestSpotPriceOrdersOrderIdDeleteRes]) *Order {
 	accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotPriceAccountType(res.Data.Put.Account)
-
+	amt, _ := decimal.NewFromString(res.Data.Put.Amount)
 	return &Order{
 		Exchange:             g.ExchangeType().String(),
 		AccountType:          accountType.String(),
@@ -451,10 +450,10 @@ func (g *GateTradeEngine) handleOrderFromSpotPriceOrderCancel(req *OrderParam, r
 		OrderId:              strconv.FormatInt(res.Data.ID, 10),
 		ClientOrderId:        "",
 		Price:                res.Data.Put.Price,
-		Quantity:             res.Data.Put.Amount,
+		Quantity:             amt.String(),
 		ExecutedQty:          "",
 		CumQuoteQty:          "",
-		AvgPrice:             res.Data.Put.Price,
+		AvgPrice:             "",
 		Status:               g.gateConverter.FromGateSpotPriceOrderStatus(res.Data.Status),
 		Type:                 OrderType(g.gateConverter.FromGateOrderType(res.Data.Put.Type)),
 		Side:                 OrderSide(g.gateConverter.FromGateOrderSide(res.Data.Put.Side)),
@@ -469,6 +468,7 @@ func (g *GateTradeEngine) handleOrderFromSpotPriceOrderCancel(req *OrderParam, r
 		AttachTpTriggerPrice: "",
 		AttachTpOrdPrice:     "",
 		AttachSlTriggerPrice: "",
+		IsAlgo:               true,
 		TriggerPrice:         res.Data.Trigger.Price,
 		TriggerType:          g.gateConverter.FromGateSpotPriceOrderTriggerRule(res.Data.Trigger.Rule, OrderSide(g.gateConverter.FromGateOrderSide(res.Data.Put.Side))),
 		TriggerConditionType: "",
@@ -765,6 +765,11 @@ func (g *GateTradeEngine) handleOrdersFromSpotPriceOpenOrders(req *QueryOrderPar
 	var orders []*Order
 	for _, order := range res.Data {
 		accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotPriceAccountType(order.Put.Account)
+		updateTime := decimal.NewFromInt(order.Ftime)
+		if updateTime.IsZero() {
+			updateTime = decimal.NewFromInt(order.Ctime)
+		}
+		amt, _ := decimal.NewFromString(order.Put.Amount)
 		orders = append(orders, &Order{
 			Exchange:             g.ExchangeType().String(),
 			AccountType:          accountType.String(),
@@ -774,10 +779,10 @@ func (g *GateTradeEngine) handleOrdersFromSpotPriceOpenOrders(req *QueryOrderPar
 			OrderId:              strconv.FormatInt(order.ID, 10),
 			ClientOrderId:        "",
 			Price:                order.Put.Price,
-			Quantity:             order.Put.Amount,
+			Quantity:             amt.String(),
 			ExecutedQty:          "",
 			CumQuoteQty:          "",
-			AvgPrice:             order.Put.Price,
+			AvgPrice:             "",
 			Status:               g.gateConverter.FromGateSpotPriceOrderStatus(order.Status),
 			Type:                 OrderType(g.gateConverter.FromGateOrderType(order.Put.Type)),
 			Side:                 OrderSide(g.gateConverter.FromGateOrderSide(order.Put.Side)),
@@ -787,11 +792,12 @@ func (g *GateTradeEngine) handleOrdersFromSpotPriceOpenOrders(req *QueryOrderPar
 			FeeCcy:               "",
 			ReduceOnly:           false,
 			CreateTime:           decimal.NewFromInt(order.Ctime).Mul(gateTimeMul).IntPart(),
-			UpdateTime:           decimal.NewFromInt(order.Ftime).Mul(gateTimeMul).IntPart(),
+			UpdateTime:           updateTime.Mul(gateTimeMul).IntPart(),
 			RealizedPnl:          "",
 			AttachTpTriggerPrice: "",
 			AttachTpOrdPrice:     "",
 			AttachSlTriggerPrice: "",
+			IsAlgo:               true,
 			TriggerPrice:         order.Trigger.Price,
 			TriggerType:          g.gateConverter.FromGateSpotPriceOrderTriggerRule(order.Trigger.Rule, OrderSide(g.gateConverter.FromGateOrderSide(order.Put.Side))),
 			TriggerConditionType: "",
@@ -1469,6 +1475,12 @@ func (g *GateTradeEngine) handleOrdersFromSpotPriceOrdersQuery(req *QueryOrderPa
 	var orders []*Order
 	for _, order := range res.Data {
 		accountType, isMargin, isIsolated := g.gateConverter.FromOrderSpotAccountType(GateAccountType(order.Put.Account))
+
+		updateTime := decimal.NewFromInt(order.Ftime)
+		if updateTime.IsZero() {
+			updateTime = decimal.NewFromInt(order.Ctime)
+		}
+		amt, _ := decimal.NewFromString(order.Put.Amount)
 		orders = append(orders, &Order{
 			Exchange:              g.ExchangeType().String(),
 			AccountType:           accountType.String(),
@@ -1478,10 +1490,10 @@ func (g *GateTradeEngine) handleOrdersFromSpotPriceOrdersQuery(req *QueryOrderPa
 			OrderId:               strconv.FormatInt(order.ID, 10),
 			ClientOrderId:         "",
 			Price:                 order.Put.Price,
-			Quantity:              order.Put.Amount,
+			Quantity:              amt.String(),
 			ExecutedQty:           "",
 			CumQuoteQty:           "",
-			AvgPrice:              order.Put.Price,
+			AvgPrice:              "",
 			Status:                g.gateConverter.FromGateSpotPriceOrderStatus(order.Status),
 			Type:                  OrderType(g.gateConverter.FromGateOrderType(order.Put.Type)),
 			Side:                  OrderSide(g.gateConverter.FromGateOrderSide(order.Put.Side)),
@@ -1491,11 +1503,12 @@ func (g *GateTradeEngine) handleOrdersFromSpotPriceOrdersQuery(req *QueryOrderPa
 			FeeCcy:                "",
 			ReduceOnly:            false,
 			CreateTime:            decimal.NewFromInt(order.Ctime).Mul(gateTimeMul).IntPart(),
-			UpdateTime:            decimal.NewFromInt(order.Ftime).Mul(gateTimeMul).IntPart(),
+			UpdateTime:            updateTime.Mul(gateTimeMul).IntPart(),
 			RealizedPnl:           "",
 			AttachTpTriggerPrice:  "",
 			AttachTpOrdPrice:      "",
 			AttachSlTriggerPrice:  "",
+			IsAlgo:                true,
 			TriggerPrice:          order.Trigger.Price,
 			TriggerType:           g.gateConverter.FromGateSpotPriceOrderTriggerRule(order.Trigger.Rule, OrderSide(g.gateConverter.FromGateOrderSide(order.Put.Side))),
 			TriggerConditionType:  "",

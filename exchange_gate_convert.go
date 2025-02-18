@@ -339,11 +339,11 @@ func (c *GateEnumConverter) FromGateSpotPriceOrderTriggerRule(rule string, s Ord
 func (c *GateEnumConverter) FromGateSpotPriceOrderStatus(t string) OrderStatus {
 	switch t {
 	case GATE_ORDER_SPOT_PRICE_STATUS_OPEN:
-		return ORDER_STATUS_NEW
+		return ORDER_STATUS_UN_TRIGGERED
 	case GATE_ORDER_SPOT_PRICE_STATUS_CANCELED:
 		return ORDER_STATUS_CANCELED
 	case GATE_ORDER_SPOT_PRICE_STATUS_FINISHED:
-		return ORDER_STATUS_FILLED
+		return ORDER_STATUS_TRIGGERED
 	case GATE_ORDER_SPOT_PRICE_STATUS_FAILED:
 		return ORDER_STATUS_CANCELED
 	case GATE_ORDER_SPOT_PRICE_STATUS_EXPIRED:
