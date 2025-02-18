@@ -28,8 +28,6 @@ func (g *GateTradeEngine) apiSpotOrderCreate(req *OrderParam) *mygateapi.Private
 	if req.TimeInForce != "" {
 		api.TimeInForce(g.gateConverter.ToGateTimeInForce(req.TimeInForce))
 	}
-	
-	
 
 	return api
 }
@@ -58,8 +56,9 @@ func (g *GateTradeEngine) apiSpotPriceOrderCreate(req *OrderParam) *mygateapi.Pr
 	if req.ClientOrderId != "" {
 		text = req.ClientOrderId
 	}
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
 	api.Put(mygateapi.PrivateRestSpotPriceOrdersPostPutReq{
-		Account:     GetPointer(g.gateConverter.ToGateSpotPriceOrderAccount(GateAccountType(req.AccountType))),
+		Account:     GetPointer(account.String()),
 		Type:        GetPointer(g.gateConverter.ToGateOrderType(req.OrderType)),
 		Side:        GetPointer(g.gateConverter.ToGateOrderSide(req.OrderSide)),
 		Amount:      GetPointer(req.Quantity.String()),

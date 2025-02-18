@@ -153,7 +153,7 @@ func (g *GateTradeEngine) QueryOrders(req *QueryOrderParam) ([]*Order, error) {
 	case GATE_ACCOUNT_TYPE_SPOT:
 		if req.IsAlgo {
 			api := g.apiSpotPriceOrdersQuery(req)
-			
+
 			var orders []*Order
 			var statuses []string = []string{GATE_ORDER_CONTRACT_STATUS_OPEN, GATE_ORDER_CONTRACT_STATUS_FINISHED}
 			// errGroup
