@@ -395,8 +395,8 @@ func (g *GateTradeEngine) apiSpotOpenOrders(req *QueryOrderParam) *mygateapi.Pri
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().
 		NewPrivateRestSpotOpenOrders()
 
-	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
-	if account != GATE_ACCOUNT_TYPE_SPOT {
+	if req.AccountType != "" {
+		account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
 		api.Account(account.String())
 	}
 
@@ -410,8 +410,10 @@ func (g *GateTradeEngine) apiSpotPriceOpenOrders(req *QueryOrderParam) *mygateap
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotPriceOrdersGet().
 		Status(GATE_ORDER_SPOT_PRICE_STATUS_OPEN)
 
-	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
-	api.Account(g.gateConverter.ToGateSpotPriceOrderAccount(account))
+	if req.AccountType != "" {
+		account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+		api.Account(g.gateConverter.ToGateSpotPriceOrderAccount(account))
+	}
 
 	if req.Symbol != "" {
 		api.Market(req.Symbol)
@@ -583,8 +585,10 @@ func (g *GateTradeEngine) apiSpotOrdersQuery(req *QueryOrderParam) *mygateapi.Pr
 
 	api.Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
 
-	// account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
-	// api.Account("unified")
+	if req.AccountType != "" {
+		account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+		api.Account(account.String())
+	}
 
 	if req.Symbol != "" {
 		api.CurrencyPair(req.Symbol)
@@ -602,8 +606,10 @@ func (g *GateTradeEngine) apiSpotPriceOrdersQuery(req *QueryOrderParam) *mygatea
 		NewPrivateRestSpotPriceOrdersGet().
 		Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
 
-	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
-	api.Account(g.gateConverter.ToGateSpotPriceOrderAccount(account))
+	if req.AccountType != "" {
+		account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+		api.Account(g.gateConverter.ToGateSpotPriceOrderAccount(account))
+	}
 
 	if req.Symbol != "" {
 		api.Market(req.Symbol)
