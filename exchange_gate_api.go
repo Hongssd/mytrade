@@ -395,8 +395,8 @@ func (g *GateTradeEngine) apiSpotOpenOrders(req *QueryOrderParam) *mygateapi.Pri
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().
 		NewPrivateRestSpotOpenOrders()
 
-	if req.AccountType != "" {
-		account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	if account != GATE_ACCOUNT_TYPE_SPOT {
 		api.Account(account.String())
 	}
 
@@ -410,8 +410,8 @@ func (g *GateTradeEngine) apiSpotPriceOpenOrders(req *QueryOrderParam) *mygateap
 	api := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestSpotPriceOrdersGet().
 		Status(GATE_ORDER_SPOT_PRICE_STATUS_OPEN)
 
-	if req.AccountType != "" {
-		account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	if account != GATE_ACCOUNT_TYPE_SPOT {
 		api.Account(g.gateConverter.ToGateSpotPriceOrderAccount(account))
 	}
 
@@ -585,8 +585,8 @@ func (g *GateTradeEngine) apiSpotOrdersQuery(req *QueryOrderParam) *mygateapi.Pr
 
 	api.Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
 
-	if req.AccountType != "" {
-		account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	if account != GATE_ACCOUNT_TYPE_SPOT {
 		api.Account(account.String())
 	}
 
@@ -606,8 +606,8 @@ func (g *GateTradeEngine) apiSpotPriceOrdersQuery(req *QueryOrderParam) *mygatea
 		NewPrivateRestSpotPriceOrdersGet().
 		Status(GATE_ORDER_CONTRACT_STATUS_FINISHED)
 
-	if req.AccountType != "" {
-		account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	account := g.gateConverter.ToOrderSpotAccountType(GateAccountType(req.AccountType), req.IsMargin, req.IsIsolated)
+	if account != GATE_ACCOUNT_TYPE_SPOT {
 		api.Account(g.gateConverter.ToGateSpotPriceOrderAccount(account))
 	}
 
