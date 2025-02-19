@@ -152,16 +152,20 @@ func (c *GateEnumConverter) FromGateFuturesPriceOrderTriggerRule(t int64, s Orde
 	case GATE_FUTURES_PRICE_ORDER_TRIGGER_RULE_GTE:
 		switch s {
 		case ORDER_SIDE_BUY:
-			return ORDER_TRIGGER_TYPE_TAKE_PROFIT
-		case ORDER_SIDE_SELL:
+			//价格上穿时买入，止损
 			return ORDER_TRIGGER_TYPE_STOP_LOSS
+		case ORDER_SIDE_SELL:
+			//价格上穿时卖出，止盈
+			return ORDER_TRIGGER_TYPE_TAKE_PROFIT
 		}
 	case GATE_FUTURES_PRICE_ORDER_TRIGGER_RULE_LTE:
 		switch s {
 		case ORDER_SIDE_BUY:
-			return ORDER_TRIGGER_TYPE_STOP_LOSS
-		case ORDER_SIDE_SELL:
+			//价格下穿时买入，止盈
 			return ORDER_TRIGGER_TYPE_TAKE_PROFIT
+		case ORDER_SIDE_SELL:
+			//价格下穿时卖出，止损
+			return ORDER_TRIGGER_TYPE_STOP_LOSS
 		}
 	}
 	return ORDER_TRIGGER_TYPE_UNKNOWN
@@ -351,6 +355,24 @@ func (c *GateEnumConverter) FromGateSpotPriceOrderStatus(t string) OrderStatus {
 	}
 	return ORDER_STATUS_UNKNOWN
 }
+func (c *GateEnumConverter) FromGateContractPriceOrderStatus(t string, fas string) OrderStatus {
+	switch t {
+	case GATE_ORDER_FUTURES_PRICE_STATUS_OPEN, GATE_ORDER_FUTURES_PRICE_STATUS_INACTIVE:
+		return ORDER_STATUS_UN_TRIGGERED
+	case GATE_ORDER_FUTURES_PRICE_STATUS_FINISHED:
+		switch fas {
+		case GATE_ORDER_FUTURES_PRICE_FINISH_AS_CANCELLED,
+			GATE_ORDER_FUTURES_PRICE_FINISH_AS_FAILED,
+			GATE_ORDER_FUTURES_PRICE_FINISH_AS_EXPIRED:
+			return ORDER_STATUS_CANCELED
+		case GATE_ORDER_FUTURES_PRICE_FINISH_AS_SUCCEEDED:
+			return ORDER_STATUS_TRIGGERED
+		}
+	case GATE_ORDER_FUTURES_PRICE_STATUS_INVALID:
+		return ORDER_STATUS_REJECTED
+	}
+	return ORDER_STATUS_UNKNOWN
+}
 
 func (c *GateEnumConverter) ToGateSpotPriceOrderAccount(t GateAccountType) string {
 	switch t {
@@ -360,6 +382,41 @@ func (c *GateEnumConverter) ToGateSpotPriceOrderAccount(t GateAccountType) strin
 		return GATE_SPOT_PRICE_ORDER_ACCOUNT_MARGIN
 	case GATE_ACCOUNT_TYPE_CROSS_MARGIN:
 		return GATE_SPOT_PRICE_ORDER_ACCOUNT_CROSSED_MARGIN
+	}
+	return ""
+}
+func (c *GateEnumConverter) FromGateSpotPriceOrderAccount(t string) (GateAccountType, bool, bool) {
+	switch t {
+	case GATE_SPOT_PRICE_ORDER_ACCOUNT_NORMAL:
+		return GATE_ACCOUNT_TYPE_SPOT, false, false
+	case GATE_SPOT_PRICE_ORDER_ACCOUNT_MARGIN:
+		return GATE_ACCOUNT_TYPE_SPOT, true, true
+	case GATE_SPOT_PRICE_ORDER_ACCOUNT_CROSSED_MARGIN:
+		return GATE_ACCOUNT_TYPE_SPOT, true, false
+	}
+	return GATE_ACCOUNT_TYPE_UNKNOWN, false, false
+}
+
+func (c *GateEnumConverter) FromGateTriggerCondition(OrderSide OrderSide, triggerType OrderTriggerType) OrderTriggerConditionType {
+	switch OrderSide {
+	case ORDER_SIDE_BUY:
+		switch triggerType {
+		case ORDER_TRIGGER_TYPE_STOP_LOSS:
+			//止损买入时高价 价格上穿触发
+			return ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+		case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+			//止盈买入时低价 价格下穿触发
+			return ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+		}
+	case ORDER_SIDE_SELL:
+		switch triggerType {
+		case ORDER_TRIGGER_TYPE_STOP_LOSS:
+			//止损卖出时低价 价格下穿触发
+			return ORDER_TRIGGER_CONDITION_TYPE_THROUGH_DOWN
+		case ORDER_TRIGGER_TYPE_TAKE_PROFIT:
+			//止盈卖出时高价 价格上穿触发
+			return ORDER_TRIGGER_CONDITION_TYPE_THROUGH_UP
+		}
 	}
 	return ""
 }

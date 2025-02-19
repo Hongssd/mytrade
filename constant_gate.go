@@ -171,6 +171,21 @@ const (
 )
 
 const (
+	GATE_ORDER_FUTURES_PRICE_STATUS_OPEN     = "open"     // 活跃中
+	GATE_ORDER_FUTURES_PRICE_STATUS_FINISHED = "finished" // 已结束
+	GATE_ORDER_FUTURES_PRICE_STATUS_INACTIVE = "inactive" // 未生效
+	GATE_ORDER_FUTURES_PRICE_STATUS_INVALID  = "invalid"  // 无效
+)
+
+// 结束状态，cancelled - 被取消；succeeded - 成功；failed - 失败；expired - 过期
+const (
+	GATE_ORDER_FUTURES_PRICE_FINISH_AS_CANCELLED = "cancelled" // 被取消
+	GATE_ORDER_FUTURES_PRICE_FINISH_AS_SUCCEEDED = "succeeded" // 成功
+	GATE_ORDER_FUTURES_PRICE_FINISH_AS_FAILED    = "failed"    // 失败
+	GATE_ORDER_FUTURES_PRICE_FINISH_AS_EXPIRED   = "expired"   // 过期
+)
+
+const (
 	GATE_SPOT_PRICE_ORDER_ACCOUNT_NORMAL         = "normal"       // 现货交易
 	GATE_SPOT_PRICE_ORDER_ACCOUNT_MARGIN         = "margin"       // 杠杆交易
 	GATE_SPOT_PRICE_ORDER_ACCOUNT_CROSSED_MARGIN = "cross_margin" // 全仓杠杆交易
