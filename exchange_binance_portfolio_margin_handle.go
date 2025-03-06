@@ -1,10 +1,11 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mybinanceapi"
-	"github.com/shopspring/decimal"
 	"strconv"
 	"time"
+
+	"github.com/Hongssd/mybinanceapi"
+	"github.com/shopspring/decimal"
 )
 
 // UM
@@ -26,6 +27,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderCreate(req *OrderParam,
 		Type:          b.bnConverter.FromBNOrderType(order.Type),
 		Side:          b.bnConverter.FromBNOrderSide(order.Side),
 		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 		CreateTime:    order.UpdateTime,
 		UpdateTime:    order.UpdateTime,
 
@@ -52,6 +54,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderAmend(req *OrderParam, 
 		Type:          b.bnConverter.FromBNOrderType(order.Type),
 		Side:          b.bnConverter.FromBNOrderSide(order.Side),
 		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 		CreateTime:    order.UpdateTime,
 		UpdateTime:    order.UpdateTime,
 
@@ -78,6 +81,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderCancel(req *OrderParam,
 		Type:          b.bnConverter.FromBNOrderType(order.Type),
 		Side:          b.bnConverter.FromBNOrderSide(order.Side),
 		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 		CreateTime:    order.UpdateTime,
 		UpdateTime:    order.UpdateTime,
 
@@ -107,6 +111,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginUmOpenOrders(req *QueryOrderPa
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
 			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 			CreateTime:    order.Time,
 			UpdateTime:    order.UpdateTime,
 
@@ -135,6 +140,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderQuery(req *QueryOrderPa
 		Type:          b.bnConverter.FromBNOrderType(order.Type),
 		Side:          b.bnConverter.FromBNOrderSide(order.Side),
 		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 		CreateTime:    order.UpdateTime,
 		UpdateTime:    order.UpdateTime,
 
@@ -163,6 +169,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginUmOrdersQuery(req *QueryOrderP
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
 			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 			CreateTime:    order.UpdateTime,
 			UpdateTime:    order.UpdateTime,
 
@@ -216,6 +223,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderCreate(req *OrderParam,
 		Type:          b.bnConverter.FromBNOrderType(order.Type),
 		Side:          b.bnConverter.FromBNOrderSide(order.Side),
 		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 		CreateTime:    order.UpdateTime,
 		UpdateTime:    order.UpdateTime,
 
@@ -242,6 +250,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderAmend(req *OrderParam, 
 		Type:          b.bnConverter.FromBNOrderType(order.Type),
 		Side:          b.bnConverter.FromBNOrderSide(order.Side),
 		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 		CreateTime:    order.UpdateTime,
 		UpdateTime:    order.UpdateTime,
 
@@ -268,6 +277,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderCancel(req *OrderParam,
 		Type:          b.bnConverter.FromBNOrderType(order.Type),
 		Side:          b.bnConverter.FromBNOrderSide(order.Side),
 		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 		CreateTime:    order.UpdateTime,
 		UpdateTime:    order.UpdateTime,
 
@@ -298,6 +308,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOpenOrders(req *QueryOrderPa
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
 			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 			CreateTime:    order.UpdateTime,
 			UpdateTime:    order.UpdateTime,
 
@@ -327,6 +338,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderQuery(req *QueryOrderPa
 		Type:          b.bnConverter.FromBNOrderType(order.Type),
 		Side:          b.bnConverter.FromBNOrderSide(order.Side),
 		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+		PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 		CreateTime:    order.UpdateTime,
 		UpdateTime:    order.UpdateTime,
 
@@ -356,6 +368,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrdersQuery(req *QueryOrderP
 			Type:          b.bnConverter.FromBNOrderType(order.Type),
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
 			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
+			PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
 			CreateTime:    order.UpdateTime,
 			UpdateTime:    order.UpdateTime,
 
