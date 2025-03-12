@@ -130,7 +130,7 @@ func (o OkxTradeAccount) SetPositionMode(accountType, symbol string, mode Positi
 	return nil
 }
 
-func (o OkxTradeAccount) SetLeverage(accountType, symbol string, marginMode MarginMode,  positionSide PositionSide, leverage decimal.Decimal) error {
+func (o OkxTradeAccount) SetLeverage(accountType, symbol string, marginMode MarginMode, positionSide PositionSide, leverage decimal.Decimal) error {
 
 	api := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().
 		NewPrivateRestAccountSetLeverage().InstId(symbol).
@@ -287,25 +287,27 @@ func (o OkxTradeAccount) GetAssets(accountType string, currencies ...string) ([]
 				frozenBal, _ := decimal.NewFromString(d.FrozenBal)  //仓位占用保证金+挂单冻结保证金
 				//仓位维持保证金= d.FrozenBal - d.OrdFrozen
 				MaintMargin := frozenBal.Sub(ordFronzen)
+				marginBalance := decimal.RequireFromString(d.AvailEq).Add(decimal.RequireFromString(d.Upl))
+				availableBalance := decimal.RequireFromString(d.CashBal).Sub(frozenBal)
 				assets = append(assets, &Asset{
 					Exchange:               o.ExchangeType().String(),
 					AccountType:            accountType,
 					Asset:                  d.Ccy,
 					Free:                   d.AvailBal,
 					Locked:                 d.OrdFrozen,
-					Borrowed:               d.Liab,               //币种负债额 值为正数，如 21625.64 适用于跨币种保证金模式/组合保证金模式
-					Interest:               d.Interest,           //计息，应扣未扣利息 值为正数，如 9.01 适用于跨币种保证金模式/组合保证金模式
-					WalletBalance:          d.CashBal,            //钱包余额=币种余额
-					UnrealizedProfit:       d.Upl,                //未实现盈亏
-					MarginBalance:          d.Eq,                 //保证金余额=钱包余额+未实现盈亏
-					MaintMargin:            MaintMargin.String(), //维持保证金=仓位占用保证金
-					InitialMargin:          d.FrozenBal,          //当前所需起始保证金=仓位占用保证金+挂单冻结保证金
-					PositionInitialMargin:  MaintMargin.String(), //持仓所需起始保证金=仓位占用保证金
-					OpenOrderInitialMargin: d.OrdFrozen,          //挂单所需起始保证金
-					CrossWalletBalance:     d.CashBal,            //全仓账户余额
-					CrossUnPnl:             d.Upl,                //全仓持仓未实现盈亏
-					AvailableBalance:       d.AvailEq,            //可用余额=钱包余额
-					MaxWithdrawAmount:      d.AvailBal,           //最大可转出余额=币种余额
+					Borrowed:               d.Liab,                    //币种负债额 值为正数，如 21625.64 适用于跨币种保证金模式/组合保证金模式
+					Interest:               d.Interest,                //计息，应扣未扣利息 值为正数，如 9.01 适用于跨币种保证金模式/组合保证金模式
+					WalletBalance:          d.CashBal,                 //可用余额=钱包余额
+					UnrealizedProfit:       d.Upl,                     //未实现盈亏
+					MarginBalance:          marginBalance.String(),    //保证金余额=钱包余额+未实现盈亏
+					MaintMargin:            MaintMargin.String(),      //维持保证金=仓位占用保证金
+					InitialMargin:          d.FrozenBal,               //当前所需起始保证金=仓位占用保证金+挂单冻结保证金
+					PositionInitialMargin:  MaintMargin.String(),      //持仓所需起始保证金=仓位占用保证金
+					OpenOrderInitialMargin: d.OrdFrozen,               //挂单所需起始保证金
+					CrossWalletBalance:     d.CashBal,                 //全仓账户余额
+					CrossUnPnl:             d.Upl,                     //全仓持仓未实现盈亏
+					AvailableBalance:       availableBalance.String(), //可用余额=钱包余额
+					MaxWithdrawAmount:      d.AvailBal,                //最大可转出余额=币种余额
 					MarginAvailable:        true,
 					UpdateTime:             updateTime,
 				})
