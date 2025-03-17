@@ -120,14 +120,14 @@ func (e *GateExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Tra
 		tickSize = getSizeFromPrecision(v.Precision)
 		amtPrecision = v.AmountPrecision
 		lotSize = getSizeFromPrecision(v.AmountPrecision)
-		if v.MinBaseAmount != "null" {
+		if v.MinBaseAmount != "null" && v.MinBaseAmount != "" {
 			minAmt = v.MinBaseAmount
 		}
-		if v.MinQuoteAmount != "null" {
+		if v.MinQuoteAmount != "null" && v.MinQuoteAmount != "" {
 			minNotional = v.MinQuoteAmount
 		}
 
-		if v.MaxBaseAmount != "null" {
+		if v.MaxBaseAmount != "null" && v.MaxBaseAmount != "" {
 			maxMktAmt = v.MaxBaseAmount
 			maxLmtAmt = v.MaxBaseAmount
 		}
