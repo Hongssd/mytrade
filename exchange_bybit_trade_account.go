@@ -374,6 +374,29 @@ func (b BybitTradeAccount) GetAssets(accountType string, currencies ...string) (
 		if err != nil {
 			return nil, err
 		}
+
+		availableWithdrawalMap := map[string]string{}
+
+		CoinList := []string{}
+		for _, a := range res.Result.List[0].Coin {
+			CoinList = append(CoinList, a.Coin)
+		}
+		//每20个币种查询一次可划转余额，若不足20个币种，则查询所有币种
+		for i := 0; i < len(CoinList); i += 20 {
+			if i+20 > len(CoinList) {
+				CoinList = CoinList[i:]
+			} else {
+				CoinList = CoinList[i : i+20]
+			}
+			r, err := mybybitapi.NewRestClient(b.apiKey, b.secretKey).PrivateRestClient().NewAccountWithdrawal().CoinName(strings.Join(CoinList, ",")).Do()
+			if err != nil {
+				return nil, err
+			}
+			for coin, amount := range r.Result.AvailableWithdrawalMap {
+				availableWithdrawalMap[coin] = amount
+			}
+		}
+
 		for _, a := range res.Result.List[0].Coin {
 
 			tpIm, _ := decimal.NewFromString(a.TotalPositionIM)
@@ -383,6 +406,12 @@ func (b BybitTradeAccount) GetAssets(accountType string, currencies ...string) (
 			eq, _ := decimal.NewFromString(a.Equity)
 			lock, _ := decimal.NewFromString(a.Locked)
 			avb := eq.Sub(lock)
+
+			availableWithdrawal, ok := availableWithdrawalMap[a.Coin]
+			if !ok {
+				availableWithdrawal = "0"
+			}
+
 			asset := &Asset{
 				Exchange:               b.ExchangeType().String(),
 				AccountType:            accountType,
@@ -401,7 +430,7 @@ func (b BybitTradeAccount) GetAssets(accountType string, currencies ...string) (
 				CrossWalletBalance:     a.WalletBalance,
 				CrossUnPnl:             a.UnrealisedPnl,
 				AvailableBalance:       avb.String(),
-				MaxWithdrawAmount:      a.AvailableToWithdraw,
+				MaxWithdrawAmount:      availableWithdrawal,
 				MarginAvailable:        false,
 				UpdateTime:             res.Time,
 			}
