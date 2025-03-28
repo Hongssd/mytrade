@@ -560,6 +560,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOpenOrders(req *QueryOrderParam
 		symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, order.Contract)
 		if err != nil {
 			log.Error(err)
+			continue
 		}
 		cumQuoteQty := executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
 
@@ -711,6 +712,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderQuery(req *QueryOrderParam,
 	symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, res.Data.Contract)
 	if err != nil {
 		log.Error(err)
+		return nil
 	}
 	cumQuoteQty := executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
 	var updateTime int64
@@ -857,6 +859,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOrdersQuery(req *QueryOrderPara
 		symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, order.Contract)
 		if err != nil {
 			log.Error(err)
+			continue
 		}
 
 		// log.Info(order.Id, ":", order.IsClose)
@@ -1016,6 +1019,7 @@ func (g *GateTradeEngine) handleTradesFromFuturesTradesQuery(req *QueryTradePara
 		symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, trade.Contract)
 		if err != nil {
 			log.Error(err)
+			continue
 		}
 		if symbolInfo != nil && symbolInfo.IsContract() && symbolInfo.IsContractAmt() {
 			quoteQty = amt.Abs().Mul(symbolInfo.ContractSize()).Mul(price)
@@ -1065,6 +1069,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCreate(req *OrderParam, res
 	symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, res.Data.Contract)
 	if err != nil {
 		log.Error(err)
+		return nil
 	}
 	cumQuoteQty := executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
 
@@ -1170,6 +1175,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderAmend(req *OrderParam, res 
 	symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, res.Data.Contract)
 	if err != nil {
 		log.Error(err)
+		return nil
 	}
 	cumQuoteQty := executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
 
@@ -1245,6 +1251,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCancel(req *OrderParam, res
 	symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, res.Data.Contract)
 	if err != nil {
 		log.Error(err)
+		return nil
 	}
 	cumQuoteQty := executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
 	var updateTime int64
@@ -1385,6 +1392,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOpenOrders(req *QueryOrderPara
 		symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, order.Contract)
 		if err != nil {
 			log.Error(err)
+			continue
 		}
 		cumQuoteQty := executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
 		var updateTime int64
@@ -1537,6 +1545,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderQuery(req *QueryOrderParam
 	symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, res.Data.Contract)
 	if err != nil {
 		log.Error(err)
+		return nil
 	}
 	cumQuoteQty := executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
 	var updateTime int64
@@ -1680,6 +1689,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOrdersQuery(req *QueryOrderPar
 		symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, order.Contract)
 		if err != nil {
 			log.Error(err)
+			continue
 		}
 		cumQuoteQty := executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
 		var updateTime int64
@@ -1830,6 +1840,7 @@ func (g *GateTradeEngine) handleTradesFromDeliveryTradesQuery(req *QueryTradePar
 		symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, trade.Contract)
 		if err != nil {
 			log.Error(err)
+			continue
 		}
 		quoteQty := amt.Abs().Mul(symbolInfo.ContractSize()).Mul(price)
 
@@ -1877,6 +1888,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCreate(req *OrderParam, re
 	symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, res.Data.Contract)
 	if err != nil {
 		log.Error(err)
+		return nil
 	}
 	cumQuoteQty := executedQty.Abs().Mul(symbolInfo.ContractSize()).Mul(fillPrice)
 
@@ -1988,6 +2000,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCancel(req *OrderParam, re
 	symbolInfo, err := InnerExchangeManager.GetSymbolInfo(GATE_NAME.String(), req.AccountType, res.Data.Contract)
 	if err != nil {
 		log.Error(err)
+		return nil
 	}
 	cumQuoteQty := executedQty.Mul(symbolInfo.ContractSize()).Mul(fillPrice)
 	// var positionSide PositionSide
