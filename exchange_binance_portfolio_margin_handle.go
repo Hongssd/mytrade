@@ -183,6 +183,9 @@ func (b *BinanceTradeEngine) handlePortfolioMarginUmOrdersQuery(req *QueryOrderP
 func (b *BinanceTradeEngine) handlePortfolioMarginUmTradesQuery(req *QueryTradeParam, res *mybinanceapi.PortfolioMarginUmUserTradesRes) []*Trade {
 	var trades []*Trade
 	for _, trade := range *res {
+		if req.OrderId != "" && strconv.FormatInt(trade.OrderId, 10) != req.OrderId {
+			continue
+		}
 		trades = append(trades, &Trade{
 			Exchange:     BINANCE_NAME.String(),
 			AccountType:  req.AccountType,

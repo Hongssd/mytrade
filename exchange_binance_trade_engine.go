@@ -3,8 +3,9 @@ package mytrade
 import (
 	"errors"
 	"fmt"
-	"github.com/Hongssd/mybinanceapi"
 	"sync"
+
+	"github.com/Hongssd/mybinanceapi"
 )
 
 type BinanceTradeEngine struct {
@@ -514,12 +515,35 @@ func (b *BinanceTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) 
 		}
 		wg.Wait()
 	case BN_AC_FUTURE:
-		api := b.apiFutureBatchOrderCreate(reqs)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			//统一账号无批量接口，直接并发下单
+			var wg sync.WaitGroup
+			var mu sync.Mutex
+			for _, req := range reqs {
+				req := req
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					order, err := b.CreateOrder(req)
+					if err != nil {
+						mu.Lock()
+						orders = append(orders, b.handleOrderFromSpotBatchErr(req, err))
+						mu.Unlock()
+					}
+					mu.Lock()
+					orders = append(orders, order)
+					mu.Unlock()
+				}()
+			}
+			wg.Wait()
+		} else {
+			api := b.apiFutureBatchOrderCreate(reqs)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handleOrdersFromFutureBatchOrderCreate(reqs, res)
 		}
-		orders = b.handleOrdersFromFutureBatchOrderCreate(reqs, res)
 	case BN_AC_SWAP:
 		api := b.apiSwapBatchOrderCreate(reqs)
 		res, err := api.Do()
@@ -563,12 +587,35 @@ func (b *BinanceTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
 		}
 		wg.Wait()
 	case BN_AC_FUTURE:
-		api := b.apiFutureBatchOrderAmend(reqs)
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			//统一账号无批量接口，直接并发改单
+			var wg sync.WaitGroup
+			var mu sync.Mutex
+			for _, req := range reqs {
+				req := req
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					order, err := b.AmendOrder(req)
+					if err != nil {
+						mu.Lock()
+						orders = append(orders, b.handleOrderFromSpotBatchErr(req, err))
+						mu.Unlock()
+					}
+					mu.Lock()
+					orders = append(orders, order)
+					mu.Unlock()
+				}()
+			}
+			wg.Wait()
+		} else {
+			api := b.apiFutureBatchOrderAmend(reqs)
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handleOrdersFromFutureBatchOrderAmend(reqs, res)
 		}
-		orders = b.handleOrdersFromFutureBatchOrderAmend(reqs, res)
 	case BN_AC_SWAP:
 		api := b.apiSwapBatchOrderAmend(reqs)
 		res, err := api.Do()
@@ -613,15 +660,39 @@ func (b *BinanceTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) 
 		}
 		wg.Wait()
 	case BN_AC_FUTURE:
-		api, err := b.apiFutureBatchOrderCancel(reqs)
-		if err != nil {
-			return nil, err
+		if b.isPortfolioMargin {
+			//统一账号无批量接口，直接并发撤单
+			var wg sync.WaitGroup
+			var mu sync.Mutex
+			for _, req := range reqs {
+				req := req
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					order, err := b.CancelOrder(req)
+					if err != nil {
+						mu.Lock()
+						orders = append(orders, b.handleOrderFromSpotBatchErr(req, err))
+						mu.Unlock()
+					}
+					mu.Lock()
+					orders = append(orders, order)
+					mu.Unlock()
+				}()
+			}
+			wg.Wait()
+		} else {
+			api, err := b.apiFutureBatchOrderCancel(reqs)
+			if err != nil {
+				return nil, err
+			}
+			res, err := api.Do()
+			if err != nil {
+				return nil, err
+			}
+			orders = b.handleOrdersFromFutureBatchOrderCancel(reqs, res)
 		}
-		res, err := api.Do()
-		if err != nil {
-			return nil, err
-		}
-		orders = b.handleOrdersFromFutureBatchOrderCancel(reqs, res)
+
 	case BN_AC_SWAP:
 		api, err := b.apiSwapBatchOrderCancel(reqs)
 		res, err := api.Do()
