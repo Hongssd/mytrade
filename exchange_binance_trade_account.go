@@ -38,6 +38,10 @@ func (b BinanceTradeAccount) GetMarginMode(accountType, symbol string, positionS
 		case BN_AC_SPOT:
 			return MARGIN_MODE_CROSSED, nil
 		case BN_AC_FUTURE:
+			if b.isPortfolioMargin {
+				// 统一账号只支持全仓模式
+				return MARGIN_MODE_CROSSED, nil
+			}
 			res, err := binance.NewFutureRestClient(b.apiKey, b.secretKey).NewFutureAccount().Do()
 			if err != nil {
 				return MARGIN_MODE_UNKNOWN, err
