@@ -1,10 +1,11 @@
 package mytrade
 
 import (
-	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type OkxTradeAccount struct {
@@ -287,8 +288,12 @@ func (o OkxTradeAccount) GetAssets(accountType string, currencies ...string) ([]
 				frozenBal, _ := decimal.NewFromString(d.FrozenBal)  //仓位占用保证金+挂单冻结保证金
 				//仓位维持保证金= d.FrozenBal - d.OrdFrozen
 				MaintMargin := frozenBal.Sub(ordFronzen)
-				marginBalance := decimal.RequireFromString(d.AvailEq).Add(decimal.RequireFromString(d.Upl))
-				availableBalance := decimal.RequireFromString(d.CashBal).Sub(frozenBal)
+				avalieq, _ := decimal.NewFromString(d.AvailEq)
+				upl, _ := decimal.NewFromString(d.Upl)
+
+				cashBal, _ := decimal.NewFromString(d.CashBal)
+				marginBalance := avalieq.Add(upl)
+				availableBalance := cashBal.Sub(frozenBal)
 				assets = append(assets, &Asset{
 					Exchange:               o.ExchangeType().String(),
 					AccountType:            accountType,
