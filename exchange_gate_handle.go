@@ -2135,3 +2135,148 @@ func (g *GateTradeEngine) handleOrderFromDeliveryPriceOrderCancel(req *OrderPara
 		OcoSlOrdPrice:        "",
 	}
 }
+func (g *GateTradeEngine) handleOrderFromBatchErr(req *OrderParam, err error) *Order {
+	return &Order{
+		Exchange:      GATE_NAME.String(),
+		AccountType:   req.AccountType,
+		Symbol:        req.Symbol,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
+		OrderId:       req.OrderId,
+		ClientOrderId: req.ClientOrderId,
+		Price:         req.Price.String(),
+		Quantity:      req.Quantity.String(),
+		Type:          req.OrderType,
+		Side:          req.OrderSide,
+		PositionSide:  req.PositionSide,
+		TimeInForce:   req.TimeInForce,
+		Status:        ORDER_STATUS_REJECTED,
+		ErrorMsg:      err.Error(),
+	}
+}
+
+// handle ws
+func (g *GateTradeEngine) handleSubscribeOrderFromSpotSub(req SubscribeOrderParam,
+	spotSub *mygateapi.MultipleSubscription[mygateapi.WsSubscribeResult[mygateapi.WsSpotOrder]], newSub *subscription[Order]) {
+	//处理订单推送订阅
+	go func() {
+		for {
+			select {
+			case err := <-spotSub.ErrChan():
+				newSub.errChan <- err
+			case <-spotSub.CloseChan():
+				newSub.CloseChan() <- struct{}{}
+				return
+			case result := <-spotSub.ResultChan():
+				r := result.Result
+				avgPrice := decimal.Zero
+				filledAmount, _ := decimal.NewFromString(r.FilledAmount)
+				filledTotal, _ := decimal.NewFromString(r.FilledTotal)
+				if !filledAmount.IsZero() && !filledTotal.IsZero() {
+					avgPrice, _ = decimal.NewFromString(r.AvgDealPrice)
+					if avgPrice.IsZero() {
+						avgPrice = filledTotal.Div(filledAmount)
+					}
+				}
+				createTime, _ := strconv.ParseInt(r.CreateTimeMs, 10, 64)
+				updateTime, _ := strconv.ParseInt(r.UpdateTimeMs, 10, 64)
+				order := Order{
+					Exchange:      GATE_NAME.String(),
+					AccountType:   req.AccountType,
+					Symbol:        r.CurrencyPair,
+					OrderId:       r.Id,
+					ClientOrderId: r.Text,
+					Price:         r.Price,
+					Quantity:      r.Amount,
+					ExecutedQty:   r.FilledAmount,
+					CumQuoteQty:   r.FilledTotal,
+					AvgPrice:      avgPrice.String(),
+					Status:        g.gateConverter.FromGateWsSportOrderStatus(r.Event, r.FinishAs),
+					Type:          g.gateConverter.FromGateOrderType(r.Type),
+					Side:          g.gateConverter.FromGateOrderSide(r.Side),
+					TimeInForce:   g.gateConverter.FromGateTimeInForce(r.TimeInForce),
+					FeeAmount:     r.Fee,
+					FeeCcy:        r.FeeCurrency,
+					CreateTime:    createTime,
+					UpdateTime:    updateTime,
+				}
+				newSub.resultChan <- order
+			}
+		}
+	}()
+}
+
+// handle ws
+func (g *GateTradeEngine) handleSubscribeOrderFromFuturesOrDeliverySub(req SubscribeOrderParam,
+	targetSub *mygateapi.MultipleSubscription[mygateapi.WsSubscribeResult[[]mygateapi.WsFuturesOrder]], newSub *subscription[Order]) {
+	//处理订单推送订阅
+	go func() {
+		for {
+			select {
+			case err := <-targetSub.ErrChan():
+				newSub.errChan <- err
+			case <-targetSub.CloseChan():
+				newSub.CloseChan() <- struct{}{}
+				return
+			case result := <-targetSub.ResultChan():
+				if result.Result == nil {
+					continue
+				}
+				for _, r := range *result.Result {
+					avgPrice, _ := decimal.NewFromString(r.FillPrice)
+					//size为正买入 size为负卖出
+					quantity := decimal.NewFromInt(r.Size).Abs()
+					quantityLeft := decimal.NewFromInt(r.Left).Abs()
+					filledAmount := quantity.Sub(quantityLeft)
+					filledTotal := filledAmount.Mul(avgPrice)
+
+					createTime := r.CreateTimeMs
+					updateTime := r.UpdateTime
+					var orderType OrderType
+					price, _ := decimal.NewFromString(r.Price)
+					if price.IsZero() {
+						//市价单
+						orderType = ORDER_TYPE_MARKET
+					} else {
+						//限价单
+						orderType = ORDER_TYPE_LIMIT
+					}
+
+					var orderSide OrderSide
+					if r.Size > 0 {
+						orderSide = ORDER_SIDE_BUY
+					} else {
+						orderSide = ORDER_SIDE_SELL
+					}
+
+					mkfr, _ := decimal.NewFromString(r.Mkfr)
+					tkfr, _ := decimal.NewFromString(r.Tkfr)
+					fee := mkfr.Add(tkfr)
+					order := Order{
+						Exchange:      GATE_NAME.String(),
+						AccountType:   req.AccountType,
+						Symbol:        r.Contract,
+						OrderId:       strconv.FormatInt(r.Id, 10),
+						ClientOrderId: r.Text,
+						Price:         r.Price,
+						Quantity:      quantity.String(),
+						ExecutedQty:   filledAmount.String(),
+						CumQuoteQty:   filledTotal.String(),
+						AvgPrice:      avgPrice.String(),
+						Status:        g.gateConverter.FromGateContractOrderStatus(r.Status, r.FinishAs),
+						Type:          orderType,
+						Side:          orderSide,
+						PositionSide:  "",
+						TimeInForce:   g.gateConverter.FromGateTimeInForce(r.Tif),
+						FeeAmount:     fee.String(),
+						FeeCcy:        "",
+						ReduceOnly:    r.IsReduceOnly,
+						CreateTime:    createTime,
+						UpdateTime:    updateTime,
+					}
+					newSub.resultChan <- order
+				}
+			}
+		}
+	}()
+}
