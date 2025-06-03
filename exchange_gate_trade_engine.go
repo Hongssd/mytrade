@@ -1,7 +1,6 @@
 package mytrade
 
 import (
-	"strconv"
 	"sync"
 
 	"github.com/Hongssd/mygateapi"
@@ -15,11 +14,9 @@ type GateTradeEngine struct {
 	secretKey     string
 	passphrase    string
 
-	wsForSpotOrder               *mygateapi.SpotWsStreamClient
-	wsForUSDTFuturesOrder        *mygateapi.FuturesWsStreamClient
-	wsForBTCFuturesOrder         *mygateapi.FuturesWsStreamClient
-	wsForUSDTDeliveryOrder       *mygateapi.DeliveryWsStreamClient
-	wsForBTCFuturesDeliveryOrder *mygateapi.DeliveryWsStreamClient
+	wsForSpotOrder     *mygateapi.SpotWsStreamClient
+	wsForFuturesOrder  *mygateapi.FuturesWsStreamClient
+	wsForDeliveryOrder *mygateapi.DeliveryWsStreamClient
 }
 
 func (g *GateTradeEngine) NewOrderReq() *OrderParam {
@@ -463,48 +460,26 @@ func (g *GateTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscribe
 		g.handleSubscribeOrderFromSpotSub(req, spotSub, newSub)
 		return newSub, nil
 	case GATE_ACCOUNT_TYPE_FUTURES:
-
 		err := g.checkWsForFuturesOrder()
 		if err != nil {
 			return nil, err
 		}
-		accountDetail, err := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestAccountDetail().Do()
+		futuresSub, err := g.wsForFuturesOrder.SubscribeOrders()
 		if err != nil {
 			return nil, err
 		}
-		userId := strconv.FormatInt(accountDetail.Data.UserId, 10)
-
-		futuresUsdtSub, err := g.wsForUSDTFuturesOrder.SubscribeOrder(userId, string(mygateapi.USDT_CONTRACT))
-		if err != nil {
-			return nil, err
-		}
-		futuresBtcSub, err := g.wsForBTCFuturesOrder.SubscribeOrder(userId, string(mygateapi.BTC_CONTRACT))
-		if err != nil {
-			return nil, err
-		}
-		g.handleSubscribeOrderFromFuturesOrDeliverySub(req, futuresUsdtSub, newSub)
-		g.handleSubscribeOrderFromFuturesOrDeliverySub(req, futuresBtcSub, newSub)
+		g.handleSubscribeOrderFromFuturesOrDeliverySub(req, futuresSub, newSub)
 		return newSub, nil
 	case GATE_ACCOUNT_TYPE_DELIVERY:
 		err := g.checkWsForDeliveryOrder()
 		if err != nil {
 			return nil, err
 		}
-		accountDetail, err := mygateapi.NewRestClient(g.apiKey, g.secretKey).PrivateRestClient().NewPrivateRestAccountDetail().Do()
+		deliverySub, err := g.wsForDeliveryOrder.SubscribeOrders()
 		if err != nil {
 			return nil, err
 		}
-		userId := strconv.FormatInt(accountDetail.Data.UserId, 10)
-		deliveryUsdtSub, err := g.wsForUSDTDeliveryOrder.SubscribeOrder(userId, string(mygateapi.USDT_CONTRACT))
-		if err != nil {
-			return nil, err
-		}
-		deliveryBtcSub, err := g.wsForBTCFuturesDeliveryOrder.SubscribeOrder(userId, string(mygateapi.BTC_CONTRACT))
-		if err != nil {
-			return nil, err
-		}
-		g.handleSubscribeOrderFromFuturesOrDeliverySub(req, deliveryUsdtSub, newSub)
-		g.handleSubscribeOrderFromFuturesOrDeliverySub(req, deliveryBtcSub, newSub)
+		g.handleSubscribeOrderFromFuturesOrDeliverySub(req, deliverySub, newSub)
 		return newSub, nil
 	default:
 		return nil, ErrorAccountType

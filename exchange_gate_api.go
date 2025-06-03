@@ -783,16 +783,9 @@ func (g *GateTradeEngine) checkWsForSpotOrder() error {
 }
 
 func (g *GateTradeEngine) checkWsForFuturesOrder() error {
-	if g.wsForUSDTFuturesOrder == nil {
-		g.wsForUSDTFuturesOrder = mygateapi.NewFuturesWsStreamClient(mygateapi.NewRestClient(g.apiKey, g.secretKey), mygateapi.USDT_CONTRACT)
-		err := g.wsForUSDTFuturesOrder.OpenConn()
-		if err != nil {
-			return err
-		}
-	}
-	if g.wsForBTCFuturesOrder == nil {
-		g.wsForBTCFuturesOrder = mygateapi.NewFuturesWsStreamClient(mygateapi.NewRestClient(g.apiKey, g.secretKey), mygateapi.BTC_CONTRACT)
-		err := g.wsForBTCFuturesOrder.OpenConn()
+	if g.wsForFuturesOrder == nil {
+		g.wsForFuturesOrder = mygateapi.NewFuturesWsStreamClient(mygateapi.NewRestClient(g.apiKey, g.secretKey), mygateapi.USDT_CONTRACT)
+		err := g.wsForFuturesOrder.OpenConn()
 		if err != nil {
 			return err
 		}
@@ -801,16 +794,9 @@ func (g *GateTradeEngine) checkWsForFuturesOrder() error {
 }
 
 func (g *GateTradeEngine) checkWsForDeliveryOrder() error {
-	if g.wsForUSDTDeliveryOrder == nil {
-		g.wsForUSDTDeliveryOrder = mygateapi.NewDeliveryWsStreamClient(mygateapi.NewRestClient(g.apiKey, g.secretKey), mygateapi.USDT_CONTRACT)
-		err := g.wsForUSDTDeliveryOrder.OpenConn()
-		if err != nil {
-			return err
-		}
-	}
-	if g.wsForBTCFuturesDeliveryOrder == nil {
-		g.wsForBTCFuturesDeliveryOrder = mygateapi.NewDeliveryWsStreamClient(mygateapi.NewRestClient(g.apiKey, g.secretKey), mygateapi.BTC_CONTRACT)
-		err := g.wsForBTCFuturesDeliveryOrder.OpenConn()
+	if g.wsForDeliveryOrder == nil {
+		g.wsForDeliveryOrder = mygateapi.NewDeliveryWsStreamClient(mygateapi.NewRestClient(g.apiKey, g.secretKey), mygateapi.USDT_CONTRACT)
+		err := g.wsForDeliveryOrder.OpenConn()
 		if err != nil {
 			return err
 		}
