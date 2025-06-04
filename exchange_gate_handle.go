@@ -2223,7 +2223,8 @@ func (g *GateTradeEngine) handleSubscribeOrderFromFuturesOrDeliverySub(req Subsc
 					continue
 				}
 				for _, r := range *result.Result {
-					avgPrice, _ := decimal.NewFromString(r.FillPrice)
+					price := decimal.NewFromFloat(r.Price)
+					avgPrice := decimal.NewFromFloat(r.FillPrice)
 					//size为正买入 size为负卖出
 					quantity := decimal.NewFromInt(r.Size).Abs()
 					quantityLeft := decimal.NewFromInt(r.Left).Abs()
@@ -2232,8 +2233,8 @@ func (g *GateTradeEngine) handleSubscribeOrderFromFuturesOrDeliverySub(req Subsc
 
 					createTime := r.CreateTimeMs
 					updateTime := r.UpdateTime
+
 					var orderType OrderType
-					price, _ := decimal.NewFromString(r.Price)
 					if price.IsZero() {
 						//市价单
 						orderType = ORDER_TYPE_MARKET
@@ -2249,8 +2250,8 @@ func (g *GateTradeEngine) handleSubscribeOrderFromFuturesOrDeliverySub(req Subsc
 						orderSide = ORDER_SIDE_SELL
 					}
 
-					mkfr, _ := decimal.NewFromString(r.Mkfr)
-					tkfr, _ := decimal.NewFromString(r.Tkfr)
+					mkfr := decimal.NewFromFloat(r.Mkfr)
+					tkfr := decimal.NewFromFloat(r.Tkfr)
 					fee := mkfr.Add(tkfr)
 					order := Order{
 						Exchange:      GATE_NAME.String(),
@@ -2258,7 +2259,7 @@ func (g *GateTradeEngine) handleSubscribeOrderFromFuturesOrDeliverySub(req Subsc
 						Symbol:        r.Contract,
 						OrderId:       strconv.FormatInt(r.Id, 10),
 						ClientOrderId: r.Text,
-						Price:         r.Price,
+						Price:         price.String(),
 						Quantity:      quantity.String(),
 						ExecutedQty:   filledAmount.String(),
 						CumQuoteQty:   filledTotal.String(),
