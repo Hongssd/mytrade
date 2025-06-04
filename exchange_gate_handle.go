@@ -566,18 +566,18 @@ func (g *GateTradeEngine) getPositionSide(accountType, contract string, size int
 		if reduceOnly {
 			//只减仓
 			if size > 0 {
-				//只减仓买入 平空买入
-				return POSITION_SIDE_LONG, nil
-			} else {
-				//只减仓卖出 平多卖出
+				//只减仓买入 平空买入 仓位方向为空
 				return POSITION_SIDE_SHORT, nil
+			} else {
+				//只减仓卖出 平多卖出 仓位方向为多
+				return POSITION_SIDE_LONG, nil
 			}
 		} else {
 			if size > 0 {
-				//开仓买入 开多
+				//开仓买入 开多 仓位方向为多
 				return POSITION_SIDE_LONG, nil
 			} else {
-				//开仓卖出 开空
+				//开仓卖出 开空 仓位方向为空
 				return POSITION_SIDE_SHORT, nil
 			}
 		}
