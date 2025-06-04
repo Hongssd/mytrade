@@ -33,7 +33,7 @@ func (a GateTradeAccount) GetMarginMode(accountType, symbol string, positionSide
 
 	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_SPOT:
-		return MARGIN_MODE_ISOLATED, nil
+		return MARGIN_MODE_CROSSED, nil
 	case GATE_ACCOUNT_TYPE_FUTURES, GATE_ACCOUNT_TYPE_DELIVERY:
 		positions, err := a.GetPositions(accountType, symbol)
 		if err != nil {
