@@ -619,7 +619,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOpenOrders(req *QueryOrderParam
 			orderSide = ORDER_SIDE_SELL
 		}
 
-		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, order.Size, order.ReduceOnly)
+		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, order.Size, order.IsReduceOnly)
 		if err != nil {
 			log.Error(err)
 		}
@@ -643,7 +643,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOpenOrders(req *QueryOrderParam
 			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.Tif),
 			FeeAmount:            "",
 			FeeCcy:               "",
-			ReduceOnly:           order.ReduceOnly,
+			ReduceOnly:           order.IsReduceOnly,
 			CreateTime:           decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart(),
 			UpdateTime:           updateTime,
 			RealizedPnl:          "",
@@ -778,7 +778,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderQuery(req *QueryOrderParam,
 		orderSide = ORDER_SIDE_SELL
 	}
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.ReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -804,7 +804,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderQuery(req *QueryOrderParam,
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
-		ReduceOnly:           res.Data.ReduceOnly,
+		ReduceOnly:           res.Data.IsReduceOnly,
 		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:           updateTime,
 		RealizedPnl:          "",
@@ -942,7 +942,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOrdersQuery(req *QueryOrderPara
 			orderSide = ORDER_SIDE_SELL
 		}
 
-		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, order.Size, order.ReduceOnly)
+		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, order.Size, order.IsReduceOnly)
 		if err != nil {
 			log.Error(err)
 		}
@@ -1350,7 +1350,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCancel(req *OrderParam, res
 		orderSide = ORDER_SIDE_SELL
 	}
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.ReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -1375,7 +1375,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCancel(req *OrderParam, res
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
-		ReduceOnly:           res.Data.ReduceOnly,
+		ReduceOnly:           res.Data.IsReduceOnly,
 		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:           updateTime,
 		RealizedPnl:          "",
@@ -1450,7 +1450,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesPriceOrderCancel(req *OrderParam
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Initial.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
-		ReduceOnly:           res.Data.Initial.ReduceOnly,
+		ReduceOnly:           res.Data.Initial.IsReduceOnly,
 		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:           updateTime,
 		IsAlgo:               true,
@@ -1505,7 +1505,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOpenOrders(req *QueryOrderPara
 			orderSide = ORDER_SIDE_SELL
 		}
 
-		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, order.Size, order.ReduceOnly)
+		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, order.Size, order.IsReduceOnly)
 		if err != nil {
 			log.Error(err)
 		}
@@ -1530,7 +1530,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOpenOrders(req *QueryOrderPara
 			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.Tif),
 			FeeAmount:            "",
 			FeeCcy:               "",
-			ReduceOnly:           order.ReduceOnly,
+			ReduceOnly:           order.IsReduceOnly,
 			CreateTime:           decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart(),
 			UpdateTime:           updateTime,
 			RealizedPnl:          "",
@@ -1668,7 +1668,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderQuery(req *QueryOrderParam
 		orderSide = ORDER_SIDE_SELL
 	}
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.ReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -1694,7 +1694,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderQuery(req *QueryOrderParam
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
-		ReduceOnly:           res.Data.ReduceOnly,
+		ReduceOnly:           res.Data.IsReduceOnly,
 		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:           updateTime,
 		RealizedPnl:          "",
@@ -2104,6 +2104,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryPriceOrderCreate(req *OrderPara
 		Status:               ORDER_STATUS_UN_TRIGGERED,
 		Type:                 req.OrderType,
 		Side:                 req.OrderSide,
+		PositionSide:         req.PositionSide,
 		TimeInForce:          req.TimeInForce,
 		FeeAmount:            "",
 		FeeCcy:               "",
@@ -2162,7 +2163,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCancel(req *OrderParam, re
 		orderSide = ORDER_SIDE_SELL
 	}
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.ReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -2187,7 +2188,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCancel(req *OrderParam, re
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
-		ReduceOnly:           res.Data.ReduceOnly,
+		ReduceOnly:           res.Data.IsReduceOnly,
 		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:           updateTime,
 		RealizedPnl:          "",
