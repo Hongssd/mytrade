@@ -329,13 +329,13 @@ func (a GateTradeAccount) GetPositions(accountType string, symbols ...string) ([
 	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_FUTURES:
 		var errG errgroup.Group
-		settles := []string{"usdt", "btc"}
+		settles := []string{"usdt"}
 		for _, settle := range settles {
 			settle := settle
 			errG.Go(func() error {
 				res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().NewPrivateRestFuturesSettlePositions().Settle(settle).Do()
 				if err != nil {
-					return nil
+					return err
 				}
 				for _, p := range res.Data {
 					var marginMode MarginMode
