@@ -1,8 +1,10 @@
 package mytrade
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Hongssd/mygateapi"
@@ -549,39 +551,58 @@ func (g *GateTradeEngine) handleOrderFromSpotPriceOrderCancel(req *OrderParam, r
 		OcoSlTriggerPrice:    "",
 	}
 }
+
+var positionSideMap = NewMySyncMap[string, PositionSide]()
+var positionSideMu sync.Mutex
+
 func (g *GateTradeEngine) getPositionSide(accountType, contract string, size int64, reduceOnly bool) (PositionSide, error) {
+	positionSideMu.Lock()
+	defer positionSideMu.Unlock()
 	apiParam := ExchangeApiParam{
 		Exchange:  GATE_NAME.String(),
 		ApiKey:    g.apiKey,
 		ApiSecret: g.secretKey,
 	}
+
+	key := fmt.Sprintf("%s_%s_%s", apiParam.ApiKey, accountType, contract)
+	if position, ok := positionSideMap.Load(key); ok {
+		return position, nil
+	}
+
+	var positionSide PositionSide
+
 	positions, err := InnerExchangeManager.GetPositions(apiParam, accountType, contract)
 	if err != nil {
 		log.Error(err)
 		return POSITION_SIDE_UNKNOWN, err
 	}
 	if len(positions) == 1 {
-		return POSITION_SIDE_BOTH, nil
+		positionSide = POSITION_SIDE_BOTH
 	} else {
 		if reduceOnly {
 			//只减仓
 			if size > 0 {
 				//只减仓买入 平空买入 仓位方向为空
-				return POSITION_SIDE_SHORT, nil
+				positionSide = POSITION_SIDE_SHORT
 			} else {
 				//只减仓卖出 平多卖出 仓位方向为多
-				return POSITION_SIDE_LONG, nil
+				positionSide = POSITION_SIDE_LONG
 			}
 		} else {
 			if size > 0 {
 				//开仓买入 开多 仓位方向为多
-				return POSITION_SIDE_LONG, nil
+				positionSide = POSITION_SIDE_LONG
 			} else {
 				//开仓卖出 开空 仓位方向为空
-				return POSITION_SIDE_SHORT, nil
+				positionSide = POSITION_SIDE_SHORT
 			}
 		}
 	}
+
+	positionSideMap.Store(key, positionSide)
+
+	return positionSide, nil
+
 }
 
 // 永续合约订单查询
