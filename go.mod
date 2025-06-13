@@ -4,9 +4,9 @@ go 1.19
 
 require (
 	github.com/Hongssd/mybinanceapi v1.8.3
-	github.com/Hongssd/mybybitapi v0.1.5
-	github.com/Hongssd/mygateapi v0.1.9
-	github.com/Hongssd/myokxapi v0.4.5
+	github.com/Hongssd/mybybitapi v0.1.6
+	github.com/Hongssd/mygateapi v0.2.0
+	github.com/Hongssd/myokxapi v0.4.6
 	github.com/google/uuid v1.6.0
 	github.com/json-iterator/go v1.1.12
 	github.com/shopspring/decimal v1.4.0

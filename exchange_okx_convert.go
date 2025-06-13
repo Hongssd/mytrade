@@ -44,7 +44,7 @@ func (c *OkxEnumConverter) FromOKXOrderType(t string) (OrderType, TimeInForce) {
 	}
 }
 func (c *OkxEnumConverter) ToOKXOrderType(t OrderType, t2 TimeInForce) string {
-	if t2 == TIME_IN_FORCE_GTC {
+	if t2 == TIME_IN_FORCE_GTC || t2 == "" {
 		switch t {
 		case ORDER_TYPE_LIMIT:
 			return OKX_ORDER_TYPE_LIMIT
