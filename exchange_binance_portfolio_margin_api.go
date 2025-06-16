@@ -1,8 +1,9 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mybinanceapi"
 	"strconv"
+
+	"github.com/Hongssd/mybinanceapi"
 )
 
 // UM
@@ -255,7 +256,13 @@ func (b *BinanceTradeEngine) apiPortfolioMarginMarginOrderCreate(req *OrderParam
 	}
 
 	if req.TimeInForce != "" {
-		api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
+		if req.TimeInForce == TIME_IN_FORCE_POST_ONLY {
+			//统一账号杠杆下单 设置为GTC 且订单类型为LIMIT_MAKER
+			api.TimeInForce(b.bnConverter.ToBNTimeInForce(TIME_IN_FORCE_GTC))
+			api.Type(BN_ORDER_TYPE_LIMIT_MAKER)
+		} else {
+			api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
+		}
 	}
 
 	return api
