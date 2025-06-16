@@ -30,8 +30,9 @@ func (c *BinanceEnumConverter) ToBNOrderSide(t OrderSide) string {
 // 订单类型
 func (c *BinanceEnumConverter) FromBNOrderType(t string) OrderType {
 	switch t {
-	//币安 标准限价 现货止盈止损限价 合约止盈止损限价 转为限价单
+	//币安 标准限价 限价做市 现货止盈止损限价 合约止盈止损限价 转为限价单
 	case BN_ORDER_TYPE_LIMIT,
+		BN_ORDER_TYPE_LIMIT_MAKER,
 		BN_ORDER_TYPE_SPOT_STOP_LOSS_LIMIT,
 		BN_ORDER_TYPE_SPOT_TAKE_PROFIT_LIMIT,
 		BN_ORDER_TYPE_FUTURE_STOP,

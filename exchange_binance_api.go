@@ -84,8 +84,8 @@ func (b *BinanceTradeEngine) apiSpotOrderCreate(req *OrderParam) *mybinanceapi.S
 	}
 	if req.TimeInForce != "" {
 		if req.TimeInForce == TIME_IN_FORCE_POST_ONLY {
-			//统一账号杠杆下单 设置为GTC 且订单类型为LIMIT_MAKER
-			api.TimeInForce(b.bnConverter.ToBNTimeInForce(TIME_IN_FORCE_GTC))
+			// 现货POSTONLY下单 不传timeInforce并且将订单类型为LIMIT_MAKER
+			// api.TimeInForce(b.bnConverter.ToBNTimeInForce(TIME_IN_FORCE_GTC))
 			api.Type(BN_ORDER_TYPE_LIMIT_MAKER)
 		} else {
 			api = api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
@@ -207,8 +207,8 @@ func (b *BinanceTradeEngine) apiSpotMarginOrderCreate(req *OrderParam) *mybinanc
 	}
 	if req.TimeInForce != "" {
 		if req.TimeInForce == TIME_IN_FORCE_POST_ONLY {
-			//统一账号杠杆下单 设置为GTC 且订单类型为LIMIT_MAKER
-			api.TimeInForce(b.bnConverter.ToBNTimeInForce(TIME_IN_FORCE_GTC))
+			// 统一账号杠杆POSTONLY下单 不传timeInforce并且将订单类型为LIMIT_MAKER
+			// api.TimeInForce(b.bnConverter.ToBNTimeInForce(TIME_IN_FORCE_GTC))
 			api.Type(BN_ORDER_TYPE_LIMIT_MAKER)
 		} else {
 			api = api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
