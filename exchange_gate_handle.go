@@ -555,7 +555,7 @@ func (g *GateTradeEngine) handleOrderFromSpotPriceOrderCancel(req *OrderParam, r
 var positionSideMap = NewMySyncMap[string, PositionSide]()
 var positionSideMu sync.Mutex
 
-func (g *GateTradeEngine) getPositionSide(accountType, contract string, size int64, reduceOnly bool) (PositionSide, error) {
+func (g *GateTradeEngine) getPositionSide(accountType, contract string, orderSide OrderSide, reduceOnly bool) (PositionSide, error) {
 	positionSideMu.Lock()
 	defer positionSideMu.Unlock()
 	apiParam := ExchangeApiParam{
@@ -564,7 +564,7 @@ func (g *GateTradeEngine) getPositionSide(accountType, contract string, size int
 		ApiSecret: g.secretKey,
 	}
 
-	key := fmt.Sprintf("%s_%s_%s", apiParam.ApiKey, accountType, contract)
+	key := fmt.Sprintf("%s_%s_%s_%s_%s", apiParam.ApiKey, accountType, contract, orderSide.String(), strconv.FormatBool(reduceOnly))
 	if position, ok := positionSideMap.Load(key); ok {
 		return position, nil
 	}
@@ -581,7 +581,7 @@ func (g *GateTradeEngine) getPositionSide(accountType, contract string, size int
 	} else {
 		if reduceOnly {
 			//只减仓
-			if size > 0 {
+			if orderSide == ORDER_SIDE_BUY {
 				//只减仓买入 平空买入 仓位方向为空
 				positionSide = POSITION_SIDE_SHORT
 			} else {
@@ -589,7 +589,7 @@ func (g *GateTradeEngine) getPositionSide(accountType, contract string, size int
 				positionSide = POSITION_SIDE_LONG
 			}
 		} else {
-			if size > 0 {
+			if orderSide == ORDER_SIDE_BUY {
 				//开仓买入 开多 仓位方向为多
 				positionSide = POSITION_SIDE_LONG
 			} else {
@@ -640,7 +640,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOpenOrders(req *QueryOrderParam
 			orderSide = ORDER_SIDE_SELL
 		}
 
-		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, order.Size, order.IsReduceOnly)
+		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, orderSide, order.IsReduceOnly)
 		if err != nil {
 			log.Error(err)
 		}
@@ -721,7 +721,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesPriceOpenOrders(req *QueryOrder
 
 		triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(order.Trigger.Rule, orderSide)
 		triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
-		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, order.Initial.Size, order.Initial.IsReduceOnly)
+		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, orderSide, order.Initial.IsReduceOnly)
 		if err != nil {
 			log.Error(err)
 		}
@@ -799,7 +799,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderQuery(req *QueryOrderParam,
 		orderSide = ORDER_SIDE_SELL
 	}
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.IsReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, orderSide, res.Data.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -877,7 +877,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesPriceOrderQuery(req *QueryOrderP
 	triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(res.Data.Trigger.Rule, orderSide)
 	triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, res.Data.Initial.Size, res.Data.Initial.IsReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, orderSide, res.Data.Initial.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -963,7 +963,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOrdersQuery(req *QueryOrderPara
 			orderSide = ORDER_SIDE_SELL
 		}
 
-		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, order.Size, order.IsReduceOnly)
+		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, orderSide, order.IsReduceOnly)
 		if err != nil {
 			log.Error(err)
 		}
@@ -1045,7 +1045,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesPriceOrdersQuery(req *QueryOrde
 		triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(order.Trigger.Rule, orderSide)
 		triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
-		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, order.Initial.Size, order.Initial.IsReduceOnly)
+		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, orderSide, order.Initial.IsReduceOnly)
 		if err != nil {
 			log.Error(err)
 		}
@@ -1371,7 +1371,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCancel(req *OrderParam, res
 		orderSide = ORDER_SIDE_SELL
 	}
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.IsReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, orderSide, res.Data.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -1446,7 +1446,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesPriceOrderCancel(req *OrderParam
 	triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(res.Data.Trigger.Rule, orderSide)
 	triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, res.Data.Initial.Size, res.Data.Initial.IsReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, orderSide, res.Data.Initial.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -1526,7 +1526,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOpenOrders(req *QueryOrderPara
 			orderSide = ORDER_SIDE_SELL
 		}
 
-		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, order.Size, order.IsReduceOnly)
+		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, orderSide, order.IsReduceOnly)
 		if err != nil {
 			log.Error(err)
 		}
@@ -1610,7 +1610,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryPriceOpenOrders(req *QueryOrde
 		triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(order.Trigger.Rule, orderSide)
 		triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
-		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, order.Initial.Size, order.Initial.IsReduceOnly)
+		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, orderSide, order.Initial.IsReduceOnly)
 		if err != nil {
 			log.Error(err)
 		}
@@ -1689,7 +1689,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderQuery(req *QueryOrderParam
 		orderSide = ORDER_SIDE_SELL
 	}
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.IsReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, orderSide, res.Data.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -1765,7 +1765,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryPriceOrderQuery(req *QueryOrder
 	triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(res.Data.Trigger.Rule, orderSide)
 	triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, res.Data.Initial.Size, res.Data.Initial.IsReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, orderSide, res.Data.Initial.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -1842,7 +1842,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOrdersQuery(req *QueryOrderPar
 			orderSide = ORDER_SIDE_SELL
 		}
 
-		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, order.Size, order.IsReduceOnly)
+		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, orderSide, order.IsReduceOnly)
 		if err != nil {
 			log.Error(err)
 		}
@@ -1924,7 +1924,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryPriceOrdersQuery(req *QueryOrd
 		triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(order.Trigger.Rule, orderSide)
 		triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
-		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, order.Initial.Size, order.Initial.IsReduceOnly)
+		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, orderSide, order.Initial.IsReduceOnly)
 		if err != nil {
 			log.Error(err)
 		}
@@ -2184,7 +2184,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCancel(req *OrderParam, re
 		orderSide = ORDER_SIDE_SELL
 	}
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, res.Data.Size, res.Data.IsReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, orderSide, res.Data.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -2258,7 +2258,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryPriceOrderCancel(req *OrderPara
 	triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(res.Data.Trigger.Rule, orderSide)
 	triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
-	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, res.Data.Initial.Size, res.Data.Initial.IsReduceOnly)
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, orderSide, res.Data.Initial.IsReduceOnly)
 	if err != nil {
 		log.Error(err)
 	}
@@ -2421,7 +2421,7 @@ func (g *GateTradeEngine) handleSubscribeOrderFromFuturesOrDeliverySub(req Subsc
 					tkfr := decimal.NewFromFloat(r.Tkfr)
 					fee := mkfr.Add(tkfr)
 
-					positionSide, err := g.getPositionSide(req.AccountType, r.Contract, r.Size, r.IsReduceOnly)
+					positionSide, err := g.getPositionSide(req.AccountType, r.Contract, orderSide, r.IsReduceOnly)
 					if err != nil {
 						log.Error(err)
 					}
