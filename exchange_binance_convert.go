@@ -44,7 +44,7 @@ func (c *BinanceEnumConverter) FromBNOrderType(t string) OrderType {
 		BN_ORDER_TYPE_FUTURE_TAKE_PROFIT_MARKET:
 		return ORDER_TYPE_MARKET
 	default:
-		return ORDER_TYPE_UNKNOWN
+		return OrderType(t)
 	}
 }
 func (c *BinanceEnumConverter) ToBNOrderType(t OrderType) string {
