@@ -160,8 +160,8 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res
 		}
 	}
 
-	d, _ := json.MarshalIndent(res, "", "  ")
-	log.Info(string(d))
+	// d, _ := json.MarshalIndent(res, "", "  ")
+	// log.Info(string(d))
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,

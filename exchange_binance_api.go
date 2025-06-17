@@ -74,7 +74,7 @@ func (b *BinanceTradeEngine) apiSpotOrderCreate(req *OrderParam) *mybinanceapi.S
 		api.StopPrice(req.TriggerPrice)
 	}
 
-	log.Info(req)
+	// log.Info(req)
 
 	if !req.Price.IsZero() {
 		api = api.Price(req.Price)
