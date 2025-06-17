@@ -28,10 +28,11 @@ type Param struct {
 	AttachOcoSlTriggerPrice decimal.Decimal //止损触发价
 	AttachOcoSlOrderPrice   decimal.Decimal //止损委托价
 
-	AccountMode AccountMode //账户模式（OKX）杠杆订单时必填
-	IsMargin    bool        //是否为杠杆订单
-	IsIsolated  bool        //是否是逐仓模式
-	Ccy         string      //杠杆订单保证金币种
+	AccountMode    AccountMode //账户模式（OKX）杠杆订单时必填
+	IsMargin       bool        //是否为杠杆订单
+	IsIsolated     bool        //是否是逐仓模式
+	Ccy            string      //杠杆订单保证金币种
+	SideEffectType string      //杠杆自动借还模式
 
 	// 单向止盈止损（策略委托）
 	TriggerPrice decimal.Decimal  //止盈止损触发价
@@ -133,6 +134,15 @@ func (o *OrderParam) SetIsIsolated(isIsolated bool) *OrderParam {
 	o.IsIsolated = isIsolated
 	return o
 }
+func (o *OrderParam) SetCcy(ccy string) *OrderParam {
+	o.Ccy = ccy
+	return o
+}
+func (o *OrderParam) SetSideEffectType(sideEffectType string) *OrderParam {
+	o.SideEffectType = sideEffectType
+	return o
+}
+
 func (o *OrderParam) SetTriggerPrice(triggerPrice decimal.Decimal) *OrderParam {
 	o.TriggerPrice = triggerPrice
 	return o

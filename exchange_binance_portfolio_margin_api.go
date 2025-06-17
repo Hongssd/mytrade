@@ -265,6 +265,10 @@ func (b *BinanceTradeEngine) apiPortfolioMarginMarginOrderCreate(req *OrderParam
 		}
 	}
 
+	if req.SideEffectType != "" {
+		api.SideEffectType(req.SideEffectType)
+	}
+
 	return api
 }
 func (b *BinanceTradeEngine) apiPortfolioMarginMarginOrderCancel(req *OrderParam) *mybinanceapi.PortfolioMarginMarginOrderDeleteApi {
