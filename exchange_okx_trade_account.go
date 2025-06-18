@@ -209,6 +209,19 @@ func (o OkxTradeAccount) GetPositions(accountType string, symbols ...string) ([]
 			if d.LiqPx == "" {
 				d.LiqPx = "0"
 			}
+			if d.InstType == "MARGIN" {
+				//现货杠杆 posccy为计价货币时开空，posAmt取负值
+				symbolInfo, err := InnerExchangeManager.GetSymbolInfo(OKX_NAME.String(), OKX_AC_SPOT.String(), d.InstId)
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				if d.PosCcy == symbolInfo.QuoteCoin() {
+					//posCcy为计价货币，仓位为开空 取负值
+					posAmt, _ := decimal.NewFromString(d.Pos)
+					d.Pos = posAmt.Abs().Neg().String()
+				}
+			}
 			positions = append(positions, &Position{
 				Exchange:               o.ExchangeType().String(),
 				AccountType:            d.InstType,
