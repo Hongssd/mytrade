@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/Hongssd/mybinanceapi v1.8.4
-	github.com/Hongssd/mybybitapi v0.1.6
+	github.com/Hongssd/mybybitapi v0.1.7
 	github.com/Hongssd/mygateapi v0.2.0
 	github.com/Hongssd/myokxapi v0.4.7
 	github.com/google/uuid v1.6.0
