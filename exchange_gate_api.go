@@ -29,6 +29,23 @@ func (g *GateTradeEngine) apiSpotOrderCreate(req *OrderParam) *mygateapi.Private
 		api.TimeInForce(g.gateConverter.ToGateTimeInForce(req.TimeInForce))
 	}
 
+	if req.SideEffectType != "" && req.SideEffectType != NO_MARGIN.String() {
+		switch req.SideEffectType {
+		case MARGIN_BUY.String(): //仅自动借币
+			api.AutoBorrow(true)
+			api.AutoRepay(false)
+		case AUTO_REPAY.String(): //仅自动还币
+			api.AutoBorrow(false)
+			api.AutoRepay(true)
+		case AUTO_BORROW_REPAY.String(): //自动借币还币
+			api.AutoBorrow(true)
+			api.AutoRepay(true)
+		default:
+			api.AutoBorrow(false)
+			api.AutoRepay(false)
+		}
+	}
+
 	return api
 }
 func (g *GateTradeEngine) apiSpotPriceOrderCreate(req *OrderParam) *mygateapi.PrivateRestSpotPriceOrdersPostAPI {

@@ -265,7 +265,7 @@ func (b *BinanceTradeEngine) apiPortfolioMarginMarginOrderCreate(req *OrderParam
 		}
 	}
 
-	if req.SideEffectType != "" {
+	if req.SideEffectType != "" && req.SideEffectType != NO_MARGIN.String() {
 		api.SideEffectType(req.SideEffectType)
 	}
 

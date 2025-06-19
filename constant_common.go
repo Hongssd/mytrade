@@ -180,3 +180,17 @@ const (
 	TRANSFER_STATUS_TYPE_SUCCESS TransferStatusType = "SUCCESS"
 	TRANSFER_STATUS_TYPE_FAILED  TransferStatusType = "FAILED"
 )
+
+type MarginSideEffect string
+
+func (p MarginSideEffect) String() string {
+	return string(p)
+}
+
+const (
+	NO_MARGIN         MarginSideEffect = "NO_MARGIN"         // 不启用杠杆
+	NO_SIDE_EFFECT    MarginSideEffect = "NO_SIDE_EFFECT"    // 不自动借还
+	MARGIN_BUY        MarginSideEffect = "MARGIN_BUY"        // 自动借币
+	AUTO_REPAY        MarginSideEffect = "AUTO_REPAY"        // 自动还币
+	AUTO_BORROW_REPAY MarginSideEffect = "AUTO_BORROW_REPAY" // 自动借币还币
+)

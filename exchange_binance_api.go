@@ -214,7 +214,7 @@ func (b *BinanceTradeEngine) apiSpotMarginOrderCreate(req *OrderParam) *mybinanc
 			api = api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
 		}
 	}
-	if req.SideEffectType != "" {
+	if req.SideEffectType != "" && req.SideEffectType != NO_MARGIN.String() {
 		api.SideEffectType(req.SideEffectType)
 	}
 
