@@ -159,9 +159,10 @@ func (a GateTradeAccount) SetAccountMode(mode AccountMode) error {
 	if currentAccountMode == mode {
 		return nil
 	}
+	targetMode, usdt_futures, spot_hedge := a.gateConverter.ToGateAccountMode(mode)
 	_, err = mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().
 		NewPrivateRestUnifiedUnifiedModePut().
-		Mode(a.gateConverter.ToGateAccountMode(mode)).Do()
+		Mode(targetMode).UsdtFutures(usdt_futures).SpotHedge(spot_hedge).Do()
 	if err != nil {
 		return err
 	}

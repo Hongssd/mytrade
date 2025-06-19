@@ -17,18 +17,21 @@ func (c *GateEnumConverter) FromGateAccountMode(t string) AccountMode {
 	return ACCOUNT_MODE_UNKNOWN
 }
 
-func (c *GateEnumConverter) ToGateAccountMode(t AccountMode) string {
+func (c *GateEnumConverter) ToGateAccountMode(t AccountMode) (string, bool, bool) {
 	switch t {
 	case ACCOUNT_MODE_FREE_MARGIN:
-		return GATE_ACCOUNT_MODE_CLASSIC
+		return GATE_ACCOUNT_MODE_CLASSIC, false, false
 	case ACCOUNT_MODE_SINGLE_MARGIN:
-		return GATE_ACCOUNT_MODE_SINGLE_MARGIN
+		//单币种保证金
+		return GATE_ACCOUNT_MODE_SINGLE_MARGIN, false, false
 	case ACCOUNT_MODE_MULTI_MARGIN:
-		return GATE_ACCOUNT_MODE_MULTI_MARGIN
+		//跨币种保证金
+		return GATE_ACCOUNT_MODE_MULTI_MARGIN, true, true
 	case ACCOUNT_MODE_PORTFOLIO:
-		return GATE_ACCOUNT_MODE_PORTFOLIO
+		//组合保证金
+		return GATE_ACCOUNT_MODE_PORTFOLIO, true, true
 	}
-	return ""
+	return "", false, false
 }
 
 func (c *GateEnumConverter) FromGatePositionMode(t bool) PositionMode {

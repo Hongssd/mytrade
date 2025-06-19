@@ -50,6 +50,7 @@ type Param struct {
 	Expiration         int    //Price Order过期时间, 0为不过期
 	GatePriceOrderType string //Price Order类型
 	GateAutoSize       string //双仓模式下用于设置平仓的方向，close_long 平多头， close_short 平空头，需要同时设置 size 为 0
+	// IsUnified          bool   //是否统一账号模式 gate下单需要设置
 }
 
 type OrderParam Param
@@ -175,6 +176,11 @@ func (o *OrderParam) SetOcoSlOrdType(ocoSlOrdType OrderType) *OrderParam {
 	o.OcoSlOrdType = ocoSlOrdType
 	return o
 }
+
+// func (o *OrderParam) SetIsUnified(isUnified bool) *OrderParam {
+// 	o.IsUnified = isUnified
+// 	return o
+// }
 
 type QueryOrderParam struct {
 	AccountType   string        //账户类型
