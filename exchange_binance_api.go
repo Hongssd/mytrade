@@ -1,8 +1,9 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mybinanceapi"
 	"strconv"
+
+	"github.com/Hongssd/mybinanceapi"
 )
 
 // 现货订单API接口
@@ -48,13 +49,15 @@ func (b *BinanceTradeEngine) apiSpotTradeQuery(req *QueryTradeParam) *mybinancea
 	if req.OrderId != "" {
 		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
 		api = api.OrderId(orderId)
+	} else {
+		if req.StartTime != 0 {
+			api = api.StartTime(req.StartTime)
+		}
+		if req.EndTime != 0 {
+			api = api.EndTime(req.EndTime)
+		}
 	}
-	if req.StartTime != 0 {
-		api = api.StartTime(req.StartTime)
-	}
-	if req.EndTime != 0 {
-		api = api.EndTime(req.EndTime)
-	}
+
 	if req.Limit != 0 {
 		api = api.Limit(req.Limit)
 	}
