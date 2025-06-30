@@ -144,17 +144,29 @@ const (
 	GATE_ORDER_TYPE_LIMIT  = "limit"
 	GATE_ORDER_TYPE_MARKET = "market"
 )
-
+// 有效时间
+// - gtc：GoodTillCancelled
+// - ioc：ImmediateOrCancelled，仅接受者
+// - poc：PendingOrCancelled，只进行后订单，始终享受挂单费用
+// - fok： FillOrKill，完全填充或不填充
+// type=market 时仅支持 ioc 和 fok
 const (
 	GATE_TIME_IN_FORCE_GTC = "gtc" // - GoodTillCancelled
 	GATE_TIME_IN_FORCE_IOC = "ioc" // - ioc: ImmediateOrCancelled ，立即成交或者取消，只吃单不挂单
 	GATE_TIME_IN_FORCE_POC = "poc" // - poc: PendingOrCancelled，被动委托，只挂单不吃单
+	GATE_TIME_IN_FORCE_FOK = "fok" // - fok: FillOrKill，完全填充或不填充
 )
 
 const (
 	GATE_ORDER_SPOT_STATUS_NEW       = "open"
 	GATE_ORDER_SPOT_STATUS_FILLED    = "closed"
 	GATE_ORDER_SPOT_STATUS_CANCELLED = "cancelled"
+)
+
+const (
+	GATE_ORDER_WS_SPOT_EVENT_PUT    = "put"    //订单创建
+	GATE_ORDER_WS_SPOT_EVENT_UPDATE = "update" //订单成交更新
+	GATE_ORDER_WS_SPOT_EVENT_FINISH = "finish" //订单关闭或者取消
 )
 
 const (
@@ -168,6 +180,26 @@ const (
 	GATE_ORDER_SPOT_PRICE_STATUS_FINISHED = "finish"   // 成功结束
 	GATE_ORDER_SPOT_PRICE_STATUS_FAILED   = "failed"   // 失败
 	GATE_ORDER_SPOT_PRICE_STATUS_EXPIRED  = "expired"  // 过期
+)
+
+// wsSpot 推送订单的完成状态说明如下.
+const (
+	//等待处理
+	GATE_ORDER_WS_SPOT_FINISH_AS_OPEN = "open"
+	//全部成交
+	GATE_ORDER_WS_SPOT_FINISH_AS_FILLED = "filled"
+	//以下为撤单
+	GATE_ORDER_WS_SPOT_FINISH_AS_CANCELLED           = "cancelled"
+	GATE_ORDER_WS_SPOT_FINISH_AS_IOC                 = "ioc"
+	GATE_ORDER_WS_SPOT_FINISH_AS_STP                 = "stp"
+	GATE_ORDER_WS_SPOT_FINISH_AS_POC                 = "poc"
+	GATE_ORDER_WS_SPOT_FINISH_AS_FOK                 = "fok"
+	GATE_ORDER_WS_SPOT_FINISH_AS_TRADER_NOT_ENOUGH   = "trader_not_enough"
+	GATE_ORDER_WS_SPOT_FINISH_AS_DEPTH_NOT_ENOUGH    = "depth_not_enough"
+	GATE_ORDER_WS_SPOT_FINISH_AS_LIQUIDATE_CANCELLED = "liquidate_cancelled"
+
+	//拒绝下单
+	GATE_ORDER_WS_SPOT_FINISH_AS_SMALL = "small"
 )
 
 const (
@@ -202,6 +234,19 @@ const (
 // - position_closed: 因为仓位平掉了，所以挂单被撤掉
 // - reduce_out: 只减仓被排除的不容易成交的挂单
 // - stp: 订单发生自成交限制而被撤销
+
+// 订单是如何完成的。
+// - filled：全部成交
+// - cancelled：手动取消
+// - liquidated：因清算而取消
+// - ioc：生效时间为 IOC，立即完成
+// - auto_deleveraging：ADL 完成
+// - reduce_only：因减仓设置而增仓而取消
+// - position_close：因平仓而取消
+// - stp：订单发生自成交限制而被撤销
+// - _new：新建
+// - _update：成交或部分成交或更新订单
+// - reduce_out: 只减仓被排除的不容易成交的挂单
 const (
 	GATE_ORDER_CONTRACT_FINISH_AS_FILLED           = "filled"
 	GATE_ORDER_CONTRACT_FINISH_AS_CANCELLED        = "cancelled"
@@ -209,6 +254,11 @@ const (
 	GATE_ORDER_CONTRACT_FINISH_AS_IOC              = "ioc"
 	GATE_ORDER_CONTRACT_FINISH_AS_AUTO_DELEVERAGED = "auto_deleveraged"
 	GATE_ORDER_CONTRACT_FINISH_AS_REDUCE_ONLY      = "reduce_only"
+	GATE_ORDER_CONTRACT_FINISH_AS_POSITION_CLOSE   = "position_close"
+	GATE_ORDER_CONTRACT_FINISH_AS_STP              = "stp"
+	GATE_ORDER_CONTRACT_FINISH_AS_NEW              = "new"
+	GATE_ORDER_CONTRACT_FINISH_AS_UPDATE           = "update"
+	GATE_ORDER_CONTRACT_FINISH_AS_REDUCE_OUT       = "reduce_out"
 )
 
 const (

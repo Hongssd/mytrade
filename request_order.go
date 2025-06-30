@@ -28,10 +28,11 @@ type Param struct {
 	AttachOcoSlTriggerPrice decimal.Decimal //止损触发价
 	AttachOcoSlOrderPrice   decimal.Decimal //止损委托价
 
-	AccountMode AccountMode //账户模式（OKX）杠杆订单时必填
-	IsMargin    bool        //是否为杠杆订单
-	IsIsolated  bool        //是否是逐仓模式
-	Ccy         string      //杠杆订单保证金币种
+	AccountMode    AccountMode //账户模式（OKX）杠杆订单时必填
+	IsMargin       bool        //是否为杠杆订单
+	IsIsolated     bool        //是否是逐仓模式
+	Ccy            string      //杠杆订单保证金币种
+	SideEffectType string      //杠杆自动借还模式
 
 	// 单向止盈止损（策略委托）
 	TriggerPrice decimal.Decimal  //止盈止损触发价
@@ -49,6 +50,7 @@ type Param struct {
 	Expiration         int    //Price Order过期时间, 0为不过期
 	GatePriceOrderType string //Price Order类型
 	GateAutoSize       string //双仓模式下用于设置平仓的方向，close_long 平多头， close_short 平空头，需要同时设置 size 为 0
+	// IsUnified          bool   //是否统一账号模式 gate下单需要设置
 }
 
 type OrderParam Param
@@ -133,6 +135,15 @@ func (o *OrderParam) SetIsIsolated(isIsolated bool) *OrderParam {
 	o.IsIsolated = isIsolated
 	return o
 }
+func (o *OrderParam) SetCcy(ccy string) *OrderParam {
+	o.Ccy = ccy
+	return o
+}
+func (o *OrderParam) SetSideEffectType(sideEffectType string) *OrderParam {
+	o.SideEffectType = sideEffectType
+	return o
+}
+
 func (o *OrderParam) SetTriggerPrice(triggerPrice decimal.Decimal) *OrderParam {
 	o.TriggerPrice = triggerPrice
 	return o
@@ -165,6 +176,11 @@ func (o *OrderParam) SetOcoSlOrdType(ocoSlOrdType OrderType) *OrderParam {
 	o.OcoSlOrdType = ocoSlOrdType
 	return o
 }
+
+// func (o *OrderParam) SetIsUnified(isUnified bool) *OrderParam {
+// 	o.IsUnified = isUnified
+// 	return o
+// }
 
 type QueryOrderParam struct {
 	AccountType   string        //账户类型

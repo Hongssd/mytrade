@@ -209,6 +209,19 @@ func (o OkxTradeAccount) GetPositions(accountType string, symbols ...string) ([]
 			if d.LiqPx == "" {
 				d.LiqPx = "0"
 			}
+			if d.InstType == "MARGIN" {
+				//现货杠杆 posccy为计价货币时开空，posAmt取负值
+				symbolInfo, err := InnerExchangeManager.GetSymbolInfo(OKX_NAME.String(), OKX_AC_SPOT.String(), d.InstId)
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				if d.PosCcy == symbolInfo.QuoteCoin() {
+					//posCcy为计价货币，仓位为开空 取负值
+					posAmt, _ := decimal.NewFromString(d.Pos)
+					d.Pos = posAmt.Abs().Neg().String()
+				}
+			}
 			positions = append(positions, &Position{
 				Exchange:               o.ExchangeType().String(),
 				AccountType:            d.InstType,
@@ -299,7 +312,7 @@ func (o OkxTradeAccount) GetAssets(accountType string, currencies ...string) ([]
 					AccountType:            accountType,
 					Asset:                  d.Ccy,
 					Free:                   d.AvailBal,
-					Locked:                 d.OrdFrozen,
+					Locked:                 ordFronzen.Add(frozenBal).String(),
 					Borrowed:               d.Liab,                    //币种负债额 值为正数，如 21625.64 适用于跨币种保证金模式/组合保证金模式
 					Interest:               d.Interest,                //计息，应扣未扣利息 值为正数，如 9.01 适用于跨币种保证金模式/组合保证金模式
 					WalletBalance:          d.CashBal,                 //可用余额=钱包余额

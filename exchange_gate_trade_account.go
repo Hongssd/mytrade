@@ -33,7 +33,7 @@ func (a GateTradeAccount) GetMarginMode(accountType, symbol string, positionSide
 
 	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_SPOT:
-		return MARGIN_MODE_ISOLATED, nil
+		return MARGIN_MODE_CROSSED, nil
 	case GATE_ACCOUNT_TYPE_FUTURES, GATE_ACCOUNT_TYPE_DELIVERY:
 		positions, err := a.GetPositions(accountType, symbol)
 		if err != nil {
@@ -159,9 +159,10 @@ func (a GateTradeAccount) SetAccountMode(mode AccountMode) error {
 	if currentAccountMode == mode {
 		return nil
 	}
+	targetMode, usdt_futures, spot_hedge := a.gateConverter.ToGateAccountMode(mode)
 	_, err = mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().
 		NewPrivateRestUnifiedUnifiedModePut().
-		Mode(a.gateConverter.ToGateAccountMode(mode)).Do()
+		Mode(targetMode).UsdtFutures(usdt_futures).SpotHedge(spot_hedge).Do()
 	if err != nil {
 		return err
 	}
@@ -329,13 +330,13 @@ func (a GateTradeAccount) GetPositions(accountType string, symbols ...string) ([
 	switch GateAccountType(accountType) {
 	case GATE_ACCOUNT_TYPE_FUTURES:
 		var errG errgroup.Group
-		settles := []string{"usdt", "btc"}
+		settles := []string{"usdt"}
 		for _, settle := range settles {
 			settle := settle
 			errG.Go(func() error {
 				res, err := mygateapi.NewRestClient(a.apiKey, a.secretKey).PrivateRestClient().NewPrivateRestFuturesSettlePositions().Settle(settle).Do()
 				if err != nil {
-					return nil
+					return err
 				}
 				for _, p := range res.Data {
 					var marginMode MarginMode

@@ -1,10 +1,11 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mybinanceapi"
-	"github.com/shopspring/decimal"
 	"strconv"
 	"time"
+
+	"github.com/Hongssd/mybinanceapi"
+	"github.com/shopspring/decimal"
 )
 
 // 现货订单处理
@@ -159,6 +160,8 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res
 		}
 	}
 
+	// d, _ := json.MarshalIndent(res, "", "  ")
+	// log.Info(string(d))
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,

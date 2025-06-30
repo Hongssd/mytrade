@@ -1,8 +1,10 @@
 package mytrade
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Hongssd/mygateapi"
@@ -550,6 +552,59 @@ func (g *GateTradeEngine) handleOrderFromSpotPriceOrderCancel(req *OrderParam, r
 	}
 }
 
+var positionSideMap = NewMySyncMap[string, PositionSide]()
+var positionSideMu sync.Mutex
+
+func (g *GateTradeEngine) getPositionSide(accountType, contract string, orderSide OrderSide, reduceOnly bool) (PositionSide, error) {
+	positionSideMu.Lock()
+	defer positionSideMu.Unlock()
+	apiParam := ExchangeApiParam{
+		Exchange:  GATE_NAME.String(),
+		ApiKey:    g.apiKey,
+		ApiSecret: g.secretKey,
+	}
+
+	key := fmt.Sprintf("%s_%s_%s_%s_%s", apiParam.ApiKey, accountType, contract, orderSide.String(), strconv.FormatBool(reduceOnly))
+	if position, ok := positionSideMap.Load(key); ok {
+		return position, nil
+	}
+
+	var positionSide PositionSide
+
+	positions, err := InnerExchangeManager.GetPositions(apiParam, accountType, contract)
+	if err != nil {
+		log.Error(err)
+		return POSITION_SIDE_UNKNOWN, err
+	}
+	if len(positions) == 1 {
+		positionSide = POSITION_SIDE_BOTH
+	} else {
+		if reduceOnly {
+			//只减仓
+			if orderSide == ORDER_SIDE_BUY {
+				//只减仓买入 平空买入 仓位方向为空
+				positionSide = POSITION_SIDE_SHORT
+			} else {
+				//只减仓卖出 平多卖出 仓位方向为多
+				positionSide = POSITION_SIDE_LONG
+			}
+		} else {
+			if orderSide == ORDER_SIDE_BUY {
+				//开仓买入 开多 仓位方向为多
+				positionSide = POSITION_SIDE_LONG
+			} else {
+				//开仓卖出 开空 仓位方向为空
+				positionSide = POSITION_SIDE_SHORT
+			}
+		}
+	}
+
+	positionSideMap.Store(key, positionSide)
+
+	return positionSide, nil
+
+}
+
 // 永续合约订单查询
 func (g *GateTradeEngine) handleOrdersFromFuturesOpenOrders(req *QueryOrderParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestFuturesSettleOrdersGetRes]) []*Order {
 	var orders []*Order
@@ -585,6 +640,10 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOpenOrders(req *QueryOrderParam
 			orderSide = ORDER_SIDE_SELL
 		}
 
+		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, orderSide, order.IsReduceOnly)
+		if err != nil {
+			log.Error(err)
+		}
 		orders = append(orders, &Order{
 			Exchange:             g.ExchangeType().String(),
 			AccountType:          req.AccountType,
@@ -601,11 +660,11 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOpenOrders(req *QueryOrderParam
 			Status:               g.gateConverter.FromGateContractOrderStatus(order.Status, order.FinishAs),
 			Type:                 orderType,
 			Side:                 orderSide,
-			PositionSide:         "",
+			PositionSide:         positionSide,
 			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.Tif),
 			FeeAmount:            "",
 			FeeCcy:               "",
-			ReduceOnly:           order.ReduceOnly,
+			ReduceOnly:           order.IsReduceOnly,
 			CreateTime:           decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart(),
 			UpdateTime:           updateTime,
 			RealizedPnl:          "",
@@ -662,7 +721,10 @@ func (g *GateTradeEngine) handleOrdersFromFuturesPriceOpenOrders(req *QueryOrder
 
 		triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(order.Trigger.Rule, orderSide)
 		triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
-
+		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, orderSide, order.Initial.IsReduceOnly)
+		if err != nil {
+			log.Error(err)
+		}
 		orders = append(orders, &Order{
 			Exchange:             g.ExchangeType().String(),
 			AccountType:          req.AccountType,
@@ -679,7 +741,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesPriceOpenOrders(req *QueryOrder
 			Status:               g.gateConverter.FromGateContractPriceOrderStatus(order.Status, order.FinishAs),
 			Type:                 orderType,
 			Side:                 orderSide,
-			PositionSide:         "",
+			PositionSide:         positionSide,
 			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.Initial.Tif),
 			FeeAmount:            "",
 			FeeCcy:               "",
@@ -737,6 +799,11 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderQuery(req *QueryOrderParam,
 		orderSide = ORDER_SIDE_SELL
 	}
 
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, orderSide, res.Data.IsReduceOnly)
+	if err != nil {
+		log.Error(err)
+	}
+
 	return &Order{
 		Exchange:      g.ExchangeType().String(),
 		AccountType:   req.AccountType,
@@ -754,11 +821,11 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderQuery(req *QueryOrderParam,
 		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 orderType,
 		Side:                 orderSide,
-		PositionSide:         "",
+		PositionSide:         positionSide,
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
-		ReduceOnly:           res.Data.ReduceOnly,
+		ReduceOnly:           res.Data.IsReduceOnly,
 		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:           updateTime,
 		RealizedPnl:          "",
@@ -810,6 +877,11 @@ func (g *GateTradeEngine) handleOrderFromFuturesPriceOrderQuery(req *QueryOrderP
 	triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(res.Data.Trigger.Rule, orderSide)
 	triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, orderSide, res.Data.Initial.IsReduceOnly)
+	if err != nil {
+		log.Error(err)
+	}
+
 	return &Order{
 		Exchange:             g.ExchangeType().String(),
 		AccountType:          req.AccountType,
@@ -826,7 +898,7 @@ func (g *GateTradeEngine) handleOrderFromFuturesPriceOrderQuery(req *QueryOrderP
 		Status:               g.gateConverter.FromGateContractPriceOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 orderType,
 		Side:                 orderSide,
-		PositionSide:         "",
+		PositionSide:         positionSide,
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Initial.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
@@ -891,6 +963,11 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOrdersQuery(req *QueryOrderPara
 			orderSide = ORDER_SIDE_SELL
 		}
 
+		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, orderSide, order.IsReduceOnly)
+		if err != nil {
+			log.Error(err)
+		}
+
 		orders = append(orders, &Order{
 			Exchange:              g.ExchangeType().String(),
 			AccountType:           req.AccountType,
@@ -907,7 +984,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesOrdersQuery(req *QueryOrderPara
 			Status:                g.gateConverter.FromGateContractOrderStatus(order.Status, order.FinishAs),
 			Type:                  orderType,
 			Side:                  orderSide,
-			PositionSide:          "",
+			PositionSide:          positionSide,
 			TimeInForce:           g.gateConverter.FromGateTimeInForce(order.Tif),
 			FeeAmount:             "",
 			FeeCcy:                "",
@@ -968,6 +1045,11 @@ func (g *GateTradeEngine) handleOrdersFromFuturesPriceOrdersQuery(req *QueryOrde
 		triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(order.Trigger.Rule, orderSide)
 		triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
+		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, orderSide, order.Initial.IsReduceOnly)
+		if err != nil {
+			log.Error(err)
+		}
+
 		orders = append(orders, &Order{
 			Exchange:             g.ExchangeType().String(),
 			AccountType:          req.AccountType,
@@ -984,7 +1066,7 @@ func (g *GateTradeEngine) handleOrdersFromFuturesPriceOrdersQuery(req *QueryOrde
 			Status:               g.gateConverter.FromGateContractPriceOrderStatus(order.Status, order.FinishAs),
 			Type:                 orderType,
 			Side:                 orderSide,
-			PositionSide:         "",
+			PositionSide:         positionSide,
 			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.Initial.Tif),
 			FeeAmount:            "",
 			FeeCcy:               "",
@@ -1011,6 +1093,23 @@ func (g *GateTradeEngine) handleOrdersFromFuturesPriceOrdersQuery(req *QueryOrde
 }
 func (g *GateTradeEngine) handleTradesFromFuturesTradesQuery(req *QueryTradeParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestFuturesSettleMyTradesRes]) []*Trade {
 	var trades []*Trade
+	var order *Order
+	var positionSide PositionSide
+	var err error
+
+	order, err = g.QueryOrder(&QueryOrderParam{
+		AccountType: req.AccountType,
+		Symbol:      req.Symbol,
+		OrderId:     req.OrderId,
+	})
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	if order != nil {
+		positionSide = order.PositionSide
+	}
+
 	for _, trade := range res.Data {
 		price, _ := decimal.NewFromString(trade.Price)
 		amt := decimal.NewFromInt(trade.Size)
@@ -1049,7 +1148,7 @@ func (g *GateTradeEngine) handleTradesFromFuturesTradesQuery(req *QueryTradePara
 			Quantity:      amt.Abs().String(),
 			QuoteQty:      quoteQty.String(),
 			Side:          side,
-			PositionSide:  "",
+			PositionSide:  positionSide,
 			FeeAmount:     trade.Fee,
 			FeeCcy:        feeCcy,
 			RealizedPnl:   "",
@@ -1272,6 +1371,11 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCancel(req *OrderParam, res
 		orderSide = ORDER_SIDE_SELL
 	}
 
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, orderSide, res.Data.IsReduceOnly)
+	if err != nil {
+		log.Error(err)
+	}
+
 	return &Order{
 		Exchange:             g.ExchangeType().String(),
 		AccountType:          req.AccountType,
@@ -1288,11 +1392,11 @@ func (g *GateTradeEngine) handleOrderFromFuturesOrderCancel(req *OrderParam, res
 		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 orderType,
 		Side:                 orderSide,
-		PositionSide:         req.PositionSide,
+		PositionSide:         positionSide,
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
-		ReduceOnly:           res.Data.ReduceOnly,
+		ReduceOnly:           res.Data.IsReduceOnly,
 		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:           updateTime,
 		RealizedPnl:          "",
@@ -1342,6 +1446,11 @@ func (g *GateTradeEngine) handleOrderFromFuturesPriceOrderCancel(req *OrderParam
 	triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(res.Data.Trigger.Rule, orderSide)
 	triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, orderSide, res.Data.Initial.IsReduceOnly)
+	if err != nil {
+		log.Error(err)
+	}
+
 	return &Order{
 		Exchange:             g.ExchangeType().String(),
 		AccountType:          req.AccountType,
@@ -1358,11 +1467,11 @@ func (g *GateTradeEngine) handleOrderFromFuturesPriceOrderCancel(req *OrderParam
 		Status:               g.gateConverter.FromGateContractPriceOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 orderType,
 		Side:                 orderSide,
-		PositionSide:         req.PositionSide,
+		PositionSide:         positionSide,
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Initial.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
-		ReduceOnly:           res.Data.Initial.ReduceOnly,
+		ReduceOnly:           res.Data.Initial.IsReduceOnly,
 		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:           updateTime,
 		IsAlgo:               true,
@@ -1417,6 +1526,11 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOpenOrders(req *QueryOrderPara
 			orderSide = ORDER_SIDE_SELL
 		}
 
+		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, orderSide, order.IsReduceOnly)
+		if err != nil {
+			log.Error(err)
+		}
+
 		orders = append(orders, &Order{
 			Exchange:             g.ExchangeType().String(),
 			AccountType:          req.AccountType,
@@ -1433,11 +1547,11 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOpenOrders(req *QueryOrderPara
 			Status:               g.gateConverter.FromGateContractOrderStatus(order.Status, order.FinishAs),
 			Type:                 orderType,
 			Side:                 orderSide,
-			PositionSide:         "",
+			PositionSide:         positionSide,
 			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.Tif),
 			FeeAmount:            "",
 			FeeCcy:               "",
-			ReduceOnly:           order.ReduceOnly,
+			ReduceOnly:           order.IsReduceOnly,
 			CreateTime:           decimal.NewFromFloat(order.CreateTime).Mul(gateTimeMul).IntPart(),
 			UpdateTime:           updateTime,
 			RealizedPnl:          "",
@@ -1496,6 +1610,11 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryPriceOpenOrders(req *QueryOrde
 		triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(order.Trigger.Rule, orderSide)
 		triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
+		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, orderSide, order.Initial.IsReduceOnly)
+		if err != nil {
+			log.Error(err)
+		}
+
 		orders = append(orders, &Order{
 			Exchange:             g.ExchangeType().String(),
 			AccountType:          req.AccountType,
@@ -1512,7 +1631,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryPriceOpenOrders(req *QueryOrde
 			Status:               g.gateConverter.FromGateContractPriceOrderStatus(order.Status, order.FinishAs),
 			Type:                 orderType,
 			Side:                 orderSide,
-			PositionSide:         "",
+			PositionSide:         positionSide,
 			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.Initial.Tif),
 			FeeAmount:            "",
 			FeeCcy:               "",
@@ -1570,6 +1689,11 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderQuery(req *QueryOrderParam
 		orderSide = ORDER_SIDE_SELL
 	}
 
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, orderSide, res.Data.IsReduceOnly)
+	if err != nil {
+		log.Error(err)
+	}
+
 	return &Order{
 		Exchange:      g.ExchangeType().String(),
 		AccountType:   req.AccountType,
@@ -1587,11 +1711,11 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderQuery(req *QueryOrderParam
 		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 orderType,
 		Side:                 orderSide,
-		PositionSide:         "",
+		PositionSide:         positionSide,
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
-		ReduceOnly:           res.Data.ReduceOnly,
+		ReduceOnly:           res.Data.IsReduceOnly,
 		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:           updateTime,
 		RealizedPnl:          "",
@@ -1641,6 +1765,11 @@ func (g *GateTradeEngine) handleOrderFromDeliveryPriceOrderQuery(req *QueryOrder
 	triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(res.Data.Trigger.Rule, orderSide)
 	triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, orderSide, res.Data.Initial.IsReduceOnly)
+	if err != nil {
+		log.Error(err)
+	}
+
 	return &Order{
 		Exchange:             g.ExchangeType().String(),
 		AccountType:          req.AccountType,
@@ -1657,7 +1786,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryPriceOrderQuery(req *QueryOrder
 		Status:               g.gateConverter.FromGateContractPriceOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 orderType,
 		Side:                 orderSide,
-		PositionSide:         "",
+		PositionSide:         positionSide,
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Initial.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
@@ -1713,6 +1842,11 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOrdersQuery(req *QueryOrderPar
 			orderSide = ORDER_SIDE_SELL
 		}
 
+		positionSide, err := g.getPositionSide(req.AccountType, order.Contract, orderSide, order.IsReduceOnly)
+		if err != nil {
+			log.Error(err)
+		}
+
 		orders = append(orders, &Order{
 			Exchange:             g.ExchangeType().String(),
 			AccountType:          req.AccountType,
@@ -1729,7 +1863,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryOrdersQuery(req *QueryOrderPar
 			Status:               g.gateConverter.FromGateContractOrderStatus(order.Status, order.FinishAs),
 			Type:                 orderType,
 			Side:                 orderSide,
-			PositionSide:         "",
+			PositionSide:         positionSide,
 			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.Tif),
 			FeeAmount:            "",
 			FeeCcy:               "",
@@ -1790,6 +1924,11 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryPriceOrdersQuery(req *QueryOrd
 		triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(order.Trigger.Rule, orderSide)
 		triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
+		positionSide, err := g.getPositionSide(req.AccountType, order.Initial.Contract, orderSide, order.Initial.IsReduceOnly)
+		if err != nil {
+			log.Error(err)
+		}
+
 		orders = append(orders, &Order{
 			Exchange:             g.ExchangeType().String(),
 			AccountType:          req.AccountType,
@@ -1806,7 +1945,7 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryPriceOrdersQuery(req *QueryOrd
 			Status:               g.gateConverter.FromGateContractPriceOrderStatus(order.Status, order.FinishAs),
 			Type:                 orderType,
 			Side:                 orderSide,
-			PositionSide:         "",
+			PositionSide:         positionSide,
 			TimeInForce:          g.gateConverter.FromGateTimeInForce(order.Initial.Tif),
 			FeeAmount:            "",
 			FeeCcy:               "",
@@ -1833,6 +1972,23 @@ func (g *GateTradeEngine) handleOrdersFromDeliveryPriceOrdersQuery(req *QueryOrd
 }
 func (g *GateTradeEngine) handleTradesFromDeliveryTradesQuery(req *QueryTradeParam, res *mygateapi.GateRestRes[mygateapi.PrivateRestDeliverySettleMyTradesRes]) []*Trade {
 	var trades []*Trade
+	var err error
+	var order *Order
+	var positionSide PositionSide
+
+	order, err = g.QueryOrder(&QueryOrderParam{
+		AccountType: req.AccountType,
+		Symbol:      req.Symbol,
+		OrderId:     req.OrderId,
+	})
+	if err != nil {
+		log.Error(err)
+	}
+
+	if order != nil {
+		positionSide = order.PositionSide
+	}
+
 	for _, trade := range res.Data {
 		price, _ := decimal.NewFromString(trade.Price)
 		amt := decimal.NewFromInt(trade.Size)
@@ -1868,7 +2024,7 @@ func (g *GateTradeEngine) handleTradesFromDeliveryTradesQuery(req *QueryTradePar
 			Quantity:      amt.Abs().String(),
 			QuoteQty:      quoteQty.String(),
 			Side:          side,
-			PositionSide:  "",
+			PositionSide:  positionSide,
 			FeeAmount:     trade.Fee,
 			FeeCcy:        feeCcy,
 			RealizedPnl:   "",
@@ -1969,6 +2125,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryPriceOrderCreate(req *OrderPara
 		Status:               ORDER_STATUS_UN_TRIGGERED,
 		Type:                 req.OrderType,
 		Side:                 req.OrderSide,
+		PositionSide:         req.PositionSide,
 		TimeInForce:          req.TimeInForce,
 		FeeAmount:            "",
 		FeeCcy:               "",
@@ -2027,6 +2184,11 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCancel(req *OrderParam, re
 		orderSide = ORDER_SIDE_SELL
 	}
 
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Contract, orderSide, res.Data.IsReduceOnly)
+	if err != nil {
+		log.Error(err)
+	}
+
 	return &Order{
 		Exchange:             g.ExchangeType().String(),
 		AccountType:          req.AccountType,
@@ -2043,11 +2205,11 @@ func (g *GateTradeEngine) handleOrderFromDeliveryOrderCancel(req *OrderParam, re
 		Status:               g.gateConverter.FromGateContractOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 orderType,
 		Side:                 orderSide,
-		PositionSide:         "",
+		PositionSide:         positionSide,
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
-		ReduceOnly:           res.Data.ReduceOnly,
+		ReduceOnly:           res.Data.IsReduceOnly,
 		CreateTime:           decimal.NewFromFloat(res.Data.CreateTime).Mul(gateTimeMul).IntPart(),
 		UpdateTime:           updateTime,
 		RealizedPnl:          "",
@@ -2096,6 +2258,11 @@ func (g *GateTradeEngine) handleOrderFromDeliveryPriceOrderCancel(req *OrderPara
 	triggerType := g.gateConverter.FromGateFuturesPriceOrderTriggerRule(res.Data.Trigger.Rule, orderSide)
 	triggerConditionType := g.gateConverter.FromGateTriggerCondition(orderSide, triggerType)
 
+	positionSide, err := g.getPositionSide(req.AccountType, res.Data.Initial.Contract, orderSide, res.Data.Initial.IsReduceOnly)
+	if err != nil {
+		log.Error(err)
+	}
+
 	return &Order{
 		Exchange:             g.ExchangeType().String(),
 		AccountType:          req.AccountType,
@@ -2112,7 +2279,7 @@ func (g *GateTradeEngine) handleOrderFromDeliveryPriceOrderCancel(req *OrderPara
 		Status:               g.gateConverter.FromGateContractPriceOrderStatus(res.Data.Status, res.Data.FinishAs),
 		Type:                 orderType,
 		Side:                 orderSide,
-		PositionSide:         "",
+		PositionSide:         positionSide,
 		TimeInForce:          g.gateConverter.FromGateTimeInForce(res.Data.Initial.Tif),
 		FeeAmount:            "",
 		FeeCcy:               "",
@@ -2134,4 +2301,156 @@ func (g *GateTradeEngine) handleOrderFromDeliveryPriceOrderCancel(req *OrderPara
 		OcoSlOrdType:         "",
 		OcoSlOrdPrice:        "",
 	}
+}
+func (g *GateTradeEngine) handleOrderFromBatchErr(req *OrderParam, err error) *Order {
+	return &Order{
+		Exchange:      GATE_NAME.String(),
+		AccountType:   req.AccountType,
+		Symbol:        req.Symbol,
+		IsMargin:      req.IsMargin,
+		IsIsolated:    req.IsIsolated,
+		OrderId:       req.OrderId,
+		ClientOrderId: req.ClientOrderId,
+		Price:         req.Price.String(),
+		Quantity:      req.Quantity.String(),
+		Type:          req.OrderType,
+		Side:          req.OrderSide,
+		PositionSide:  req.PositionSide,
+		TimeInForce:   req.TimeInForce,
+		Status:        ORDER_STATUS_REJECTED,
+		ErrorMsg:      err.Error(),
+	}
+}
+
+// handle ws
+func (g *GateTradeEngine) handleSubscribeOrderFromSpotSub(req SubscribeOrderParam,
+	spotSub *mygateapi.MultipleSubscription[mygateapi.WsSubscribeResult[mygateapi.WsSpotOrder]], newSub *subscription[Order]) {
+	//处理订单推送订阅
+	go func() {
+		for {
+			select {
+			case err := <-spotSub.ErrChan():
+				newSub.errChan <- err
+			case <-spotSub.CloseChan():
+				newSub.CloseChan() <- struct{}{}
+				return
+			case result := <-spotSub.ResultChan():
+				r := result.Result
+				avgPrice := decimal.Zero
+				filledAmount, _ := decimal.NewFromString(r.FilledAmount)
+				filledTotal, _ := decimal.NewFromString(r.FilledTotal)
+				if !filledAmount.IsZero() && !filledTotal.IsZero() {
+					avgPrice, _ = decimal.NewFromString(r.AvgDealPrice)
+					if avgPrice.IsZero() {
+						avgPrice = filledTotal.Div(filledAmount)
+					}
+				}
+				createTime, _ := strconv.ParseInt(r.CreateTimeMs, 10, 64)
+				updateTime, _ := strconv.ParseInt(r.UpdateTimeMs, 10, 64)
+				order := Order{
+					Exchange:      GATE_NAME.String(),
+					AccountType:   req.AccountType,
+					Symbol:        r.CurrencyPair,
+					OrderId:       r.Id,
+					ClientOrderId: r.Text,
+					Price:         r.Price,
+					Quantity:      r.Amount,
+					ExecutedQty:   r.FilledAmount,
+					CumQuoteQty:   r.FilledTotal,
+					AvgPrice:      avgPrice.String(),
+					Status:        g.gateConverter.FromGateWsSportOrderStatus(r.Event, r.FinishAs),
+					Type:          g.gateConverter.FromGateOrderType(r.Type),
+					Side:          g.gateConverter.FromGateOrderSide(r.Side),
+					TimeInForce:   g.gateConverter.FromGateTimeInForce(r.TimeInForce),
+					FeeAmount:     r.Fee,
+					FeeCcy:        r.FeeCurrency,
+					CreateTime:    createTime,
+					UpdateTime:    updateTime,
+				}
+				newSub.resultChan <- order
+			}
+		}
+	}()
+}
+
+// handle ws
+func (g *GateTradeEngine) handleSubscribeOrderFromFuturesOrDeliverySub(req SubscribeOrderParam,
+	targetSub *mygateapi.MultipleSubscription[mygateapi.WsSubscribeResult[[]mygateapi.WsFuturesOrder]], newSub *subscription[Order]) {
+	//处理订单推送订阅
+	go func() {
+		for {
+			select {
+			case err := <-targetSub.ErrChan():
+				newSub.errChan <- err
+			case <-targetSub.CloseChan():
+				newSub.CloseChan() <- struct{}{}
+				return
+			case result := <-targetSub.ResultChan():
+				if result.Result == nil {
+					continue
+				}
+				for _, r := range *result.Result {
+					price := decimal.NewFromFloat(r.Price)
+					avgPrice := decimal.NewFromFloat(r.FillPrice)
+					//size为正买入 size为负卖出
+					quantity := decimal.NewFromInt(r.Size).Abs()
+					quantityLeft := decimal.NewFromInt(r.Left).Abs()
+					filledAmount := quantity.Sub(quantityLeft)
+					filledTotal := filledAmount.Mul(avgPrice)
+
+					createTime := r.CreateTimeMs
+					updateTime := r.UpdateTime
+
+					var orderType OrderType
+					if price.IsZero() {
+						//市价单
+						orderType = ORDER_TYPE_MARKET
+					} else {
+						//限价单
+						orderType = ORDER_TYPE_LIMIT
+					}
+
+					var orderSide OrderSide
+					if r.Size > 0 {
+						orderSide = ORDER_SIDE_BUY
+					} else {
+						orderSide = ORDER_SIDE_SELL
+					}
+
+					mkfr := decimal.NewFromFloat(r.Mkfr)
+					tkfr := decimal.NewFromFloat(r.Tkfr)
+					fee := mkfr.Add(tkfr)
+
+					positionSide, err := g.getPositionSide(req.AccountType, r.Contract, orderSide, r.IsReduceOnly)
+					if err != nil {
+						log.Error(err)
+					}
+
+					order := Order{
+						Exchange:      GATE_NAME.String(),
+						AccountType:   req.AccountType,
+						Symbol:        r.Contract,
+						OrderId:       strconv.FormatInt(r.Id, 10),
+						ClientOrderId: r.Text,
+						Price:         price.String(),
+						Quantity:      quantity.String(),
+						ExecutedQty:   filledAmount.String(),
+						CumQuoteQty:   filledTotal.String(),
+						AvgPrice:      avgPrice.String(),
+						Status:        g.gateConverter.FromGateContractOrderStatus(r.Status, r.FinishAs),
+						Type:          orderType,
+						Side:          orderSide,
+						PositionSide:  positionSide,
+						TimeInForce:   g.gateConverter.FromGateTimeInForce(r.Tif),
+						FeeAmount:     fee.String(),
+						FeeCcy:        "",
+						ReduceOnly:    r.IsReduceOnly,
+						CreateTime:    createTime,
+						UpdateTime:    updateTime,
+					}
+					newSub.resultChan <- order
+				}
+			}
+		}
+	}()
 }

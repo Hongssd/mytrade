@@ -68,7 +68,7 @@ func (b *BinanceTradeEngine) apiSpotOrderCreate(req *OrderParam) *mybinanceapi.S
 	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotOrderPost().
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
-		Quantity(req.Quantity)
+		Quantity(req.Quantity).NewOrderRespType("FULL")
 
 	api.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 
@@ -76,7 +76,7 @@ func (b *BinanceTradeEngine) apiSpotOrderCreate(req *OrderParam) *mybinanceapi.S
 		api.StopPrice(req.TriggerPrice)
 	}
 
-	log.Info(req)
+	// log.Info(req)
 
 	if !req.Price.IsZero() {
 		api = api.Price(req.Price)
@@ -85,7 +85,13 @@ func (b *BinanceTradeEngine) apiSpotOrderCreate(req *OrderParam) *mybinanceapi.S
 		api = api.NewClientOrderId(req.ClientOrderId)
 	}
 	if req.TimeInForce != "" {
-		api = api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
+		if req.TimeInForce == TIME_IN_FORCE_POST_ONLY {
+			// 现货POSTONLY下单 不传timeInforce并且将订单类型为LIMIT_MAKER
+			// api.TimeInForce(b.bnConverter.ToBNTimeInForce(TIME_IN_FORCE_GTC))
+			api.Type(BN_ORDER_TYPE_LIMIT_MAKER)
+		} else {
+			api = api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
+		}
 	}
 	return api
 }
@@ -180,7 +186,7 @@ func (b *BinanceTradeEngine) apiSpotMarginOrderCreate(req *OrderParam) *mybinanc
 	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginOrderPost().
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
-		Quantity(req.Quantity)
+		Quantity(req.Quantity).NewOrderRespType("FULL")
 
 	api.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 
@@ -202,7 +208,16 @@ func (b *BinanceTradeEngine) apiSpotMarginOrderCreate(req *OrderParam) *mybinanc
 		api = api.NewClientOrderId(req.ClientOrderId)
 	}
 	if req.TimeInForce != "" {
-		api = api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
+		if req.TimeInForce == TIME_IN_FORCE_POST_ONLY {
+			// 现货杠杆POSTONLY下单 不传timeInforce并且将订单类型为LIMIT_MAKER
+			// api.TimeInForce(b.bnConverter.ToBNTimeInForce(TIME_IN_FORCE_GTC))
+			api.Type(BN_ORDER_TYPE_LIMIT_MAKER)
+		} else {
+			api = api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
+		}
+	}
+	if req.SideEffectType != "" && req.SideEffectType != NO_MARGIN.String() {
+		api.SideEffectType(req.SideEffectType)
 	}
 
 	return api
@@ -284,7 +299,7 @@ func (b *BinanceTradeEngine) apiFutureOrderCreate(req *OrderParam) *mybinanceapi
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-		Quantity(req.Quantity)
+		Quantity(req.Quantity).NewOrderRespType("FULL")
 
 	api.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 	if !req.TriggerPrice.IsZero() {
@@ -338,7 +353,7 @@ func (b *BinanceTradeEngine) apiFutureBatchOrderCreate(reqs []*OrderParam) *mybi
 		thisApi := client.NewFutureOrderPost().Symbol(req.Symbol).
 			Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 			PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-			Quantity(req.Quantity)
+			Quantity(req.Quantity).NewOrderRespType("FULL")
 
 		thisApi.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 		if !req.TriggerPrice.IsZero() {
@@ -466,7 +481,7 @@ func (b *BinanceTradeEngine) apiSwapOrderCreate(req *OrderParam) *mybinanceapi.S
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-		Quantity(req.Quantity)
+		Quantity(req.Quantity).NewOrderRespType("FULL")
 
 	api.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 	if !req.TriggerPrice.IsZero() {
@@ -518,7 +533,7 @@ func (b *BinanceTradeEngine) apiSwapBatchOrderCreate(reqs []*OrderParam) *mybina
 		thisApi := client.NewSwapOrderPost().Symbol(req.Symbol).
 			Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 			PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-			Quantity(req.Quantity)
+			Quantity(req.Quantity).NewOrderRespType("FULL")
 
 		thisApi.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 		if !req.TriggerPrice.IsZero() {

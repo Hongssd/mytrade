@@ -1,9 +1,10 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/myokxapi"
 	"sync"
 	"time"
+
+	"github.com/Hongssd/myokxapi"
 )
 
 type OkxTradeEngine struct {
@@ -187,6 +188,7 @@ func (o *OkxTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 	defer o.closeSubscribe(b, sub)
+
 	//执行API
 	res, err := api.Do()
 	if err != nil {

@@ -1,8 +1,9 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/mybinanceapi"
 	"strconv"
+
+	"github.com/Hongssd/mybinanceapi"
 )
 
 // UM
@@ -12,7 +13,7 @@ func (b *BinanceTradeEngine) apiPortfolioMarginUmOrderCreate(req *OrderParam) *m
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
 		Type(b.bnConverter.ToBNOrderType(req.OrderType)).
-		Quantity(req.Quantity)
+		Quantity(req.Quantity).NewOrderRespType("FULL")
 
 	if !req.Price.IsZero() {
 		api.Price(req.Price)
@@ -131,7 +132,7 @@ func (b *BinanceTradeEngine) apiPortfolioMarginCmOrderCreate(req *OrderParam) *m
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
 		Type(b.bnConverter.ToBNOrderType(req.OrderType)).
-		Quantity(req.Quantity)
+		Quantity(req.Quantity).NewOrderRespType("FULL")
 
 	if !req.Price.IsZero() {
 		api.Price(req.Price)
@@ -236,7 +237,7 @@ func (b *BinanceTradeEngine) apiPortfolioMarginMarginOrderCreate(req *OrderParam
 	api := binance.NewPortfolioMarginClient(b.apiKey, b.secretKey).NewMarginOrderPost().
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
-		Type(b.bnConverter.ToBNOrderType(req.OrderType))
+		Type(b.bnConverter.ToBNOrderType(req.OrderType)).NewOrderRespType("FULL")
 
 	if !req.Quantity.IsZero() {
 		api.Quantity(req.Quantity)
@@ -255,7 +256,17 @@ func (b *BinanceTradeEngine) apiPortfolioMarginMarginOrderCreate(req *OrderParam
 	}
 
 	if req.TimeInForce != "" {
-		api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
+		if req.TimeInForce == TIME_IN_FORCE_POST_ONLY {
+			// 统一账号杠杆POSTONLY下单 不传timeInforce并且将订单类型为LIMIT_MAKER
+			// api.TimeInForce(b.bnConverter.ToBNTimeInForce(TIME_IN_FORCE_GTC))
+			api.Type(BN_ORDER_TYPE_LIMIT_MAKER)
+		} else {
+			api.TimeInForce(b.bnConverter.ToBNTimeInForce(req.TimeInForce))
+		}
+	}
+
+	if req.SideEffectType != "" && req.SideEffectType != NO_MARGIN.String() {
+		api.SideEffectType(req.SideEffectType)
 	}
 
 	return api

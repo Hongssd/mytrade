@@ -1,8 +1,9 @@
 package mytrade
 
 import (
-	"github.com/Hongssd/myokxapi"
 	"strconv"
+
+	"github.com/Hongssd/myokxapi"
 )
 
 // 查询订单接口获取
@@ -100,8 +101,10 @@ func (o *OkxTradeEngine) apiOrderCreate(req *OrderParam) *myokxapi.PrivateRestTr
 	} else {
 		api.TgtCcy("base_ccy")
 	}
-	if req.ReduceOnly {
-		api.ReduceOnly(req.ReduceOnly)
+	if OkxAccountType(req.AccountType) != "SPOT" && !req.IsMargin {
+		if req.ReduceOnly {
+			api.ReduceOnly(req.ReduceOnly)
+		}
 	}
 	if req.ClientOrderId != "" {
 		api.ClOrdId(req.ClientOrderId)

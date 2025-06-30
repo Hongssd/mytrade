@@ -17,18 +17,21 @@ func (c *GateEnumConverter) FromGateAccountMode(t string) AccountMode {
 	return ACCOUNT_MODE_UNKNOWN
 }
 
-func (c *GateEnumConverter) ToGateAccountMode(t AccountMode) string {
+func (c *GateEnumConverter) ToGateAccountMode(t AccountMode) (string, bool, bool) {
 	switch t {
 	case ACCOUNT_MODE_FREE_MARGIN:
-		return GATE_ACCOUNT_MODE_CLASSIC
+		return GATE_ACCOUNT_MODE_CLASSIC, false, false
 	case ACCOUNT_MODE_SINGLE_MARGIN:
-		return GATE_ACCOUNT_MODE_SINGLE_MARGIN
+		//单币种保证金
+		return GATE_ACCOUNT_MODE_SINGLE_MARGIN, false, false
 	case ACCOUNT_MODE_MULTI_MARGIN:
-		return GATE_ACCOUNT_MODE_MULTI_MARGIN
+		//跨币种保证金
+		return GATE_ACCOUNT_MODE_MULTI_MARGIN, true, true
 	case ACCOUNT_MODE_PORTFOLIO:
-		return GATE_ACCOUNT_MODE_PORTFOLIO
+		//组合保证金
+		return GATE_ACCOUNT_MODE_PORTFOLIO, true, true
 	}
-	return ""
+	return "", false, false
 }
 
 func (c *GateEnumConverter) FromGatePositionMode(t bool) PositionMode {
@@ -218,6 +221,8 @@ func (c *GateEnumConverter) ToGateTimeInForce(t TimeInForce) string {
 		return GATE_TIME_IN_FORCE_IOC
 	case TIME_IN_FORCE_POST_ONLY:
 		return GATE_TIME_IN_FORCE_POC
+	case TIME_IN_FORCE_FOK:
+		return GATE_TIME_IN_FORCE_FOK
 	}
 	return ""
 }
@@ -230,6 +235,8 @@ func (c *GateEnumConverter) FromGateTimeInForce(t string) TimeInForce {
 		return TIME_IN_FORCE_IOC
 	case GATE_TIME_IN_FORCE_POC:
 		return TIME_IN_FORCE_POST_ONLY
+	case GATE_TIME_IN_FORCE_FOK:
+		return TIME_IN_FORCE_FOK
 	}
 	return TIME_IN_FORCE_UNKNOWN
 }
@@ -255,6 +262,32 @@ func (c *GateEnumConverter) FromGateSpotOrderStatus(t string) OrderStatus {
 	}
 	return ORDER_STATUS_UNKNOWN
 }
+func (c *GateEnumConverter) FromGateWsSportOrderStatus(event, finishAs string) OrderStatus {
+	switch event {
+	case GATE_ORDER_WS_SPOT_EVENT_PUT:
+		return ORDER_STATUS_NEW
+	case GATE_ORDER_WS_SPOT_EVENT_UPDATE, GATE_ORDER_WS_SPOT_EVENT_FINISH:
+		switch finishAs {
+		case GATE_ORDER_WS_SPOT_FINISH_AS_OPEN:
+			return ORDER_STATUS_NEW
+		case GATE_ORDER_WS_SPOT_FINISH_AS_FILLED:
+			return ORDER_STATUS_FILLED
+		case GATE_ORDER_WS_SPOT_FINISH_AS_CANCELLED,
+			GATE_ORDER_WS_SPOT_FINISH_AS_IOC,
+			GATE_ORDER_WS_SPOT_FINISH_AS_STP,
+			GATE_ORDER_WS_SPOT_FINISH_AS_POC,
+			GATE_ORDER_WS_SPOT_FINISH_AS_FOK,
+			GATE_ORDER_WS_SPOT_FINISH_AS_TRADER_NOT_ENOUGH,
+			GATE_ORDER_WS_SPOT_FINISH_AS_DEPTH_NOT_ENOUGH,
+			GATE_ORDER_WS_SPOT_FINISH_AS_LIQUIDATE_CANCELLED,
+			GATE_ORDER_WS_SPOT_FINISH_AS_SMALL:
+			return ORDER_STATUS_CANCELED
+		default:
+			return ORDER_STATUS_UNKNOWN
+		}
+	}
+	return ORDER_STATUS_UNKNOWN
+}
 
 func (c *GateEnumConverter) FromGateContractOrderStatus(t, fas string) OrderStatus {
 	switch t {
@@ -262,13 +295,19 @@ func (c *GateEnumConverter) FromGateContractOrderStatus(t, fas string) OrderStat
 		return ORDER_STATUS_NEW
 	case GATE_ORDER_CONTRACT_STATUS_FINISHED:
 		switch fas {
+		case GATE_ORDER_CONTRACT_FINISH_AS_NEW,
+			GATE_ORDER_CONTRACT_FINISH_AS_UPDATE,
+			GATE_ORDER_CONTRACT_FINISH_AS_REDUCE_OUT:
+			return ORDER_STATUS_NEW
 		case GATE_ORDER_CONTRACT_FINISH_AS_FILLED:
 			return ORDER_STATUS_FILLED
 		case GATE_ORDER_CONTRACT_FINISH_AS_CANCELLED,
 			GATE_ORDER_CONTRACT_FINISH_AS_LIQUIDATED,
 			GATE_ORDER_CONTRACT_FINISH_AS_IOC,
 			GATE_ORDER_CONTRACT_FINISH_AS_AUTO_DELEVERAGED,
-			GATE_ORDER_CONTRACT_FINISH_AS_REDUCE_ONLY:
+			GATE_ORDER_CONTRACT_FINISH_AS_REDUCE_ONLY,
+			GATE_ORDER_CONTRACT_FINISH_AS_POSITION_CLOSE,
+			GATE_ORDER_CONTRACT_FINISH_AS_STP:
 			return ORDER_STATUS_CANCELED
 		}
 		return ORDER_STATUS_FILLED

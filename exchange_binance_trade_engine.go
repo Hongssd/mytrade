@@ -781,11 +781,10 @@ func (b *BinanceTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscr
 				return nil, err
 			}
 			b.handleSubscribeOrderFromFuturePayload(req, newPayload, newSub)
+			return newSub, nil
 		}
-		return newSub, nil
 	case BN_AC_SWAP:
 		if !b.isPortfolioMargin {
-
 			err := b.checkWsSwapAccount()
 			if err != nil {
 				return nil, err
@@ -815,7 +814,10 @@ func (b *BinanceTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscr
 			}
 			b.handleSubscribeOrderFromPMContractPayload(req, newPayload, newSub)
 		}
+	} else {
+		return nil, ErrorAccountType
 	}
+
 	return newSub, nil
 }
 

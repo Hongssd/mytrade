@@ -14,12 +14,9 @@ type GateTradeEngine struct {
 	secretKey     string
 	passphrase    string
 
-	wsForSpotOrder       *mygateapi.SpotWsStreamClient
-	wsForSpotOrderMu     sync.Mutex
-	wsForFuturesOrder    *mygateapi.FuturesWsStreamClient
-	wsForFuturesOrderMu  sync.Mutex
-	wsForDeliveryOrder   *mygateapi.DeliveryWsStreamClient
-	wsForDeliveryOrderMu sync.Mutex
+	wsForSpotOrder     *mygateapi.SpotWsStreamClient
+	wsForFuturesOrder  *mygateapi.FuturesWsStreamClient
+	wsForDeliveryOrder *mygateapi.DeliveryWsStreamClient
 }
 
 func (g *GateTradeEngine) NewOrderReq() *OrderParam {
@@ -365,39 +362,146 @@ func (g *GateTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 }
 
 func (g *GateTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
-	return nil, nil
+	//使用并发下单
+	orders := []*Order{}
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	for _, req := range reqs {
+		req := req
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			order, err := g.CreateOrder(req)
+			if err != nil {
+				mu.Lock()
+				orders = append(orders, g.handleOrderFromBatchErr(req, err))
+				mu.Unlock()
+			}
+			mu.Lock()
+			orders = append(orders, order)
+			mu.Unlock()
+		}()
+	}
+	wg.Wait()
+	return orders, nil
 }
 func (g *GateTradeEngine) AmendOrders(reqs []*OrderParam) ([]*Order, error) {
-	return nil, nil
+	//使用并发改单
+	orders := []*Order{}
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	for _, req := range reqs {
+		req := req
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			order, err := g.AmendOrder(req)
+			if err != nil {
+				mu.Lock()
+				orders = append(orders, g.handleOrderFromBatchErr(req, err))
+				mu.Unlock()
+			}
+			mu.Lock()
+			orders = append(orders, order)
+			mu.Unlock()
+		}()
+	}
+	wg.Wait()
+	return orders, nil
 }
 func (g *GateTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
-	return nil, nil
+	//使用并发撤单
+	orders := []*Order{}
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	for _, req := range reqs {
+		req := req
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			order, err := g.CancelOrder(req)
+			if err != nil {
+				mu.Lock()
+				orders = append(orders, g.handleOrderFromBatchErr(req, err))
+				mu.Unlock()
+			}
+			mu.Lock()
+			orders = append(orders, order)
+			mu.Unlock()
+		}()
+	}
+	wg.Wait()
+	return orders, nil
 }
 
 func (g *GateTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
 	return &SubscribeOrderParam{}
 }
 
-func (g *GateTradeEngine) SubscribeOrder(req *SubscribeOrderParam) (TradeSubscribe[Order], error) {
-	return nil, nil
+func (g *GateTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscribe[Order], error) {
+	req := *r
+	//构建一个推送订单数据的中转订阅
+	newSub := &subscription[Order]{
+		resultChan: make(chan Order, 100),
+		errChan:    make(chan error, 10),
+		closeChan:  make(chan struct{}, 10),
+	}
+	switch GateAccountType(req.AccountType) {
+	case GATE_ACCOUNT_TYPE_SPOT:
+
+		err := g.checkWsForSpotOrder()
+		if err != nil {
+			return nil, err
+		}
+		spotSub, err := g.wsForSpotOrder.SubscribeOrders()
+		if err != nil {
+			return nil, err
+		}
+		g.handleSubscribeOrderFromSpotSub(req, spotSub, newSub)
+		return newSub, nil
+	case GATE_ACCOUNT_TYPE_FUTURES:
+		err := g.checkWsForFuturesOrder()
+		if err != nil {
+			return nil, err
+		}
+		futuresSub, err := g.wsForFuturesOrder.SubscribeOrders()
+		if err != nil {
+			return nil, err
+		}
+		g.handleSubscribeOrderFromFuturesOrDeliverySub(req, futuresSub, newSub)
+		return newSub, nil
+	case GATE_ACCOUNT_TYPE_DELIVERY:
+		err := g.checkWsForDeliveryOrder()
+		if err != nil {
+			return nil, err
+		}
+		deliverySub, err := g.wsForDeliveryOrder.SubscribeOrders()
+		if err != nil {
+			return nil, err
+		}
+		g.handleSubscribeOrderFromFuturesOrDeliverySub(req, deliverySub, newSub)
+		return newSub, nil
+	default:
+		return nil, ErrorAccountType
+	}
 }
 
 func (g *GateTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
-	return nil, nil
+	return nil, ErrorNotSupport
 }
 func (g *GateTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
-	return nil, nil
+	return nil, ErrorNotSupport
 }
 func (g *GateTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
-	return nil, nil
+	return nil, ErrorNotSupport
 }
 
 func (g *GateTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
-	return nil, nil
+	return nil, ErrorNotSupport
 }
 func (g *GateTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
-	return nil, nil
+	return nil, ErrorNotSupport
 }
 func (g *GateTradeEngine) WsCancelOrders(reqs []*OrderParam) ([]*Order, error) {
-	return nil, nil
+	return nil, ErrorNotSupport
 }

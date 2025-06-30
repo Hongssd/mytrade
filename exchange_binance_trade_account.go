@@ -823,12 +823,12 @@ func (b BinanceTradeAccount) GetAssets(accountType string, currencies ...string)
 			Exchange:          b.ExchangeType().String(), //交易所
 			AccountType:       accountType,               //账户类型
 			Asset:             "USD",                     //资产
-			WalletBalance:     r.AccountEquity,           //账户USD权益
-			MarginBalance:     r.AccountEquity,           //保证金余额
-			InitialMargin:     r.AccountMaintMargin,      //初始保证金
+			WalletBalance:     r.ActualEquity,            //账户USD权益
+			MarginBalance:     r.ActualEquity,            //保证金余额
+			InitialMargin:     r.AccountInitialMargin,    //初始保证金
 			MaintMargin:       r.AccountMaintMargin,      //维持保证金
 			MarginAvailable:   true,
-			MaxWithdrawAmount: r.VirtualMaxWithdrawAmount, //以USD计价的最大可转出金额
+			MaxWithdrawAmount: "0", //以USD计价的最大可转出金额
 		})
 
 	case BN_AC_FUNDING:

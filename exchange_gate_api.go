@@ -29,6 +29,23 @@ func (g *GateTradeEngine) apiSpotOrderCreate(req *OrderParam) *mygateapi.Private
 		api.TimeInForce(g.gateConverter.ToGateTimeInForce(req.TimeInForce))
 	}
 
+	if req.SideEffectType != "" && req.SideEffectType != NO_MARGIN.String() {
+		switch req.SideEffectType {
+		case MARGIN_BUY.String(): //仅自动借币
+			api.AutoBorrow(true)
+			api.AutoRepay(false)
+		case AUTO_REPAY.String(): //仅自动还币
+			api.AutoBorrow(false)
+			api.AutoRepay(true)
+		case AUTO_BORROW_REPAY.String(): //自动借币还币
+			api.AutoBorrow(true)
+			api.AutoRepay(true)
+		default:
+			api.AutoBorrow(false)
+			api.AutoRepay(false)
+		}
+	}
+
 	return api
 }
 func (g *GateTradeEngine) apiSpotPriceOrderCreate(req *OrderParam) *mygateapi.PrivateRestSpotPriceOrdersPostAPI {
@@ -769,4 +786,37 @@ func (g *GateTradeEngine) apiDeliveryTradesQuery(req *QueryTradeParam) *mygateap
 	}
 
 	return api
+}
+
+func (g *GateTradeEngine) checkWsForSpotOrder() error {
+	if g.wsForSpotOrder == nil {
+		g.wsForSpotOrder = mygateapi.NewSpotWsStreamClient(mygateapi.NewRestClient(g.apiKey, g.secretKey))
+		err := g.wsForSpotOrder.OpenConn()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (g *GateTradeEngine) checkWsForFuturesOrder() error {
+	if g.wsForFuturesOrder == nil {
+		g.wsForFuturesOrder = mygateapi.NewFuturesWsStreamClient(mygateapi.NewRestClient(g.apiKey, g.secretKey), mygateapi.USDT_CONTRACT)
+		err := g.wsForFuturesOrder.OpenConn()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (g *GateTradeEngine) checkWsForDeliveryOrder() error {
+	if g.wsForDeliveryOrder == nil {
+		g.wsForDeliveryOrder = mygateapi.NewDeliveryWsStreamClient(mygateapi.NewRestClient(g.apiKey, g.secretKey), mygateapi.USDT_CONTRACT)
+		err := g.wsForDeliveryOrder.OpenConn()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
