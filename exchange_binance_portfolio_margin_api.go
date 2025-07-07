@@ -326,12 +326,13 @@ func (b *BinanceTradeEngine) apiPortfolioMarginMarginTradesQuery(req *QueryTrade
 	if req.OrderId != "" {
 		orderId, _ := strconv.ParseInt(req.OrderId, 10, 64)
 		api.OrderId(orderId)
-	}
-	if req.StartTime != 0 {
-		api.StartTime(req.StartTime)
-	}
-	if req.EndTime != 0 {
-		api.EndTime(req.EndTime)
+	} else {
+		if req.StartTime != 0 {
+			api.StartTime(req.StartTime)
+		}
+		if req.EndTime != 0 {
+			api.EndTime(req.EndTime)
+		}
 	}
 	if req.Limit != 0 {
 		api.Limit(int32(req.Limit))
