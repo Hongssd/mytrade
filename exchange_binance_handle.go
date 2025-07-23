@@ -688,6 +688,11 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderCreate(reqs []*Orde
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
+		code, ok := order.Code.(float64)
+		if !ok {
+			code = 0
+		}
+		codeInt := int(code)
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   reqs[0].AccountType,
@@ -709,7 +714,7 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderCreate(reqs []*Orde
 			ReduceOnly:    order.ReduceOnly,
 			CreateTime:    nowTimestamp,
 			UpdateTime:    nowTimestamp,
-			ErrorCode:     strconv.Itoa(order.Code),
+			ErrorCode:     strconv.Itoa(codeInt),
 			ErrorMsg:      order.Msg,
 
 			TriggerPrice:         order.StopPrice,
@@ -723,6 +728,11 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderAmend(reqs []*Order
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
+		code, ok := order.Code.(float64)
+		if !ok {
+			code = 0
+		}
+		codeInt := int(code)
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   reqs[0].AccountType,
@@ -744,7 +754,7 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderAmend(reqs []*Order
 			ReduceOnly:    order.ReduceOnly,
 			CreateTime:    nowTimestamp,
 			UpdateTime:    nowTimestamp,
-			ErrorCode:     strconv.Itoa(order.Code),
+			ErrorCode:     strconv.Itoa(codeInt),
 			ErrorMsg:      order.Msg,
 
 			TriggerPrice:         order.StopPrice,
@@ -758,6 +768,11 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderCancel(reqs []*Orde
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
+		code, ok := order.Code.(float64)
+		if !ok {
+			code = 0
+		}
+		codeInt := int(code)
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   reqs[0].AccountType,
@@ -779,7 +794,7 @@ func (b *BinanceTradeEngine) handleOrdersFromFutureBatchOrderCancel(reqs []*Orde
 			ReduceOnly:    order.ReduceOnly,
 			CreateTime:    nowTimestamp,
 			UpdateTime:    nowTimestamp,
-			ErrorCode:     strconv.Itoa(order.Code),
+			ErrorCode:     strconv.Itoa(codeInt),
 			ErrorMsg:      order.Msg,
 
 			TriggerPrice:         order.StopPrice,
@@ -1002,6 +1017,11 @@ func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderCreate(reqs []*OrderP
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
+		code, ok := order.Code.(float64)
+		if !ok {
+			code = 0
+		}
+		codeInt := int(code)
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   reqs[0].AccountType,
@@ -1023,7 +1043,7 @@ func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderCreate(reqs []*OrderP
 			ReduceOnly:    order.ReduceOnly,
 			CreateTime:    nowTimestamp,
 			UpdateTime:    nowTimestamp,
-			ErrorCode:     strconv.Itoa(order.Code),
+			ErrorCode:     strconv.Itoa(codeInt),
 			ErrorMsg:      order.Msg,
 
 			TriggerPrice:         order.StopPrice,
@@ -1037,6 +1057,11 @@ func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderAmend(reqs []*OrderPa
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
+		code, ok := order.Code.(float64)
+		if !ok {
+			code = 0
+		}
+		codeInt := int(code)
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   reqs[0].AccountType,
@@ -1058,7 +1083,7 @@ func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderAmend(reqs []*OrderPa
 			ReduceOnly:    order.ReduceOnly,
 			CreateTime:    nowTimestamp,
 			UpdateTime:    nowTimestamp,
-			ErrorCode:     strconv.Itoa(order.Code),
+			ErrorCode:     strconv.Itoa(codeInt),
 			ErrorMsg:      order.Msg,
 
 			TriggerPrice:         order.StopPrice,
@@ -1072,6 +1097,11 @@ func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderCancel(reqs []*OrderP
 	var orders []*Order
 	nowTimestamp := time.Now().UnixMilli()
 	for _, order := range *res {
+		code, ok := order.Code.(float64)
+		if !ok {
+			code = 0
+		}
+		codeInt := int(code)
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   reqs[0].AccountType,
@@ -1093,7 +1123,7 @@ func (b *BinanceTradeEngine) handleOrdersFromSwapBatchOrderCancel(reqs []*OrderP
 			ReduceOnly:    order.ReduceOnly,
 			CreateTime:    nowTimestamp,
 			UpdateTime:    nowTimestamp,
-			ErrorCode:     strconv.Itoa(order.Code),
+			ErrorCode:     strconv.Itoa(codeInt),
 			ErrorMsg:      order.Msg,
 
 			TriggerPrice:         order.StopPrice,
