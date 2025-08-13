@@ -437,6 +437,9 @@ func (b *BinanceTradeEngine) handlePortfolioMarginMarginOrderCreate(req *OrderPa
 		CreateTime:    order.TransactTime,
 		UpdateTime:    order.TransactTime,
 
+		MarginBuyBorrowAmount: order.MarginBuyBorrowAmount,
+		MarginBuyBorrowAsset:  order.MarginBuyBorrowAsset,
+
 		TriggerPrice:         req.TriggerPrice.String(),
 		TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(order.Type),
 		TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(order.Side, order.Type),
