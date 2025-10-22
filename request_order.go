@@ -21,6 +21,7 @@ type Param struct {
 	TimeInForce      TimeInForce  //有效方式
 	ReduceOnly       bool         //是否只减仓
 	NewClientOrderId string       //新的用户自己生成的订单ID 改单时可用
+	NewOrderRespType string       //新订单响应类型 BN有效 默认RESULT
 
 	// 附加OCO止盈止损
 	AttachOcoTpTriggerPrice decimal.Decimal //止盈触发价
@@ -109,6 +110,10 @@ func (o *OrderParam) SetReduceOnly(reduceOnly bool) *OrderParam {
 }
 func (o *OrderParam) SetNewClientOrderId(newClientOrderId string) *OrderParam {
 	o.NewClientOrderId = newClientOrderId
+	return o
+}
+func (o *OrderParam) SetNewOrderRespType(newOrderRespType string) *OrderParam {
+	o.NewOrderRespType = newOrderRespType
 	return o
 }
 func (o *OrderParam) SetAttachOcoTpTriggerPrice(attachOcoTpTriggerPrice decimal.Decimal) *OrderParam {

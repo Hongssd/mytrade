@@ -68,7 +68,13 @@ func (b *BinanceTradeEngine) apiSpotOrderCreate(req *OrderParam) *mybinanceapi.S
 	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotOrderPost().
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
-		Quantity(req.Quantity).NewOrderRespType("FULL")
+		Quantity(req.Quantity)
+
+	if req.NewOrderRespType != "" {
+		api.NewOrderRespType(req.NewOrderRespType)
+	} else {
+		api.NewOrderRespType("RESULT")
+	}
 
 	api.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 
@@ -186,8 +192,13 @@ func (b *BinanceTradeEngine) apiSpotMarginOrderCreate(req *OrderParam) *mybinanc
 	api := binance.NewSpotRestClient(b.apiKey, b.secretKey).NewSpotMarginOrderPost().
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
-		Quantity(req.Quantity).NewOrderRespType("FULL")
+		Quantity(req.Quantity)
 
+	if req.NewOrderRespType != "" {
+		api.NewOrderRespType(req.NewOrderRespType)
+	} else {
+		api.NewOrderRespType("RESULT")
+	}
 	api.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 
 	// 默认为全仓模式 FALSE
@@ -299,7 +310,13 @@ func (b *BinanceTradeEngine) apiFutureOrderCreate(req *OrderParam) *mybinanceapi
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-		Quantity(req.Quantity).NewOrderRespType("FULL")
+		Quantity(req.Quantity)
+
+	if req.NewOrderRespType != "" {
+		api.NewOrderRespType(req.NewOrderRespType)
+	} else {
+		api.NewOrderRespType("RESULT")
+	}
 
 	api.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 	if !req.TriggerPrice.IsZero() {
@@ -353,8 +370,13 @@ func (b *BinanceTradeEngine) apiFutureBatchOrderCreate(reqs []*OrderParam) *mybi
 		thisApi := client.NewFutureOrderPost().Symbol(req.Symbol).
 			Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 			PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-			Quantity(req.Quantity).NewOrderRespType("FULL")
+			Quantity(req.Quantity)
 
+		if req.NewOrderRespType != "" {
+			thisApi.NewOrderRespType(req.NewOrderRespType)
+		} else {
+			thisApi.NewOrderRespType("RESULT")
+		}
 		thisApi.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 		if !req.TriggerPrice.IsZero() {
 			thisApi.StopPrice(req.TriggerPrice)
@@ -481,8 +503,13 @@ func (b *BinanceTradeEngine) apiSwapOrderCreate(req *OrderParam) *mybinanceapi.S
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-		Quantity(req.Quantity).NewOrderRespType("FULL")
+		Quantity(req.Quantity)
 
+	if req.NewOrderRespType != "" {
+		api.NewOrderRespType(req.NewOrderRespType)
+	} else {
+		api.NewOrderRespType("RESULT")
+	}
 	api.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 	if !req.TriggerPrice.IsZero() {
 		api.StopPrice(req.TriggerPrice)
@@ -533,7 +560,13 @@ func (b *BinanceTradeEngine) apiSwapBatchOrderCreate(reqs []*OrderParam) *mybina
 		thisApi := client.NewSwapOrderPost().Symbol(req.Symbol).
 			Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 			PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
-			Quantity(req.Quantity).NewOrderRespType("FULL")
+			Quantity(req.Quantity)
+
+		if req.NewOrderRespType != "" {
+			thisApi.NewOrderRespType(req.NewOrderRespType)
+		} else {
+			thisApi.NewOrderRespType("RESULT")
+		}
 
 		thisApi.Type(b.bnConverter.ToTriggerBnOrderType(BinanceAccountType(req.AccountType), req.OrderType, req.TriggerType))
 		if !req.TriggerPrice.IsZero() {

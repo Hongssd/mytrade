@@ -13,8 +13,13 @@ func (b *BinanceTradeEngine) apiPortfolioMarginUmOrderCreate(req *OrderParam) *m
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
 		Type(b.bnConverter.ToBNOrderType(req.OrderType)).
-		Quantity(req.Quantity).NewOrderRespType("FULL")
+		Quantity(req.Quantity)
 
+	if req.NewOrderRespType != "" {
+		api.NewOrderRespType(req.NewOrderRespType)
+	} else {
+		api.NewOrderRespType("RESULT")
+	}
 	if !req.Price.IsZero() {
 		api.Price(req.Price)
 	}
@@ -132,8 +137,13 @@ func (b *BinanceTradeEngine) apiPortfolioMarginCmOrderCreate(req *OrderParam) *m
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
 		PositionSide(b.bnConverter.ToBNPositionSide(req.PositionSide)).
 		Type(b.bnConverter.ToBNOrderType(req.OrderType)).
-		Quantity(req.Quantity).NewOrderRespType("FULL")
+		Quantity(req.Quantity)
 
+	if req.NewOrderRespType != "" {
+		api.NewOrderRespType(req.NewOrderRespType)
+	} else {
+		api.NewOrderRespType("RESULT")
+	}
 	if !req.Price.IsZero() {
 		api.Price(req.Price)
 	}
@@ -237,8 +247,13 @@ func (b *BinanceTradeEngine) apiPortfolioMarginMarginOrderCreate(req *OrderParam
 	api := binance.NewPortfolioMarginClient(b.apiKey, b.secretKey).NewMarginOrderPost().
 		Symbol(req.Symbol).
 		Side(b.bnConverter.ToBNOrderSide(req.OrderSide)).
-		Type(b.bnConverter.ToBNOrderType(req.OrderType)).NewOrderRespType("FULL")
+		Type(b.bnConverter.ToBNOrderType(req.OrderType))
 
+	if req.NewOrderRespType != "" {
+		api.NewOrderRespType(req.NewOrderRespType)
+	} else {
+		api.NewOrderRespType("RESULT")
+	}
 	if !req.Quantity.IsZero() {
 		api.Quantity(req.Quantity)
 	}
