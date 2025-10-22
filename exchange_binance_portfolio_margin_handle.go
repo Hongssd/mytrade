@@ -141,7 +141,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginUmOrderQuery(req *QueryOrderPa
 		Side:          b.bnConverter.FromBNOrderSide(order.Side),
 		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
 		PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
-		CreateTime:    order.UpdateTime,
+		CreateTime:    order.Time,
 		UpdateTime:    order.UpdateTime,
 
 		TriggerPrice:         order.Price, // 返回值无相关参数，price代替
@@ -170,7 +170,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginUmOrdersQuery(req *QueryOrderP
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
 			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
 			PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
-			CreateTime:    order.UpdateTime,
+			CreateTime:    order.Time,
 			UpdateTime:    order.UpdateTime,
 
 			TriggerPrice:         order.Price, // 返回值无相关参数，price代替
@@ -312,7 +312,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOpenOrders(req *QueryOrderPa
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
 			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
 			PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
-			CreateTime:    order.UpdateTime,
+			CreateTime:    order.Time,
 			UpdateTime:    order.UpdateTime,
 
 			TriggerPrice:         order.Price, // 返回值无相关参数，price代替
@@ -342,7 +342,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrderQuery(req *QueryOrderPa
 		Side:          b.bnConverter.FromBNOrderSide(order.Side),
 		TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
 		PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
-		CreateTime:    order.UpdateTime,
+		CreateTime:    order.Time,
 		UpdateTime:    order.UpdateTime,
 
 		TriggerPrice:         order.Price, // 返回值无相关参数，price代替
@@ -372,7 +372,7 @@ func (b *BinanceTradeEngine) handlePortfolioMarginCmOrdersQuery(req *QueryOrderP
 			Side:          b.bnConverter.FromBNOrderSide(order.Side),
 			TimeInForce:   b.bnConverter.FromBNTimeInForce(order.TimeInForce),
 			PositionSide:  b.bnConverter.FromBNPositionSide(order.PositionSide),
-			CreateTime:    order.UpdateTime,
+			CreateTime:    order.Time,
 			UpdateTime:    order.UpdateTime,
 
 			TriggerPrice:         order.Price, // 返回值无相关参数，price代替
@@ -684,7 +684,7 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromPMMarginPayload(req Subscri
 					FeeAmount:     r.FeeQty,
 					FeeCcy:        r.FeeAsset,
 					CreateTime:    r.OrderCreateTime,
-					UpdateTime:    r.Timestamp,
+					UpdateTime:    r.TradeTime,
 					IsMargin:      true,
 
 					TriggerPrice:         r.StopPrice,
@@ -747,8 +747,8 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromPMContractPayload(req Subsc
 					FeeAmount:     r.FeeQty,
 					FeeCcy:        r.FeeAsset,
 					ReduceOnly:    r.IsReduceOnly,
-					CreateTime:    result.Timestamp,
-					UpdateTime:    result.Timestamp,
+					CreateTime:    result.TradeTime,
+					UpdateTime:    r.TradeTime,
 
 					TriggerPrice:         r.StopPrice,
 					TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(r.Type),
