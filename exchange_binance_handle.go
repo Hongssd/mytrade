@@ -1260,8 +1260,8 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromFuturePayload(req Subscribe
 					FeeAmount:     r.FeeQty,
 					FeeCcy:        r.FeeAsset,
 					ReduceOnly:    r.IsReduceOnly,
-					CreateTime:    result.Timestamp,
-					UpdateTime:    result.Timestamp,
+					CreateTime:    result.TradeTime,
+					UpdateTime:    r.TradeTime,
 
 					TriggerPrice:         r.StopPrice,
 					TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(r.Type),
