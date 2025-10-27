@@ -3,6 +3,7 @@ package mytrade
 import "github.com/shopspring/decimal"
 
 type Param struct {
+	IsWs bool //是否是WS请求
 
 	// 以下是必填参数
 	AccountType   string          //账户类型
