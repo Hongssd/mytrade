@@ -37,3 +37,11 @@ func NewGateExchange() TradeExchange {
 		},
 	}
 }
+
+func NewAsterExchange() TradeExchange {
+	return &AsterExchange{
+		ExchangeBase: ExchangeBase{
+			exchangeType: ASTER_NAME,
+		},
+	}
+}

@@ -1,10 +1,12 @@
 package mytrade
 
 import (
-	"github.com/shopspring/decimal"
-	"golang.org/x/sync/errgroup"
 	"strconv"
 	"sync"
+
+	"github.com/Hongssd/myasterapi"
+	"github.com/shopspring/decimal"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Hongssd/mybinanceapi"
 	"github.com/Hongssd/myokxapi"
@@ -17,6 +19,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 var log = logrus.New()
 var binance = mybinanceapi.MyBinance{}
 var okx = myokxapi.MyOkx{}
+var aster = myasterapi.MyAster{}
 
 func SetLogger(logger *logrus.Logger) {
 	log = logger

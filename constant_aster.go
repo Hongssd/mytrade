@@ -1,0 +1,97 @@
+package mytrade
+
+type AsterAccountType string
+
+func (b AsterAccountType) String() string {
+	return string(b)
+}
+
+const (
+	ASTER_AC_SPOT             AsterAccountType = "SPOT"             //现货账户
+	ASTER_AC_FUTURE           AsterAccountType = "FUTURE"           //U合约
+)
+
+const (
+	ASTER_ORDER_TYPE_LIMIT                  = "LIMIT"
+	ASTER_ORDER_TYPE_MARKET                 = "MARKET"
+	ASTER_ORDER_TYPE_SPOT_STOP_LOSS_LIMIT   = "STOP_LOSS_LIMIT"
+	ASTER_ORDER_TYPE_SPOT_TAKE_PROFIT_LIMIT = "TAKE_PROFIT_LIMIT"
+	ASTER_ORDER_TYPE_LIMIT_MAKER            = "LIMIT_MAKER"
+
+	ASTER_ORDER_TYPE_FUTURE_STOP               = "STOP"
+	ASTER_ORDER_TYPE_FUTURE_TAKE_PROFIT        = "TAKE_PROFIT"
+	ASTER_ORDER_TYPE_FUTURE_STOP_MARKET        = "STOP_MARKET"
+	ASTER_ORDER_TYPE_FUTURE_TAKE_PROFIT_MARKET = "TAKE_PROFIT_MARKET"
+)
+
+const (
+	ASTER_ORDER_SIDE_BUY  = "BUY"
+	ASTER_ORDER_SIDE_SELL = "SELL"
+)
+
+const (
+	ASTER_POSITION_SIDE_LONG  = "LONG"
+	ASTER_POSITION_SIDE_SHORT = "SHORT"
+	ASTER_POSITION_SIDE_BOTH  = "BOTH"
+)
+
+const (
+	ASTER_ORDER_STATUS_NEW              = "NEW"
+	ASTER_ORDER_STATUS_PARTIALLY_FILLED = "PARTIALLY_FILLED"
+	ASTER_ORDER_STATUS_FILLED           = "FILLED"
+	ASTER_ORDER_STATUS_CANCELED         = "CANCELED"
+	ASTER_ORDER_STATUS_REJECTED         = "REJECTED"
+	ASTER_ORDER_STATUS_EXPIRED          = "EXPIRED"
+)
+
+const (
+	ASTER_TIME_IN_FORCE_GTC       = "GTC"
+	ASTER_TIME_IN_FORCE_IOC       = "IOC"
+	ASTER_TIME_IN_FORCE_FOK       = "FOK"
+	ASTER_TIME_IN_FORCE_POST_ONLY = "GTX"
+)
+
+const (
+	ASTER_WORKING_TYPE_MARK_PRICE     = "MARK_PRICE"
+	ASTER_WORKING_TYPE_CONTRACT_PRICE = "CONTRACT_PRICE"
+)
+
+// {
+// "multiAssetsMargin": true // "true": 联合保证金模式开启；"false": 联合保证金模式关闭
+// }
+const (
+	ASTER_ACCOUNT_MOED_MULTI_CURRENCY_MARGIN  = true
+	ASTER_ACCOUNT_MODE_SINGLE_CURRENCY_MARGIN = false
+)
+
+// "isolated": true,  // 是否是逐仓模式
+const (
+	ASTER_MARGIN_MODE_ISOLATED = true
+	ASTER_MARGIN_MODE_CROSSED  = false
+)
+
+const (
+	ASTER_MARGIN_MODE_ISOLATED_STR = "ISOLATED"
+	ASTER_MARGIN_MODE_CROSSED_STR  = "CROSSED"
+)
+
+// {
+// "dualSidePosition": true // "true": 双向持仓模式；"false": 单向持仓模式
+// }
+const (
+	ASTER_POSITION_MODE_HEDGE  = true
+	ASTER_POSITION_MODE_ONEWAY = false
+)
+
+// 账户类型
+const (
+	ASTER_ASSET_TYPE_UNIFIED          = "MAIN"
+	ASTER_ASSET_TYPE_UMFUTURE         = "UMFUTURE"
+)
+
+// 资金划转类型
+const (
+	ASTER_TRANSFER_STATUS_TYPE_SUCCESS = "CONFIRMED"
+	ASTER_TRANSFER_STATUS_TYPE_FAILED  = "FAILED"
+	ASTER_TRANSFER_STATUS_TYPE_PENDING = "PENDING"
+)
