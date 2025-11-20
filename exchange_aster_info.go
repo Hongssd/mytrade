@@ -91,7 +91,7 @@ func (b *AsterExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Tr
 			case "MARKET_LOT_SIZE":
 				maxMktAmt = m["maxQty"].(string)
 			case "MAX_NUM_ORDERS":
-				maxOrderNum = int(m["maxNumOrders"].(float64))
+				maxOrderNum = int(m["limit"].(float64))
 			case "NOTIONAL":
 				minNotional = m["minNotional"].(string)
 			default:
