@@ -61,7 +61,7 @@ func (b *AsterTradeEngine) handleOrderFromSpotOrderQuery(req *QueryOrderParam, r
 	order := &Order{
 		Exchange:      ASTER_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -98,7 +98,7 @@ func (b *AsterTradeEngine) handleOrderFromSpotOrdersQuery(req *QueryOrderParam, 
 		orders = append(orders, &Order{
 			Exchange:      ASTER_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			IsMargin:      req.IsMargin,
 			IsIsolated:    req.IsIsolated,
 			OrderId:       strconv.FormatInt(order.OrderId, 10),
@@ -134,7 +134,7 @@ func (b *AsterTradeEngine) handleTradesFromSpotTradeQuery(req *QueryTradeParam, 
 		trades = append(trades, &Trade{
 			Exchange:    ASTER_NAME.String(),
 			AccountType: req.AccountType,
-			Symbol:      req.Symbol,
+			Symbol:      trade.Symbol,
 			TradeId:     strconv.FormatInt(trade.Id, 10),
 			OrderId:     strconv.FormatInt(trade.OrderId, 10),
 			Price:       trade.Price,
@@ -165,7 +165,7 @@ func (b *AsterTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res *
 	order := &Order{
 		Exchange:      ASTER_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -200,7 +200,7 @@ func (b *AsterTradeEngine) handleOrderFromSpotOrderAmend(req *OrderParam, res *m
 	order := &Order{
 		Exchange:      ASTER_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.NewOrderResponse.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.NewOrderResponse.OrderId, 10),
@@ -238,7 +238,7 @@ func (b *AsterTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res *
 	order := &Order{
 		Exchange:      ASTER_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -319,7 +319,7 @@ func (b *AsterTradeEngine) handleOrderFromFutureOrderQuery(req *QueryOrderParam,
 	order := &Order{
 		Exchange:      ASTER_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -382,7 +382,7 @@ func (b *AsterTradeEngine) handleTradesFromFutureTradeQuery(req *QueryTradeParam
 		trades = append(trades, &Trade{
 			Exchange:     ASTER_NAME.String(),
 			AccountType:  req.AccountType,
-			Symbol:       req.Symbol,
+			Symbol:       trade.Symbol,
 			TradeId:      strconv.FormatInt(trade.Id, 10),
 			OrderId:      strconv.FormatInt(trade.OrderId, 10),
 			Price:        trade.Price,
@@ -405,7 +405,7 @@ func (b *AsterTradeEngine) handleOrderFromFutureOrderCreate(req *OrderParam, res
 	order := &Order{
 		Exchange:      ASTER_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -435,7 +435,7 @@ func (b *AsterTradeEngine) handleOrderFromFutureOrderAmend(req *OrderParam, res 
 	order := &Order{
 		Exchange:      ASTER_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -464,7 +464,7 @@ func (b *AsterTradeEngine) handleOrderFromFutureOrderCancel(req *OrderParam, res
 	order := &Order{
 		Exchange:      ASTER_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),

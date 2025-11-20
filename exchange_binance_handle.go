@@ -61,7 +61,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderQuery(req *QueryOrderParam,
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -98,7 +98,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrdersQuery(req *QueryOrderParam
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			IsMargin:      req.IsMargin,
 			IsIsolated:    req.IsIsolated,
 			OrderId:       strconv.FormatInt(order.OrderId, 10),
@@ -134,7 +134,7 @@ func (b *BinanceTradeEngine) handleTradesFromSpotTradeQuery(req *QueryTradeParam
 		trades = append(trades, &Trade{
 			Exchange:    BINANCE_NAME.String(),
 			AccountType: req.AccountType,
-			Symbol:      req.Symbol,
+			Symbol:      trade.Symbol,
 			TradeId:     strconv.FormatInt(trade.Id, 10),
 			OrderId:     strconv.FormatInt(trade.OrderId, 10),
 			Price:       trade.Price,
@@ -165,7 +165,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderCreate(req *OrderParam, res
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -200,7 +200,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderAmend(req *OrderParam, res 
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.NewOrderResponse.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.NewOrderResponse.OrderId, 10),
@@ -238,7 +238,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotOrderCancel(req *OrderParam, res
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -335,7 +335,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotMarginOrderQuery(req *QueryOrder
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -372,7 +372,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotMarginOrdersQuery(req *QueryOrde
 		orders = append(orders, &Order{
 			Exchange:      BINANCE_NAME.String(),
 			AccountType:   req.AccountType,
-			Symbol:        req.Symbol,
+			Symbol:        order.Symbol,
 			IsMargin:      req.IsMargin,
 			IsIsolated:    req.IsIsolated,
 			OrderId:       strconv.FormatInt(order.OrderId, 10),
@@ -410,7 +410,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotMarginOrderCreate(req *OrderPara
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    res.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -452,7 +452,7 @@ func (b *BinanceTradeEngine) handleOrderFromSpotMarginOrderCancel(req *OrderPara
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       res.OrderId,
@@ -513,7 +513,7 @@ func (b *BinanceTradeEngine) handleOrderFromFutureOrderQuery(req *QueryOrderPara
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -576,7 +576,7 @@ func (b *BinanceTradeEngine) handleTradesFromFutureTradeQuery(req *QueryTradePar
 		trades = append(trades, &Trade{
 			Exchange:     BINANCE_NAME.String(),
 			AccountType:  req.AccountType,
-			Symbol:       req.Symbol,
+			Symbol:       trade.Symbol,
 			TradeId:      strconv.FormatInt(trade.Id, 10),
 			OrderId:      strconv.FormatInt(trade.OrderId, 10),
 			Price:        trade.Price,
@@ -599,7 +599,7 @@ func (b *BinanceTradeEngine) handleOrderFromFutureOrderCreate(req *OrderParam, r
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -629,7 +629,7 @@ func (b *BinanceTradeEngine) handleOrderFromFutureOrderAmend(req *OrderParam, re
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -658,7 +658,7 @@ func (b *BinanceTradeEngine) handleOrderFromFutureOrderCancel(req *OrderParam, r
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -842,7 +842,7 @@ func (b *BinanceTradeEngine) handleOrderFromSwapOrderQuery(req *QueryOrderParam,
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -905,7 +905,7 @@ func (b *BinanceTradeEngine) handleTradesFromSwapTradeQuery(req *QueryTradeParam
 		trades = append(trades, &Trade{
 			Exchange:     BINANCE_NAME.String(),
 			AccountType:  req.AccountType,
-			Symbol:       req.Symbol,
+			Symbol:       trade.Symbol,
 			TradeId:      strconv.FormatInt(trade.Id, 10),
 			OrderId:      strconv.FormatInt(trade.OrderId, 10),
 			Price:        trade.Price,
@@ -928,7 +928,7 @@ func (b *BinanceTradeEngine) handleOrderFromSwapOrderCreate(req *OrderParam, res
 	order := Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -958,7 +958,7 @@ func (b *BinanceTradeEngine) handleOrderFromSwapOrderAmend(req *OrderParam, res 
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
@@ -987,7 +987,7 @@ func (b *BinanceTradeEngine) handleOrderFromSwapOrderCancel(req *OrderParam, res
 	order := &Order{
 		Exchange:      BINANCE_NAME.String(),
 		AccountType:   req.AccountType,
-		Symbol:        req.Symbol,
+		Symbol:        res.Symbol,
 		IsMargin:      req.IsMargin,
 		IsIsolated:    req.IsIsolated,
 		OrderId:       strconv.FormatInt(res.OrderId, 10),
