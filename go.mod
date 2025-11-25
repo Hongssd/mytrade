@@ -7,7 +7,7 @@ require (
 	github.com/Hongssd/mybinanceapi v1.9.7
 	github.com/Hongssd/mybybitapi v0.1.8
 	github.com/Hongssd/mygateapi v0.2.4
-	github.com/Hongssd/myokxapi v0.5.1
+	github.com/Hongssd/myokxapi v0.5.2
 	github.com/google/uuid v1.6.0
 	github.com/json-iterator/go v1.1.12
 	github.com/shopspring/decimal v1.4.0
