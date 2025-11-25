@@ -560,10 +560,12 @@ func (o *OkxTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
 	}
 	defer o.closeSubscribe(b, sub)
 
+	o.wsForOrderMu.Lock()
 	res, err := o.wsForOrder.Order(o.handleWsOrderCreateFromOrderParam(req), time.Now().UnixMilli()+5000)
 	if err != nil {
 		return nil, err
 	}
+	o.wsForOrderMu.Unlock()
 
 	//处理API返回值
 	_, err = o.handleOrderFromWsOrderResult(req, res)
@@ -591,10 +593,12 @@ func (o *OkxTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
 	}
 	defer o.closeSubscribe(b, sub)
 
+	o.wsForOrderMu.Lock()
 	res, err := o.wsForOrder.AmendOrder(o.handleWsOrderAmendFromOrderParam(req), time.Now().UnixMilli()+5000)
 	if err != nil {
 		return nil, err
 	}
+	o.wsForOrderMu.Unlock()
 
 	//处理API返回值
 	_, err = o.handleOrderFromWsOrderResult(req, res)
@@ -621,11 +625,12 @@ func (o *OkxTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
 		return nil, err
 	}
 	defer o.closeSubscribe(b, sub)
-
+	o.wsForOrderMu.Lock()
 	res, err := o.wsForOrder.CancelOrder(o.handleWsOrderCancelFromOrderParam(req), time.Now().UnixMilli()+5000)
 	if err != nil {
 		return nil, err
 	}
+	o.wsForOrderMu.Unlock()
 
 	//处理API返回值
 	_, err = o.handleOrderFromWsOrderResult(req, res)
@@ -669,10 +674,12 @@ func (o *OkxTradeEngine) WsCreateOrders(reqs []*OrderParam) ([]*Order, error) {
 	}()
 
 	//执行API
+	o.wsForOrderMu.Lock()
 	res, err := o.wsForOrder.BatchOrder(o.handleBatchWsOrderCreateFromOrderParams(reqs), time.Now().UnixMilli()+5000)
 	if err != nil && res == nil {
 		return nil, err
 	}
+	o.wsForOrderMu.Unlock()
 	//处理API返回值
 	ords, err := o.handleOrdersFromWsBatchOrderResult(reqs, res)
 	if err != nil {
@@ -731,11 +738,12 @@ func (o *OkxTradeEngine) WsAmendOrders(reqs []*OrderParam) ([]*Order, error) {
 		}
 	}()
 	//执行API
+	o.wsForOrderMu.Lock()
 	res, err := o.wsForOrder.BatchAmendOrder(o.handleBatchWsOrderAmendFromOrderParams(reqs), time.Now().UnixMilli()+5000)
 	if err != nil {
 		return nil, err
 	}
-
+	o.wsForOrderMu.Unlock()
 	//处理API返回值
 	ords, err := o.handleOrdersFromWsBatchOrderResult(reqs, res)
 	if err != nil {
@@ -795,10 +803,12 @@ func (o *OkxTradeEngine) WsCancelOrders(reqs []*OrderParam) ([]*Order, error) {
 		}
 	}()
 	//执行API
+	o.wsForOrderMu.Lock()
 	res, err := o.wsForOrder.BatchCancelOrder(o.handleBatchWsOrderCancelFromOrderParams(reqs), time.Now().UnixMilli()+5000)
 	if err != nil {
 		return nil, err
 	}
+	o.wsForOrderMu.Unlock()
 
 	//处理API返回值
 	ords, err := o.handleOrdersFromWsBatchOrderResult(reqs, res)
