@@ -26,6 +26,9 @@ type BinanceTradeEngine struct {
 
 	wsSpotWsApi   *mybinanceapi.SpotWsStreamClient
 	wsFutureWsApi *mybinanceapi.FutureWsStreamClient
+
+	wsSpotWsApiMu   sync.Mutex
+	wsFutureWsApiMu sync.Mutex
 }
 
 func (b *BinanceTradeEngine) NewOrderReq() *OrderParam {
@@ -827,6 +830,8 @@ func (b *BinanceTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
 		if b.wsSpotWsApi == nil {
+			b.wsSpotWsApiMu.Lock()
+			defer b.wsSpotWsApiMu.Unlock()
 			wsSpotWsApi, err := binance.NewSpotWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
 			if err != nil {
 				return nil, err
@@ -848,6 +853,8 @@ func (b *BinanceTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
 		order = b.handleOrderFromSpotOrderCreate(req, &res.Result)
 	case BN_AC_FUTURE:
 		if b.wsFutureWsApi == nil {
+			b.wsFutureWsApiMu.Lock()
+			defer b.wsFutureWsApiMu.Unlock()
 			b.wsFutureWsApi, err = binance.NewFutureWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
 			if err != nil {
 				return nil, err
@@ -882,6 +889,8 @@ func (b *BinanceTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
 		if b.wsSpotWsApi == nil {
+			b.wsSpotWsApiMu.Lock()
+			defer b.wsSpotWsApiMu.Unlock()
 			b.wsSpotWsApi, err = binance.NewSpotWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
 			if err != nil {
 				return nil, err
@@ -902,6 +911,8 @@ func (b *BinanceTradeEngine) WsAmendOrder(req *OrderParam) (*Order, error) {
 		order = b.handleOrderFromSpotOrderAmend(req, &res.Result)
 	case BN_AC_FUTURE:
 		if b.wsFutureWsApi == nil {
+			b.wsFutureWsApiMu.Lock()
+			defer b.wsFutureWsApiMu.Unlock()
 			b.wsFutureWsApi, err = binance.NewFutureWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
 			if err != nil {
 				return nil, err
@@ -935,6 +946,8 @@ func (b *BinanceTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
 	switch BinanceAccountType(req.AccountType) {
 	case BN_AC_SPOT:
 		if b.wsSpotWsApi == nil {
+			b.wsSpotWsApiMu.Lock()
+			defer b.wsSpotWsApiMu.Unlock()
 			b.wsSpotWsApi, err = binance.NewSpotWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
 			if err != nil {
 				return nil, err
@@ -955,6 +968,8 @@ func (b *BinanceTradeEngine) WsCancelOrder(req *OrderParam) (*Order, error) {
 		order = b.handleOrderFromSpotOrderCancel(req, &res.Result)
 	case BN_AC_FUTURE:
 		if b.wsFutureWsApi == nil {
+			b.wsFutureWsApiMu.Lock()
+			defer b.wsFutureWsApiMu.Unlock()
 			b.wsFutureWsApi, err = binance.NewFutureWsStreamClient().ConvertToWsApi(b.apiKey, b.secretKey)
 			if err != nil {
 				return nil, err
