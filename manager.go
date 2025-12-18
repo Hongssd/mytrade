@@ -38,6 +38,7 @@ func NewExchangeManager() *ExchangeManager {
 	e.ExchangeMap.Store(BYBIT_NAME.String(), NewBybitExchange())
 	e.ExchangeMap.Store(GATE_NAME.String(), NewGateExchange())
 	e.ExchangeMap.Store(ASTER_NAME.String(), NewAsterExchange())
+	e.ExchangeMap.Store(SUNX_NAME.String(), NewSunxExchange())
 	return e
 }
 
