@@ -56,12 +56,12 @@ const (
 
 const (
 	SUNX_ACCOUNT_TYPE_SWAP     SunxAccountType = "swap"     // 永续合约
-	SUNX_ACCOUNT_TYPE_DELIVERY SunxAccountType = "delivery" // 交割合约
+	// SUNX_ACCOUNT_TYPE_DELIVERY SunxAccountType = "delivery" // 交割合约
 )
 
 const (
 	SUNX_ASSET_TYPE_SWAP     = "swap"     // 永续合约
-	SUNX_ASSET_TYPE_DELIVERY = "delivery" // 交割合约
+	// SUNX_ASSET_TYPE_DELIVERY = "delivery" // 交割合约
 )
 
 const (
