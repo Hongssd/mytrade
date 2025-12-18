@@ -43,6 +43,9 @@ type BookParam struct {
 	AccountType string
 	Symbol      string
 	Level       int
+
+	// Sunx
+	Step string
 }
 
 func (b *BookParam) SetAccountType(accountType string) *BookParam {

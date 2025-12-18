@@ -206,6 +206,11 @@ type QueryOrderParam struct {
 
 	// Gate
 	// Status OrderStatus //订单状态
+
+	// Sunx
+	States string //订单状态
+	From   int64  //查询的起始id，默认从0开始
+	Direct string //翻页方向，prev, next，默认next
 }
 
 func (q *QueryOrderParam) SetAccountType(accountType string) *QueryOrderParam {
@@ -262,6 +267,10 @@ type QueryTradeParam struct {
 	Limit       int    //限制返回的成交明细数量
 	IsMargin    bool   //是否为杠杆订单
 	IsIsolated  bool   //是否是逐仓模式（杠杆） 币安统一账号使用
+
+	// Sunx
+	From   int64  //查询的起始id，默认从0开始
+	Direct string //翻页方向，prev, next，默认next
 }
 
 func (q *QueryTradeParam) SetAccountType(accountType string) *QueryTradeParam {

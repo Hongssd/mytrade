@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/Hongssd/myasterapi"
+	"github.com/Hongssd/mysunxapi"
 	"github.com/shopspring/decimal"
 	"golang.org/x/sync/errgroup"
 
@@ -20,6 +21,7 @@ var log = logrus.New()
 var binance = mybinanceapi.MyBinance{}
 var okx = myokxapi.MyOkx{}
 var aster = myasterapi.MyAster{}
+var sunx = mysunxapi.MySunx{}
 
 func SetLogger(logger *logrus.Logger) {
 	log = logger

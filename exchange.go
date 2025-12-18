@@ -45,3 +45,11 @@ func NewAsterExchange() TradeExchange {
 		},
 	}
 }
+
+func NewSunxExchange() TradeExchange {
+	return &SunxExchange{
+		ExchangeBase: ExchangeBase{
+			exchangeType: SUNX_NAME,
+		},
+	}
+}

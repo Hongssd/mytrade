@@ -12,6 +12,7 @@ const (
 	BYBIT_NAME   ExchangeType = "BYBIT"
 	GATE_NAME    ExchangeType = "GATE"
 	ASTER_NAME   ExchangeType = "ASTER"
+	SUNX_NAME    ExchangeType = "SUNX"
 )
 
 type OrderStatus string
@@ -21,14 +22,15 @@ func (o OrderStatus) String() string {
 }
 
 const (
-	ORDER_STATUS_UNKNOWN          OrderStatus = ""
-	ORDER_STATUS_NEW              OrderStatus = "NEW"              //新订单
-	ORDER_STATUS_PARTIALLY_FILLED OrderStatus = "PARTIALLY_FILLED" //部分成交
-	ORDER_STATUS_FILLED           OrderStatus = "FILLED"           //完全成交
-	ORDER_STATUS_CANCELED         OrderStatus = "CANCELED"         //已撤销
-	ORDER_STATUS_REJECTED         OrderStatus = "REJECTED"         //已拒绝
-	ORDER_STATUS_UN_TRIGGERED     OrderStatus = "UN_TRIGGERED"     //未触发
-	ORDER_STATUS_TRIGGERED        OrderStatus = "TRIGGERED"        //已触发
+	ORDER_STATUS_UNKNOWN            OrderStatus = ""
+	ORDER_STATUS_NEW                OrderStatus = "NEW"                //新订单
+	ORDER_STATUS_PARTIALLY_FILLED   OrderStatus = "PARTIALLY_FILLED"   //部分成交
+	ORDER_STATUS_FILLED             OrderStatus = "FILLED"             //完全成交
+	ORDER_STATUS_PARTIALLY_CANCELED OrderStatus = "PARTIALLY_CANCELED" //部分撤销
+	ORDER_STATUS_CANCELED           OrderStatus = "CANCELED"           //已撤销
+	ORDER_STATUS_REJECTED           OrderStatus = "REJECTED"           //已拒绝
+	ORDER_STATUS_UN_TRIGGERED       OrderStatus = "UN_TRIGGERED"       //未触发
+	ORDER_STATUS_TRIGGERED          OrderStatus = "TRIGGERED"          //已触发
 )
 
 type OrderType string
@@ -95,6 +97,7 @@ const (
 	ACCOUNT_MODE_SINGLE_MARGIN AccountMode = "SINGLE"    //单币种保证金
 	ACCOUNT_MODE_MULTI_MARGIN  AccountMode = "MULTI"     //多币种保证金
 	ACCOUNT_MODE_PORTFOLIO     AccountMode = "PORTFOLIO" //组合保证金
+	ACCOUNT_MODE_UNIFIED       AccountMode = "UNIFIED"   //统一账户
 )
 
 // 仓位保证金模式 全仓 逐仓
