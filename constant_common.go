@@ -26,7 +26,6 @@ const (
 	ORDER_STATUS_NEW                OrderStatus = "NEW"                //新订单
 	ORDER_STATUS_PARTIALLY_FILLED   OrderStatus = "PARTIALLY_FILLED"   //部分成交
 	ORDER_STATUS_FILLED             OrderStatus = "FILLED"             //完全成交
-	ORDER_STATUS_PARTIALLY_CANCELED OrderStatus = "PARTIALLY_CANCELED" //部分撤销
 	ORDER_STATUS_CANCELED           OrderStatus = "CANCELED"           //已撤销
 	ORDER_STATUS_REJECTED           OrderStatus = "REJECTED"           //已拒绝
 	ORDER_STATUS_UN_TRIGGERED       OrderStatus = "UN_TRIGGERED"       //未触发
