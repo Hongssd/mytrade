@@ -100,10 +100,6 @@ func (s SunxTradeAccount) GetFeeRate(accountType, symbol string) (*FeeRate, erro
 }
 
 func (s SunxTradeAccount) GetPositions(accountType string, symbols ...string) ([]*Position, error) {
-	symbolMap := make(map[string]string)
-	for _, symbol := range symbols {
-		symbolMap[symbol] = symbol
-	}
 	res, err := sunx.NewPrivateRestClient(s.accessKey, s.secretKey).
 		NewPrivateRestTradePositionOpens().Do()
 	if err != nil {
@@ -111,30 +107,29 @@ func (s SunxTradeAccount) GetPositions(accountType string, symbols ...string) ([
 	}
 	var positions []*Position
 	for _, p := range res.Data {
-		if _, ok := symbolMap[p.ContractCode]; ok {
-			positions = append(positions, &Position{
-				Exchange:               s.ExchangeType().String(),
-				AccountType:            accountType,
-				Symbol:                 p.ContractCode,
-				MarginCcy:              p.MarginCurrency,
-				InitialMargin:          p.InitialMargin,
-				MaintMargin:            p.MaintenanceMargin,
-				UnrealizedProfit:       p.ProfitUnreal,
-				PositionInitialMargin:  p.InitialMargin,
-				OpenOrderInitialMargin: "0",
-				Leverage:               decimal.NewFromInt(p.LeverRate).String(),
-				MarginMode:             s.sunxConverter.FromSunxMarginMode(p.MarginMode),
-				EntryPrice:             p.OpenAvgPrice,
-				MaxNotional:            "0",
-				PositionSide:           s.sunxConverter.FromSunxPositionSide(p.PositionSide),
-				PositionAmt:            p.Volume,
-				MarkPrice:              p.MarkPrice,
-				LiquidationPrice:       p.LiquidationPrice,
-				MarginRatio:            p.MarginRate,
-				UpdateTime:             decimal.RequireFromString(p.UpdatedTime).IntPart(),
-			})
-		}
+		positions = append(positions, &Position{
+			Exchange:               s.ExchangeType().String(),
+			AccountType:            accountType,
+			Symbol:                 p.ContractCode,
+			MarginCcy:              p.MarginCurrency,
+			InitialMargin:          p.InitialMargin,
+			MaintMargin:            p.MaintenanceMargin,
+			UnrealizedProfit:       p.ProfitUnreal,
+			PositionInitialMargin:  p.InitialMargin,
+			OpenOrderInitialMargin: "0",
+			Leverage:               decimal.NewFromInt(p.LeverRate).String(),
+			MarginMode:             s.sunxConverter.FromSunxMarginMode(p.MarginMode),
+			EntryPrice:             p.OpenAvgPrice,
+			MaxNotional:            "0",
+			PositionSide:           s.sunxConverter.FromSunxPositionSide(p.PositionSide),
+			PositionAmt:            p.Volume,
+			MarkPrice:              p.MarkPrice,
+			LiquidationPrice:       p.LiquidationPrice,
+			MarginRatio:            p.MarginRate,
+			UpdateTime:             decimal.RequireFromString(p.UpdatedTime).IntPart(),
+		})
 	}
+
 	return positions, nil
 }
 
