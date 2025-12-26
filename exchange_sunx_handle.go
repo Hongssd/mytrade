@@ -13,7 +13,7 @@ func (e *SunxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, 
 	for _, order := range res.Data {
 		orders = append(orders, &Order{
 			Exchange:      e.ExchangeType().String(),
-			AccountType:   e.sunxConverter.FromSunxAccountMode().String(),
+			AccountType:   req.AccountType,
 			Symbol:        order.ContractCode,
 			IsMargin:      true,
 			IsIsolated:    false, // sunx 仅全仓
@@ -43,7 +43,7 @@ func (e *SunxTradeEngine) handleOrderFromQueryOrder(req *QueryOrderParam, res *m
 	r := res.Data
 	return &Order{
 		Exchange:          e.ExchangeType().String(),
-		AccountType:       e.sunxConverter.FromSunxAccountMode().String(),
+		AccountType:       req.AccountType,
 		Symbol:            r.ContractCode,
 		IsMargin:          true,
 		IsIsolated:        false, // sunx 仅全仓
@@ -79,7 +79,7 @@ func (e *SunxTradeEngine) handleOrdersFromQueryOrders(req *QueryOrderParam, res 
 	for _, order := range res.Data {
 		orders = append(orders, &Order{
 			Exchange:      e.ExchangeType().String(),
-			AccountType:   e.sunxConverter.FromSunxAccountMode().String(),
+			AccountType:   req.AccountType,
 			Symbol:        order.ContractCode,
 			IsMargin:      true,
 			IsIsolated:    false, // sunx 仅全仓
@@ -111,7 +111,7 @@ func (e *SunxTradeEngine) handleTradesFromQueryTrades(req *QueryTradeParam, res 
 	for _, trade := range res.Data {
 		trades = append(trades, &Trade{
 			Exchange:     e.ExchangeType().String(),
-			AccountType:  e.sunxConverter.FromSunxAccountMode().String(),
+			AccountType:  req.AccountType,
 			Symbol:       trade.ContractCode,
 			TradeId:      trade.TradeId,
 			OrderId:      trade.OrderId,
@@ -138,7 +138,7 @@ func (e *SunxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *mysun
 		Exchange:      e.ExchangeType().String(),
 		OrderId:       res.Data.OrderId,
 		ClientOrderId: res.Data.ClientOrderId,
-		AccountType:   e.sunxConverter.FromSunxAccountMode().String(),
+		AccountType:   req.AccountType,
 		Symbol:        req.Symbol,
 		IsMargin:      true,
 		IsIsolated:    false, // sunx 仅全仓
@@ -181,7 +181,7 @@ func (e *SunxTradeEngine) handleOrderFromOrderCancel(req *OrderParam, res *mysun
 		Exchange:      e.ExchangeType().String(),
 		OrderId:       res.Data.OrderId,
 		ClientOrderId: res.Data.ClientOrderId,
-		AccountType:   e.sunxConverter.FromSunxAccountMode().String(),
+		AccountType:   req.AccountType,
 		Symbol:        req.Symbol,
 		IsMargin:      true,
 		IsIsolated:    false, // sunx 仅全仓
