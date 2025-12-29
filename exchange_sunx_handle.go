@@ -139,11 +139,14 @@ func (e *SunxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *mysun
 		OrderId:       res.Data.OrderId,
 		ClientOrderId: res.Data.ClientOrderId,
 		AccountType:   req.AccountType,
+		Side:          req.OrderSide,
+		Type:          req.OrderType,
+		PositionSide:  req.PositionSide,
+		Price:         req.Price.String(),
+		Quantity:      req.Quantity.String(),
 		Symbol:        req.Symbol,
 		IsMargin:      true,
 		IsIsolated:    false, // sunx 仅全仓
-		Status:        ORDER_STATUS_NEW,
-		UpdateTime:    res.Ts,
 	}
 	return order, nil
 }
@@ -166,8 +169,6 @@ func (e *SunxTradeEngine) handleOrdersFromBatchOrderCreate(reqs []*OrderParam, r
 			Symbol:        reqs[i].Symbol,
 			IsMargin:      reqs[i].IsMargin,
 			IsIsolated:    reqs[i].IsIsolated,
-			Status:        ORDER_STATUS_NEW,
-			UpdateTime:    res.Ts,
 		})
 	}
 	return orders, nil
@@ -185,8 +186,6 @@ func (e *SunxTradeEngine) handleOrderFromOrderCancel(req *OrderParam, res *mysun
 		Symbol:        req.Symbol,
 		IsMargin:      true,
 		IsIsolated:    false, // sunx 仅全仓
-		Status:        ORDER_STATUS_CANCELED,
-		UpdateTime:    res.Ts,
 	}
 	return order, nil
 }
@@ -209,8 +208,6 @@ func (e *SunxTradeEngine) handleOrdersFromBatchOrderCancel(reqs []*OrderParam, r
 			Symbol:        reqs[i].Symbol,
 			IsMargin:      reqs[i].IsMargin,
 			IsIsolated:    reqs[i].IsIsolated,
-			Status:        ORDER_STATUS_CANCELED,
-			UpdateTime:    res.Ts,
 		}
 		orders = append(orders, order)
 	}
@@ -218,4 +215,43 @@ func (e *SunxTradeEngine) handleOrdersFromBatchOrderCancel(reqs []*OrderParam, r
 		return orders, fmt.Errorf("[%d]%s: [%s]", res.Code, res.Message, errStr)
 	}
 	return orders, nil
+}
+
+func (e *SunxTradeEngine) handleSubscribeOrderFromSwapSub(req *SubscribeOrderParam, swapSub *mysunxapi.Subscription[mysunxapi.WsOrdersReq, mysunxapi.WsOrders], newSub *subscription[Order]) {
+	go func() {
+		for {
+			select {
+			case <-swapSub.CloseChan():
+				return
+			case err := <-swapSub.ErrChan():
+				swapSub.ErrChan() <- err
+			case r := <-swapSub.ResultChan():
+				order := Order{
+					Exchange:      e.ExchangeType().String(),
+					AccountType:   req.AccountType,
+					Symbol:        r.ContractCode,
+					IsMargin:      true,
+					IsIsolated:    false,
+					OrderId:       r.Data.OrderId,
+					ClientOrderId: r.Data.ClientOrderId,
+					Price:         r.Data.Price,
+					Quantity:      r.Data.Volume,
+					ExecutedQty:   r.Data.TradeVolume,
+					CumQuoteQty:   r.Data.TradeTurnover,
+					AvgPrice:      r.Data.TradeAvgPrice,
+					Status:        e.sunxConverter.FromSunxOrderStatus(r.Data.State),
+					Type:          e.sunxConverter.FromSunxOrderType(r.Data.Type),
+					Side:          e.sunxConverter.FromSunxOrderSide(r.Data.Side),
+					PositionSide:  e.sunxConverter.FromSunxPositionSide(r.Data.PositionSide),
+					TimeInForce:   e.sunxConverter.FromSunxTimeInForce(r.Data.TimeInForce),
+					ReduceOnly:    r.Data.ReduceOnly,
+					FeeAmount:     r.Data.Fee,
+					FeeCcy:        r.Data.FeeCurrency,
+					CreateTime:    stringToInt64(r.Data.CreatedTime),
+					UpdateTime:    stringToInt64(r.Data.MatchTime),
+				}
+				newSub.ResultChan() <- order
+			}
+		}
+	}()
 }

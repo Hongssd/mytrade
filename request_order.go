@@ -311,6 +311,8 @@ type SubscribeOrderParam struct {
 	IsMargin       bool   //是否为杠杆订单
 	IsIsolated     bool   //是否是逐仓模式（杠杆）
 	IsolatedSymbol string //逐仓模式（杠杆）币对
+
+	ContractCodes []string //合约代码 sunx
 }
 
 func (s *SubscribeOrderParam) SetAccountType(accountType string) *SubscribeOrderParam {
