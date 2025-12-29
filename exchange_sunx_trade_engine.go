@@ -1,11 +1,15 @@
 package mytrade
 
+import "github.com/Hongssd/mysunxapi"
+
 type SunxTradeEngine struct {
 	ExchangeBase
 
 	sunxConverter SunxEnumConverter
 	accessKey     string
 	secretKey     string
+
+	wsForSwapOrder *mysunxapi.PrivateWsStreamClient
 }
 
 func (s *SunxTradeEngine) NewOrderReq() *OrderParam {
@@ -205,8 +209,29 @@ func (s *SunxTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
 	return &SubscribeOrderParam{}
 }
 
-func (s *SunxTradeEngine) SubscribeOrder(req *SubscribeOrderParam) (TradeSubscribe[Order], error) {
-	return nil, ErrorNotSupport
+func (s *SunxTradeEngine) SubscribeOrder(r *SubscribeOrderParam) (TradeSubscribe[Order], error) {
+	req := *r
+	// 构建一个推送订单数据的中转订阅
+	newSub := &subscription[Order]{
+		resultChan: make(chan Order, 100),
+		errChan:    make(chan error, 10),
+		closeChan:  make(chan struct{}, 10),
+	}
+	switch SunxAccountType(req.AccountType) {
+	case SUNX_ACCOUNT_TYPE_SWAP:
+		err := s.checkWsForSwapOrder()
+		if err != nil {
+			return nil, err
+		}
+		swapSub, err := s.wsForSwapOrder.SubscribeOrders(req.ContractCodes, true)
+		if err != nil {
+			return nil, err
+		}
+		s.handleSubscribeOrderFromSwapSub(&req, swapSub, newSub)
+		return newSub, nil
+	default:
+		return nil, ErrorAccountType
+	}
 }
 
 func (s *SunxTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
