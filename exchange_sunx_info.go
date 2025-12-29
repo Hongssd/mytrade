@@ -129,8 +129,8 @@ func (e *SunxExchangeInfo) GetSymbolInfo(accountType string, symbol string) (Tra
 
 	return &sunxSymbolInfo{symbolInfo: symbolInfo{
 		symbolInfoStruct: symbolInfoStruct{
-			Exchange:      OKX_NAME.String(),
-			AccountType:   contractType,
+			Exchange:      SUNX_NAME.String(),
+			AccountType:   accountType,
 			Symbol:        symbol,
 			BaseCoin:      baseCoin,
 			QuoteCoin:     quoteCoin,
