@@ -167,6 +167,13 @@ func (e *SunxTradeEngine) handleOrdersFromBatchOrderCreate(reqs []*OrderParam, r
 			ClientOrderId: reqs[i].ClientOrderId,
 			AccountType:   reqs[i].AccountType,
 			Symbol:        reqs[i].Symbol,
+			Price:         reqs[i].Price.String(),
+			Quantity:      reqs[i].Quantity.String(),
+			Side:          reqs[i].OrderSide,
+			Type:          reqs[i].OrderType,
+			PositionSide:  reqs[i].PositionSide,
+			TimeInForce:   reqs[i].TimeInForce,
+			ReduceOnly:    reqs[i].ReduceOnly,
 			IsMargin:      reqs[i].IsMargin,
 			IsIsolated:    reqs[i].IsIsolated,
 		})

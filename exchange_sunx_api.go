@@ -171,24 +171,39 @@ func (e *SunxTradeEngine) apiBatchOrderCreate(reqs []*OrderParam) *mysunxapi.Pri
 		if req.ReduceOnly {
 			reduceOnly = 1
 		}
-		api.AddOrder(mysunxapi.PrivateRestTradeOrderPostReq{
-			ContractCode:   GetPointer(req.Symbol),
-			MarginMode:     GetPointer(SUNX_MARGIN_MODE_CROSSED),
-			Side:           GetPointer(e.sunxConverter.ToSunxOrderSide(req.OrderSide)),
-			Type:           GetPointer(e.sunxConverter.ToSunxOrderType(req.OrderType)),
-			Price:          GetPointer(req.Price.InexactFloat64()),
-			Volume:         GetPointer(req.Quantity.InexactFloat64()),
-			ClientOrderId:  GetPointer(stringToInt64(req.ClientOrderId)),
-			TimeInForce:    GetPointer(e.sunxConverter.ToSunxTimeInForce(req.TimeInForce)),
-			ReduceOnly:     GetPointer(reduceOnly),
-			PositionSide:   GetPointer(e.sunxConverter.ToSunxPositionSide(req.PositionSide)),
-			SlTriggerPrice: GetPointer(req.OcoSlTriggerPx.String()),
-			SlType:         GetPointer(e.sunxConverter.ToSunxOrderType(req.OcoSlOrdType)),
-			SlOrderPrice:   GetPointer(req.OcoSlOrdPx.String()),
-			TpTriggerPrice: GetPointer(req.OcoTpTriggerPx.String()),
-			TpType:         GetPointer(e.sunxConverter.ToSunxOrderType(req.OcoTpOrdType)),
-			TpOrderPrice:   GetPointer(req.OcoTpOrdPx.String()),
-		})
+		o := mysunxapi.PrivateRestTradeOrderPostReq{
+			ContractCode:  GetPointer(req.Symbol),
+			MarginMode:    GetPointer(SUNX_MARGIN_MODE_CROSSED),
+			Side:          GetPointer(e.sunxConverter.ToSunxOrderSide(req.OrderSide)),
+			Type:          GetPointer(e.sunxConverter.ToSunxOrderType(req.OrderType)),
+			Price:         GetPointer(req.Price.InexactFloat64()),
+			Volume:        GetPointer(req.Quantity.InexactFloat64()),
+			ClientOrderId: GetPointer(stringToInt64(req.ClientOrderId)),
+			TimeInForce:   GetPointer(e.sunxConverter.ToSunxTimeInForce(req.TimeInForce)),
+			ReduceOnly:    GetPointer(reduceOnly),
+			PositionSide:  GetPointer(e.sunxConverter.ToSunxPositionSide(req.PositionSide)),
+		}
+
+		if !req.OcoSlTriggerPx.IsZero() {
+			o.SlTriggerPrice = GetPointer(req.OcoSlTriggerPx.String())
+		}
+		if req.OcoSlOrdType != "" {
+			o.SlType = GetPointer(e.sunxConverter.ToSunxOrderType(req.OcoSlOrdType))
+		}
+		if !req.OcoSlOrdPx.IsZero() {
+			o.SlOrderPrice = GetPointer(req.OcoSlOrdPx.String())
+		}
+		if !req.OcoTpTriggerPx.IsZero() {
+			o.TpTriggerPrice = GetPointer(req.OcoTpTriggerPx.String())
+		}
+		if req.OcoTpOrdType != "" {
+			o.TpType = GetPointer(e.sunxConverter.ToSunxOrderType(req.OcoTpOrdType))
+		}
+		if !req.OcoTpOrdPx.IsZero() {
+			o.TpOrderPrice = GetPointer(req.OcoTpOrdPx.String())
+		}
+
+		api.AddOrder(o)
 	}
 	return api
 }
