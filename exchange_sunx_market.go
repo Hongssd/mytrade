@@ -85,11 +85,22 @@ func (m *SunxMarketData) GetBook(req *BookParam) (*OrderBook, error) {
 		if req.Step != "" {
 			api.Type(req.Step)
 		} else {
-			api.Type(SUNX_ORDER_BOOK_STEP0)
+			if req.Level <= 20 {
+				api.Type("step6") //20档
+			} else {
+				api.Type("step0") //150档
+			}
+
 		}
 		data, err := api.Do()
 		if err != nil {
 			return nil, err
+		}
+		if req.Level > 0 {
+			askEnd := min(req.Level, len(data.Data.Asks))
+			bidEnd := min(req.Level, len(data.Data.Bids))
+			data.Data.Asks = data.Data.Asks[:askEnd]
+			data.Data.Bids = data.Data.Bids[:bidEnd]
 		}
 		return m.convertToSwapOrderBook(req.AccountType, req.Symbol, &data.Data), nil
 	default:
