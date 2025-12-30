@@ -147,6 +147,9 @@ func (e *SunxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *mysun
 		Symbol:        req.Symbol,
 		IsMargin:      true,
 		IsIsolated:    false, // sunx 仅全仓
+		Status:        ORDER_STATUS_NEW,
+		CreateTime:    res.Ts,
+		UpdateTime:    res.Ts,
 	}
 	return order, nil
 }
@@ -176,6 +179,9 @@ func (e *SunxTradeEngine) handleOrdersFromBatchOrderCreate(reqs []*OrderParam, r
 			ReduceOnly:    reqs[i].ReduceOnly,
 			IsMargin:      reqs[i].IsMargin,
 			IsIsolated:    reqs[i].IsIsolated,
+			Status:        ORDER_STATUS_NEW,
+			CreateTime:    res.Ts,
+			UpdateTime:    res.Ts,
 		})
 	}
 	return orders, nil
@@ -193,6 +199,9 @@ func (e *SunxTradeEngine) handleOrderFromOrderCancel(req *OrderParam, res *mysun
 		Symbol:        req.Symbol,
 		IsMargin:      true,
 		IsIsolated:    false, // sunx 仅全仓
+		Status:        ORDER_STATUS_CANCELED,
+		CreateTime:    res.Ts,
+		UpdateTime:    res.Ts,
 	}
 	return order, nil
 }
@@ -215,6 +224,9 @@ func (e *SunxTradeEngine) handleOrdersFromBatchOrderCancel(reqs []*OrderParam, r
 			Symbol:        reqs[i].Symbol,
 			IsMargin:      reqs[i].IsMargin,
 			IsIsolated:    reqs[i].IsIsolated,
+			Status:        ORDER_STATUS_CANCELED,
+			CreateTime:    res.Ts,
+			UpdateTime:    res.Ts,
 		}
 		orders = append(orders, order)
 	}

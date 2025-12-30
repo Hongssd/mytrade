@@ -371,7 +371,6 @@ func (e *SunxTradeEngine) apiAmendOrderCreate(currOrder *Order, amendReq *OrderP
 
 	return orderParam, api
 }
-
 func (s *SunxTradeEngine) checkWsForSwapOrder() error {
 	if s.wsForSwapOrder == nil {
 		s.wsForSwapOrder = sunx.NewPrivateWsStreamClient(s.accessKey, s.secretKey, mysunxapi.WsAPITypeNotification)
