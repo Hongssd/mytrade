@@ -48,6 +48,7 @@ func (e *SunxTradeEngine) handleOrderFromQueryOrder(req *QueryOrderParam, res *m
 		IsMargin:          false,
 		IsIsolated:        false, // sunx 仅全仓
 		OrderId:           r.OrderId,
+		ClientOrderId:     r.ClientOrderId,
 		Price:             r.Price,
 		Quantity:          r.Volume,
 		ExecutedQty:       r.TradeVolume,
