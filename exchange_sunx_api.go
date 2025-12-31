@@ -261,6 +261,8 @@ func (e *SunxTradeEngine) apiBatchOrderCancel(reqs []*OrderParam) *mysunxapi.Pri
 
 func (e *SunxTradeEngine) apiAmendOrderCreate(currOrder *Order, amendReq *OrderParam) (*OrderParam, *mysunxapi.PrivateRestTradeOrderPostAPI) {
 	api := sunx.NewPrivateRestClient(e.accessKey, e.secretKey).NewPrivateRestTradeOrderPost().MarginMode(SUNX_MARGIN_MODE_CROSSED)
+
+	
 	orderParam := &OrderParam{
 		Symbol:         currOrder.Symbol,
 		PositionSide:   currOrder.PositionSide,

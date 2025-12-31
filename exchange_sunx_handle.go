@@ -15,7 +15,7 @@ func (e *SunxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, 
 			Exchange:      e.ExchangeType().String(),
 			AccountType:   req.AccountType,
 			Symbol:        order.ContractCode,
-			IsMargin:      true,
+			IsMargin:      false,
 			IsIsolated:    false, // sunx 仅全仓
 			OrderId:       order.OrderId,
 			ClientOrderId: order.ClientOrderId,
@@ -45,7 +45,7 @@ func (e *SunxTradeEngine) handleOrderFromQueryOrder(req *QueryOrderParam, res *m
 		Exchange:          e.ExchangeType().String(),
 		AccountType:       req.AccountType,
 		Symbol:            r.ContractCode,
-		IsMargin:          true,
+		IsMargin:          false,
 		IsIsolated:        false, // sunx 仅全仓
 		OrderId:           r.OrderId,
 		Price:             r.Price,
@@ -81,7 +81,7 @@ func (e *SunxTradeEngine) handleOrdersFromQueryOrders(req *QueryOrderParam, res 
 			Exchange:      e.ExchangeType().String(),
 			AccountType:   req.AccountType,
 			Symbol:        order.ContractCode,
-			IsMargin:      true,
+			IsMargin:      false,
 			IsIsolated:    false, // sunx 仅全仓
 			OrderId:       order.OrderId,
 			ClientOrderId: order.ClientOrderId,
@@ -145,7 +145,7 @@ func (e *SunxTradeEngine) handleOrderFromOrderCreate(req *OrderParam, res *mysun
 		Price:         req.Price.String(),
 		Quantity:      req.Quantity.String(),
 		Symbol:        req.Symbol,
-		IsMargin:      true,
+		IsMargin:      false,
 		IsIsolated:    false, // sunx 仅全仓
 		Status:        ORDER_STATUS_NEW,
 		CreateTime:    res.Ts,
@@ -197,7 +197,7 @@ func (e *SunxTradeEngine) handleOrderFromOrderCancel(req *OrderParam, res *mysun
 		ClientOrderId: res.Data.ClientOrderId,
 		AccountType:   req.AccountType,
 		Symbol:        req.Symbol,
-		IsMargin:      true,
+		IsMargin:      false,
 		IsIsolated:    false, // sunx 仅全仓
 		Status:        ORDER_STATUS_CANCELED,
 		CreateTime:    res.Ts,
@@ -249,7 +249,7 @@ func (e *SunxTradeEngine) handleSubscribeOrderFromSwapSub(req *SubscribeOrderPar
 					Exchange:      e.ExchangeType().String(),
 					AccountType:   req.AccountType,
 					Symbol:        r.ContractCode,
-					IsMargin:      true,
+					IsMargin:      false,
 					IsIsolated:    false,
 					OrderId:       r.Data.OrderId,
 					ClientOrderId: r.Data.ClientOrderId,
