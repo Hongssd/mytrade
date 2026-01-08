@@ -113,7 +113,7 @@ func (s *SunxTradeEngine) newOrderBroadcaster(symbol string) (*sunxOrderBroadcas
 					return true
 				})
 			case result := <-sub.ResultChan():
-				log.Infof("订单频道订阅接收到消息：%v", result)
+				// log.Infof("订单频道订阅接收到消息：%v", result)
 				order := s.handleOrderFromWsOrder(result)
 				order.AccountType = broadcaster.accountType
 				broadcaster.subscribers.Range(func(key string, value *sunxOrderSubscriber) bool {
