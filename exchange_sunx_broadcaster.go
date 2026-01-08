@@ -169,11 +169,11 @@ func (s *SunxTradeEngine) handleOrderFromWsOrder(wsOrder mysunxapi.WsOrders) *Or
 		Type:          s.sunxConverter.FromSunxOrderType(r.Type),
 		Side:          s.sunxConverter.FromSunxOrderSide(r.Side),
 		PositionSide:  s.sunxConverter.FromSunxPositionSide(r.PositionSide),
-		TimeInForce:   s.sunxConverter.FromSunxTimeInForce(r.TimeInForce),
+		TimeInForce:   s.sunxConverter.FromSunxTimeInForce(r.Type, r.TimeInForce),
 		ReduceOnly:    r.ReduceOnly,
 		FeeAmount:     r.Fee,
 		FeeCcy:        r.FeeCurrency,
 		CreateTime:    stringToInt64(r.CreatedTime),
-		UpdateTime:    stringToInt64(r.MatchTime),
+		UpdateTime:    stringToInt64(r.UpdatedTime),
 	}
 }

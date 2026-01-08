@@ -55,12 +55,12 @@ const (
 )
 
 const (
-	SUNX_ACCOUNT_TYPE_SWAP     SunxAccountType = "swap"     // 永续合约
+	SUNX_ACCOUNT_TYPE_SWAP SunxAccountType = "swap" // 永续合约
 	// SUNX_ACCOUNT_TYPE_DELIVERY SunxAccountType = "delivery" // 交割合约
 )
 
 const (
-	SUNX_ASSET_TYPE_SWAP     = "swap"     // 永续合约
+	SUNX_ASSET_TYPE_SWAP = "swap" // 永续合约
 	// SUNX_ASSET_TYPE_DELIVERY = "delivery" // 交割合约
 )
 
@@ -83,8 +83,9 @@ const (
 )
 
 const (
-	SUNX_ORDER_TYPE_LIMIT  = "limit"
-	SUNX_ORDER_TYPE_MARKET = "market"
+	SUNX_ORDER_TYPE_LIMIT     = "limit"
+	SUNX_ORDER_TYPE_MARKET    = "market"
+	SUNX_ORDER_TYPE_POST_ONLY = "post_only"
 )
 
 const (
