@@ -61,7 +61,9 @@ func (s *SunxTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 		if err != nil {
 			return nil, err
 		}
-		return s.handleOrderFromQueryOrder(req, res)
+		o, err := s.handleOrderFromQueryOrder(req, res)
+		log.Infof("query order: %+v", o)
+		return o, nil
 	default:
 		return nil, ErrorAccountType
 	}
@@ -130,13 +132,14 @@ func (s *SunxTradeEngine) CreateOrder(req *OrderParam) (*Order, error) {
 			return nil, err
 		}
 
-		// 等待 WS 推送返回完整订单信息
-		order, err := s.waitSubscribeReturn(sub, 10*time.Second)
+		//处理API返回值
+		_, err = s.handleOrderFromOrderCreate(req, res)
 		if err != nil {
-			// 如果超时或失败，尝试直接返回API的基础信息
-			return s.handleOrderFromOrderCreate(req, res)
+			return nil, err
 		}
-		return order, nil
+
+		// 等待 WS 推送返回完整订单信息
+		return s.waitSubscribeReturn(sub, 10*time.Second)
 	default:
 		return nil, ErrorAccountType
 	}
@@ -172,13 +175,14 @@ func (s *SunxTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 			return nil, err
 		}
 
-		// 等待 WS 推送返回完整订单信息
-		order, err := s.waitSubscribeReturn(sub, 10*time.Second)
+		//处理API返回值
+		_, err = s.handleOrderFromOrderCancel(req, res)
 		if err != nil {
-			// 如果超时或失败，尝试直接返回API的基础信息
-			return s.handleOrderFromOrderCancel(req, res)
+			return nil, err
 		}
-		return order, nil
+
+		// 等待 WS 推送返回完整订单信息
+		return s.waitSubscribeReturn(sub, 10*time.Second)
 	default:
 		return nil, ErrorAccountType
 	}

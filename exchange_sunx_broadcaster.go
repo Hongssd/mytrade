@@ -113,7 +113,7 @@ func (s *SunxTradeEngine) newOrderBroadcaster(symbol string) (*sunxOrderBroadcas
 					return true
 				})
 			case result := <-sub.ResultChan():
-				log.Infof("订单频道订阅接收到消息：%v", result)
+				// log.Infof("订单频道订阅接收到消息：%v", result)
 				order := s.handleOrderFromWsOrder(result)
 				order.AccountType = broadcaster.accountType
 				broadcaster.subscribers.Range(func(key string, value *sunxOrderSubscriber) bool {
@@ -169,11 +169,11 @@ func (s *SunxTradeEngine) handleOrderFromWsOrder(wsOrder mysunxapi.WsOrders) *Or
 		Type:          s.sunxConverter.FromSunxOrderType(r.Type),
 		Side:          s.sunxConverter.FromSunxOrderSide(r.Side),
 		PositionSide:  s.sunxConverter.FromSunxPositionSide(r.PositionSide),
-		TimeInForce:   s.sunxConverter.FromSunxTimeInForce(r.TimeInForce),
+		TimeInForce:   s.sunxConverter.FromSunxTimeInForce(r.Type, r.TimeInForce),
 		ReduceOnly:    r.ReduceOnly,
 		FeeAmount:     r.Fee,
 		FeeCcy:        r.FeeCurrency,
 		CreateTime:    stringToInt64(r.CreatedTime),
-		UpdateTime:    stringToInt64(r.MatchTime),
+		UpdateTime:    stringToInt64(r.UpdatedTime),
 	}
 }

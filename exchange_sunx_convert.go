@@ -84,7 +84,11 @@ func (c *SunxEnumConverter) FromSunxOrderType(t string) OrderType {
 	}
 }
 
-func (c *SunxEnumConverter) ToSunxOrderType(t OrderType) string {
+func (c *SunxEnumConverter) ToSunxOrderType(t OrderType, tif TimeInForce) string {
+	if tif == TIME_IN_FORCE_POST_ONLY {
+		return SUNX_ORDER_TYPE_POST_ONLY
+	}
+
 	switch t {
 	case ORDER_TYPE_LIMIT:
 		return SUNX_ORDER_TYPE_LIMIT
@@ -146,17 +150,17 @@ func (c *SunxEnumConverter) ToSunxPositionSide(t PositionSide) string {
 }
 
 // 时间InForce
-func (c *SunxEnumConverter) FromSunxTimeInForce(t string) TimeInForce {
-	switch t {
+func (c *SunxEnumConverter) FromSunxTimeInForce(ot string, tif string) TimeInForce {
+	if ot == SUNX_ORDER_TYPE_POST_ONLY {
+		return TIME_IN_FORCE_POST_ONLY
+	}
+	switch tif {
 	case SUNX_TIME_IN_FORCE_GTC:
 		return TIME_IN_FORCE_GTC
 	case SUNX_TIME_IN_FORCE_IOC:
 		return TIME_IN_FORCE_IOC
-	case SUNX_TIME_INFORCE_FOK:
-		return TIME_IN_FORCE_FOK
-	default:
-		return TIME_IN_FORCE_UNKNOWN
 	}
+	return TIME_IN_FORCE_UNKNOWN
 }
 
 func (c *SunxEnumConverter) ToSunxTimeInForce(t TimeInForce) string {
@@ -167,6 +171,8 @@ func (c *SunxEnumConverter) ToSunxTimeInForce(t TimeInForce) string {
 		return SUNX_TIME_IN_FORCE_IOC
 	case TIME_IN_FORCE_FOK:
 		return SUNX_TIME_INFORCE_FOK
+	case TIME_IN_FORCE_POST_ONLY:
+		return ""
 	default:
 		return ""
 	}

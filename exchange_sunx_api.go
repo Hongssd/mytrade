@@ -107,7 +107,7 @@ func (e *SunxTradeEngine) apiOrderCreate(req *OrderParam) *mysunxapi.PrivateRest
 		api.Side(e.sunxConverter.ToSunxOrderSide(req.OrderSide))
 	}
 	if req.OrderType != "" {
-		api.Type(e.sunxConverter.ToSunxOrderType(req.OrderType))
+		api.Type(e.sunxConverter.ToSunxOrderType(req.OrderType, req.TimeInForce))
 	}
 	if !req.Price.IsZero() {
 		api.Price(req.Price.InexactFloat64())
@@ -131,7 +131,7 @@ func (e *SunxTradeEngine) apiOrderCreate(req *OrderParam) *mysunxapi.PrivateRest
 		api.SlTriggerPrice(req.OcoSlTriggerPx.String())
 	}
 	if req.OcoSlOrdType != "" {
-		api.SlType(e.sunxConverter.ToSunxOrderType(req.OcoSlOrdType))
+		api.SlType(e.sunxConverter.ToSunxOrderType(req.OcoSlOrdType, ""))
 	}
 	if !req.OcoSlOrdPx.IsZero() {
 		api.SlOrderPrice(req.OcoSlOrdPx.String())
@@ -140,7 +140,7 @@ func (e *SunxTradeEngine) apiOrderCreate(req *OrderParam) *mysunxapi.PrivateRest
 		api.TpTriggerPrice(req.OcoTpTriggerPx.String())
 	}
 	if req.OcoTpOrdType != "" {
-		api.TpType(e.sunxConverter.ToSunxOrderType(req.OcoTpOrdType))
+		api.TpType(e.sunxConverter.ToSunxOrderType(req.OcoTpOrdType, ""))
 	}
 	if !req.OcoTpOrdPx.IsZero() {
 		api.TpOrderPrice(req.OcoTpOrdPx.String())
@@ -175,7 +175,7 @@ func (e *SunxTradeEngine) apiBatchOrderCreate(reqs []*OrderParam) *mysunxapi.Pri
 			ContractCode:  GetPointer(req.Symbol),
 			MarginMode:    GetPointer(SUNX_MARGIN_MODE_CROSSED),
 			Side:          GetPointer(e.sunxConverter.ToSunxOrderSide(req.OrderSide)),
-			Type:          GetPointer(e.sunxConverter.ToSunxOrderType(req.OrderType)),
+			Type:          GetPointer(e.sunxConverter.ToSunxOrderType(req.OrderType, req.TimeInForce)),
 			Price:         GetPointer(req.Price.InexactFloat64()),
 			Volume:        GetPointer(req.Quantity.InexactFloat64()),
 			ClientOrderId: GetPointer(stringToInt64(req.ClientOrderId)),
@@ -188,7 +188,7 @@ func (e *SunxTradeEngine) apiBatchOrderCreate(reqs []*OrderParam) *mysunxapi.Pri
 			o.SlTriggerPrice = GetPointer(req.OcoSlTriggerPx.String())
 		}
 		if req.OcoSlOrdType != "" {
-			o.SlType = GetPointer(e.sunxConverter.ToSunxOrderType(req.OcoSlOrdType))
+			o.SlType = GetPointer(e.sunxConverter.ToSunxOrderType(req.OcoSlOrdType, ""))
 		}
 		if !req.OcoSlOrdPx.IsZero() {
 			o.SlOrderPrice = GetPointer(req.OcoSlOrdPx.String())
@@ -197,7 +197,7 @@ func (e *SunxTradeEngine) apiBatchOrderCreate(reqs []*OrderParam) *mysunxapi.Pri
 			o.TpTriggerPrice = GetPointer(req.OcoTpTriggerPx.String())
 		}
 		if req.OcoTpOrdType != "" {
-			o.TpType = GetPointer(e.sunxConverter.ToSunxOrderType(req.OcoTpOrdType))
+			o.TpType = GetPointer(e.sunxConverter.ToSunxOrderType(req.OcoTpOrdType, ""))
 		}
 		if !req.OcoTpOrdPx.IsZero() {
 			o.TpOrderPrice = GetPointer(req.OcoTpOrdPx.String())
@@ -262,7 +262,6 @@ func (e *SunxTradeEngine) apiBatchOrderCancel(reqs []*OrderParam) *mysunxapi.Pri
 func (e *SunxTradeEngine) apiAmendOrderCreate(currOrder *Order, amendReq *OrderParam) (*OrderParam, *mysunxapi.PrivateRestTradeOrderPostAPI) {
 	api := sunx.NewPrivateRestClient(e.accessKey, e.secretKey).NewPrivateRestTradeOrderPost().MarginMode(SUNX_MARGIN_MODE_CROSSED)
 
-	
 	orderParam := &OrderParam{
 		Symbol:         currOrder.Symbol,
 		PositionSide:   currOrder.PositionSide,
@@ -298,10 +297,10 @@ func (e *SunxTradeEngine) apiAmendOrderCreate(currOrder *Order, amendReq *OrderP
 		api.Side(e.sunxConverter.ToSunxOrderSide(orderParam.OrderSide))
 	}
 
-	api.Type(e.sunxConverter.ToSunxOrderType(orderParam.OrderType))
+	api.Type(e.sunxConverter.ToSunxOrderType(orderParam.OrderType, orderParam.TimeInForce))
 	if amendReq.OrderType != "" {
 		orderParam.OrderType = amendReq.OrderType
-		api.Type(e.sunxConverter.ToSunxOrderType(orderParam.OrderType))
+		api.Type(e.sunxConverter.ToSunxOrderType(orderParam.OrderType, orderParam.TimeInForce))
 	}
 
 	api.Price(orderParam.Price.InexactFloat64())
@@ -341,10 +340,10 @@ func (e *SunxTradeEngine) apiAmendOrderCreate(currOrder *Order, amendReq *OrderP
 		api.SlTriggerPrice(amendReq.OcoSlTriggerPx.String())
 	}
 
-	api.SlType(e.sunxConverter.ToSunxOrderType(orderParam.OcoSlOrdType))
+	api.SlType(e.sunxConverter.ToSunxOrderType(orderParam.OcoSlOrdType, ""))
 	if amendReq.OcoSlOrdType != "" {
 		orderParam.OcoSlOrdType = amendReq.OcoSlOrdType
-		api.SlType(e.sunxConverter.ToSunxOrderType(orderParam.OcoSlOrdType))
+		api.SlType(e.sunxConverter.ToSunxOrderType(orderParam.OcoSlOrdType, ""))
 	}
 
 	api.SlOrderPrice(orderParam.OcoSlOrdPx.String())
@@ -359,10 +358,10 @@ func (e *SunxTradeEngine) apiAmendOrderCreate(currOrder *Order, amendReq *OrderP
 		api.TpTriggerPrice(amendReq.OcoTpTriggerPx.String())
 	}
 
-	api.TpType(e.sunxConverter.ToSunxOrderType(orderParam.OcoTpOrdType))
+	api.TpType(e.sunxConverter.ToSunxOrderType(orderParam.OcoTpOrdType, ""))
 	if amendReq.OcoTpOrdType != "" {
 		orderParam.OcoTpOrdType = amendReq.OcoTpOrdType
-		api.TpType(e.sunxConverter.ToSunxOrderType(orderParam.OcoTpOrdType))
+		api.TpType(e.sunxConverter.ToSunxOrderType(orderParam.OcoTpOrdType, ""))
 	}
 
 	api.TpOrderPrice(orderParam.OcoTpOrdPx.String())
