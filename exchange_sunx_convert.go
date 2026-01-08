@@ -150,17 +150,20 @@ func (c *SunxEnumConverter) ToSunxPositionSide(t PositionSide) string {
 }
 
 // 时间InForce
-func (c *SunxEnumConverter) FromSunxTimeInForce(ot string, tif string) TimeInForce {
+func (c *SunxEnumConverter) FromSunxTimeInForce(ot string, tif string) (OrderType, TimeInForce) {
 	if ot == SUNX_ORDER_TYPE_POST_ONLY {
-		return TIME_IN_FORCE_POST_ONLY
+		return ORDER_TYPE_LIMIT, TIME_IN_FORCE_POST_ONLY
 	}
+	orderType := c.FromSunxOrderType(ot)
 	switch tif {
 	case SUNX_TIME_IN_FORCE_GTC:
-		return TIME_IN_FORCE_GTC
+		return orderType, TIME_IN_FORCE_GTC
 	case SUNX_TIME_IN_FORCE_IOC:
-		return TIME_IN_FORCE_IOC
+		return orderType, TIME_IN_FORCE_IOC
+	case SUNX_TIME_INFORCE_FOK:
+		return orderType, TIME_IN_FORCE_FOK
 	}
-	return TIME_IN_FORCE_UNKNOWN
+	return ORDER_TYPE_UNKNOWN, TIME_IN_FORCE_UNKNOWN
 }
 
 func (c *SunxEnumConverter) ToSunxTimeInForce(t TimeInForce) string {

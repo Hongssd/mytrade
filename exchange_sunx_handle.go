@@ -11,6 +11,7 @@ func (e *SunxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, 
 	var orders []*Order
 
 	for _, order := range res.Data {
+		orderType, timeInForce := e.sunxConverter.FromSunxTimeInForce(order.Type, order.TimeInForce)
 		orders = append(orders, &Order{
 			Exchange:      e.ExchangeType().String(),
 			AccountType:   req.AccountType,
@@ -25,10 +26,10 @@ func (e *SunxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, 
 			CumQuoteQty:   order.TradeTurnover,
 			AvgPrice:      order.TradeAvgPrice,
 			Status:        e.sunxConverter.FromSunxOrderStatus(order.State),
-			Type:          e.sunxConverter.FromSunxOrderType(order.Type),
+			Type:          orderType,
 			Side:          e.sunxConverter.FromSunxOrderSide(order.Side),
 			PositionSide:  e.sunxConverter.FromSunxPositionSide(order.PositionSide),
-			TimeInForce:   e.sunxConverter.FromSunxTimeInForce(order.Type, order.TimeInForce),
+			TimeInForce:   timeInForce,
 			ReduceOnly:    order.ReduceOnly,
 			FeeAmount:     order.Fee,
 			FeeCcy:        order.FeeCurrency,
@@ -41,6 +42,7 @@ func (e *SunxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, 
 
 func (e *SunxTradeEngine) handleOrderFromQueryOrder(req *QueryOrderParam, res *mysunxapi.SunxRestRes[mysunxapi.PrivateRestTradeOrderGetRes]) (*Order, error) {
 	r := res.Data
+	orderType, timeInForce := e.sunxConverter.FromSunxTimeInForce(r.Type, r.TimeInForce)
 	return &Order{
 		Exchange:          e.ExchangeType().String(),
 		AccountType:       req.AccountType,
@@ -55,10 +57,10 @@ func (e *SunxTradeEngine) handleOrderFromQueryOrder(req *QueryOrderParam, res *m
 		CumQuoteQty:       r.TradeTurnover,
 		AvgPrice:          r.TradeAvgPrice,
 		Status:            e.sunxConverter.FromSunxOrderStatus(r.State),
-		Type:              e.sunxConverter.FromSunxOrderType(r.Type),
+		Type:              orderType,
 		Side:              e.sunxConverter.FromSunxOrderSide(r.Side),
 		PositionSide:      e.sunxConverter.FromSunxPositionSide(r.PositionSide),
-		TimeInForce:       e.sunxConverter.FromSunxTimeInForce(r.Type, r.TimeInForce),
+		TimeInForce:       timeInForce,
 		ReduceOnly:        r.ReduceOnly,
 		FeeAmount:         r.Fee,
 		FeeCcy:            r.FeeCurrency,
@@ -78,6 +80,7 @@ func (e *SunxTradeEngine) handleOrdersFromQueryOrders(req *QueryOrderParam, res 
 	var orders []*Order
 
 	for _, order := range res.Data {
+		orderType, timeInForce := e.sunxConverter.FromSunxTimeInForce(order.Type, order.TimeInForce)
 		orders = append(orders, &Order{
 			Exchange:      e.ExchangeType().String(),
 			AccountType:   req.AccountType,
@@ -92,10 +95,10 @@ func (e *SunxTradeEngine) handleOrdersFromQueryOrders(req *QueryOrderParam, res 
 			CumQuoteQty:   order.TradeTurnover,
 			AvgPrice:      order.TradeAvgPrice,
 			Status:        e.sunxConverter.FromSunxOrderStatus(order.State),
-			Type:          e.sunxConverter.FromSunxOrderType(order.Type),
+			Type:          orderType,
 			Side:          e.sunxConverter.FromSunxOrderSide(order.Side),
 			PositionSide:  e.sunxConverter.FromSunxPositionSide(order.PositionSide),
-			TimeInForce:   e.sunxConverter.FromSunxTimeInForce(order.Type, order.TimeInForce),
+			TimeInForce:   timeInForce,
 			ReduceOnly:    order.ReduceOnly,
 			FeeAmount:     order.Fee,
 			FeeCcy:        order.FeeCurrency,
@@ -247,6 +250,7 @@ func (e *SunxTradeEngine) handleSubscribeOrderFromSwapSub(req *SubscribeOrderPar
 			case err := <-swapSub.ErrChan():
 				swapSub.ErrChan() <- err
 			case r := <-swapSub.ResultChan():
+				orderType, timeInForce := e.sunxConverter.FromSunxTimeInForce(r.Data.Type, r.Data.TimeInForce)
 				order := Order{
 					Exchange:      e.ExchangeType().String(),
 					AccountType:   req.AccountType,
@@ -261,10 +265,10 @@ func (e *SunxTradeEngine) handleSubscribeOrderFromSwapSub(req *SubscribeOrderPar
 					CumQuoteQty:   r.Data.TradeTurnover,
 					AvgPrice:      r.Data.TradeAvgPrice,
 					Status:        e.sunxConverter.FromSunxOrderStatus(r.Data.State),
-					Type:          e.sunxConverter.FromSunxOrderType(r.Data.Type),
+					Type:          orderType,
 					Side:          e.sunxConverter.FromSunxOrderSide(r.Data.Side),
 					PositionSide:  e.sunxConverter.FromSunxPositionSide(r.Data.PositionSide),
-					TimeInForce:   e.sunxConverter.FromSunxTimeInForce(r.Data.Type, r.Data.TimeInForce),
+					TimeInForce:   timeInForce,
 					ReduceOnly:    r.Data.ReduceOnly,
 					FeeAmount:     r.Data.Fee,
 					FeeCcy:        r.Data.FeeCurrency,
