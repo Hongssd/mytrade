@@ -152,6 +152,7 @@ func (s *SunxTradeEngine) closeSubscribe(broadcaster *sunxOrderBroadcaster, sub 
 // 从 WS 订单数据转换为 Order
 func (s *SunxTradeEngine) handleOrderFromWsOrder(wsOrder mysunxapi.WsOrders) *Order {
 	r := wsOrder.Data
+	orderType, timeInForce := s.sunxConverter.FromSunxTimeInForce(r.Type, r.TimeInForce)
 	return &Order{
 		Exchange:      s.ExchangeType().String(),
 		AccountType:   SUNX_ACCOUNT_TYPE_SWAP.String(),
@@ -166,10 +167,10 @@ func (s *SunxTradeEngine) handleOrderFromWsOrder(wsOrder mysunxapi.WsOrders) *Or
 		CumQuoteQty:   r.TradeTurnover,
 		AvgPrice:      r.TradeAvgPrice,
 		Status:        s.sunxConverter.FromSunxOrderStatus(r.State),
-		Type:          s.sunxConverter.FromSunxOrderType(r.Type),
+		Type:          orderType,
 		Side:          s.sunxConverter.FromSunxOrderSide(r.Side),
 		PositionSide:  s.sunxConverter.FromSunxPositionSide(r.PositionSide),
-		TimeInForce:   s.sunxConverter.FromSunxTimeInForce(r.Type, r.TimeInForce),
+		TimeInForce:   timeInForce,
 		ReduceOnly:    r.ReduceOnly,
 		FeeAmount:     r.Fee,
 		FeeCcy:        r.FeeCurrency,
