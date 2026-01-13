@@ -8,7 +8,7 @@ require (
 	github.com/Hongssd/mybybitapi v0.1.8
 	github.com/Hongssd/mygateapi v0.2.4
 	github.com/Hongssd/myokxapi v0.5.2
-	github.com/Hongssd/mysunxapi v0.1.1
+	github.com/Hongssd/mysunxapi v0.1.3
 	github.com/google/uuid v1.6.0
 	github.com/json-iterator/go v1.1.12
 	github.com/shopspring/decimal v1.4.0
@@ -22,5 +22,5 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
-	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
 )
