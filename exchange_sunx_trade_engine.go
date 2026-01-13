@@ -193,9 +193,13 @@ func (s *SunxTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 		return nil, err
 	}
 
+	// 准备 API
+	api := s.apiBatchOrderCreate(reqs)
+
 	// 按交易对分组创建订阅者（同一交易对只会创建一次广播器）
 	symbolBroadcasters := make(map[string]*sunxOrderBroadcaster)
 	subscribers := make([]*sunxOrderSubscriber, 0, len(reqs))
+	var defers []func()
 
 	for _, req := range reqs {
 		// 获取或创建该交易对的广播器
@@ -217,33 +221,49 @@ func (s *SunxTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 			return nil, err
 		}
 		subscribers = append(subscribers, sub)
+
+		// 捕获闭包变量
+		b := broadcaster
+		sLocal := sub
+		defers = append(defers, func() {
+			s.closeSubscribe(b, sLocal)
+		})
 	}
 
 	// 确保在返回前关闭所有订阅者
 	defer func() {
-		for i, sub := range subscribers {
-			broadcaster := symbolBroadcasters[reqs[i].Symbol]
-			s.closeSubscribe(broadcaster, sub)
+		for _, d := range defers {
+			d()
 		}
 	}()
 
-	// 发起批量下单请求
-	api := s.apiBatchOrderCreate(reqs)
+	// 执行 API
 	res, err := api.Do()
 	if err != nil {
 		return nil, err
 	}
 
-	// 等待所有订单的 WS 推送
+	// 并发等待所有订单的 WS 推送
 	orders := make([]*Order, 0, len(reqs))
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
 	for _, sub := range subscribers {
-		order, err := s.waitSubscribeReturn(sub, 10*time.Second)
-		if err != nil {
-			log.Warnf("wait order ws return failed: %v", err)
-			continue
-		}
-		orders = append(orders, order)
+		wg.Add(1)
+		go func(sub *sunxOrderSubscriber) {
+			defer wg.Done()
+			order, err := s.waitSubscribeReturn(sub, 1*time.Second)
+			if err != nil {
+				log.Warnf("wait order ws return failed: %v", err)
+				return
+			}
+			mu.Lock()
+			orders = append(orders, order)
+			mu.Unlock()
+		}(sub)
 	}
+
+	wg.Wait()
 
 	// 如果没有收到任何 WS 推送，使用 API 响应
 	if len(orders) == 0 {
@@ -262,9 +282,13 @@ func (s *SunxTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 		return nil, err
 	}
 
+	// 准备 API
+	api := s.apiBatchOrderCancel(reqs)
+
 	// 按交易对分组创建订阅者（同一交易对只会创建一次广播器）
 	symbolBroadcasters := make(map[string]*sunxOrderBroadcaster)
 	subscribers := make([]*sunxOrderSubscriber, 0, len(reqs))
+	var defers []func()
 
 	for _, req := range reqs {
 		// 获取或创建该交易对的广播器
@@ -286,33 +310,49 @@ func (s *SunxTradeEngine) CancelOrders(reqs []*OrderParam) ([]*Order, error) {
 			return nil, err
 		}
 		subscribers = append(subscribers, sub)
+
+		// 捕获闭包变量
+		b := broadcaster
+		sLocal := sub
+		defers = append(defers, func() {
+			s.closeSubscribe(b, sLocal)
+		})
 	}
 
 	// 确保在返回前关闭所有订阅者
 	defer func() {
-		for i, sub := range subscribers {
-			broadcaster := symbolBroadcasters[reqs[i].Symbol]
-			s.closeSubscribe(broadcaster, sub)
+		for _, d := range defers {
+			d()
 		}
 	}()
 
-	// 发起批量撤单请求
-	api := s.apiBatchOrderCancel(reqs)
+	// 执行 API
 	res, err := api.Do()
 	if err != nil {
 		return nil, err
 	}
 
-	// 等待所有订单的 WS 推送
+	// 并发等待所有订单的 WS 推送
 	orders := make([]*Order, 0, len(reqs))
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
 	for _, sub := range subscribers {
-		order, err := s.waitSubscribeReturn(sub, 10*time.Second)
-		if err != nil {
-			log.Warnf("wait order ws return failed: %v", err)
-			continue
-		}
-		orders = append(orders, order)
+		wg.Add(1)
+		go func(sub *sunxOrderSubscriber) {
+			defer wg.Done()
+			order, err := s.waitSubscribeReturn(sub, 1*time.Second)
+			if err != nil {
+				log.Warnf("wait order ws return failed: %v", err)
+				return
+			}
+			mu.Lock()
+			orders = append(orders, order)
+			mu.Unlock()
+		}(sub)
 	}
+
+	wg.Wait()
 
 	// 如果没有收到任何 WS 推送，使用 API 响应
 	if len(orders) == 0 {
