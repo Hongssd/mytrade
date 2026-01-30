@@ -62,7 +62,7 @@ func (s *SunxTradeEngine) QueryOrder(req *QueryOrderParam) (*Order, error) {
 			return nil, err
 		}
 		o, err := s.handleOrderFromQueryOrder(req, res)
-		log.Infof("query order: %+v", o)
+		// log.Infof("query order: %+v", o)
 		return o, nil
 	default:
 		return nil, ErrorAccountType
