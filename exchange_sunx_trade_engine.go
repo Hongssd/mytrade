@@ -238,7 +238,7 @@ func (s *SunxTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 	}()
 
 	// 执行 API
-	res, err := api.Do()
+	_, err := api.Do()
 	if err != nil {
 		return nil, err
 	}
@@ -265,10 +265,10 @@ func (s *SunxTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
 
 	wg.Wait()
 
-	// 如果没有收到任何 WS 推送，使用 API 响应
-	if len(orders) == 0 {
-		return s.handleOrdersFromBatchOrderCreate(reqs, res)
-	}
+	// // 如果没有收到任何 WS 推送，使用 API 响应
+	// if len(orders) == 0 {
+	// 	return s.handleOrdersFromBatchOrderCreate(reqs, res)
+	// }
 
 	return orders, nil
 }
