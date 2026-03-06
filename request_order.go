@@ -211,6 +211,9 @@ type QueryOrderParam struct {
 	States string //订单状态
 	From   int64  //查询的起始id，默认从0开始
 	Direct string //翻页方向，prev, next，默认next
+
+	// Xcoin
+	OrderFilter string // 订单品种 order：普通订单，默认值；oco：止盈止损单
 }
 
 func (q *QueryOrderParam) SetAccountType(accountType string) *QueryOrderParam {
@@ -271,6 +274,9 @@ type QueryTradeParam struct {
 	// Sunx
 	From   int64  //查询的起始id，默认从0开始
 	Direct string //翻页方向，prev, next，默认next
+
+	// Xcoin
+	OrderType string
 }
 
 func (q *QueryTradeParam) SetAccountType(accountType string) *QueryTradeParam {
@@ -303,6 +309,18 @@ func (q *QueryTradeParam) SetIsMargin(isMargin bool) *QueryTradeParam {
 }
 func (q *QueryTradeParam) SetIsIsolated(isIsolated bool) *QueryTradeParam {
 	q.IsIsolated = isIsolated
+	return q
+}
+func (q *QueryTradeParam) SetFrom(from int64) *QueryTradeParam {
+	q.From = from
+	return q
+}
+func (q *QueryTradeParam) SetDirect(direct string) *QueryTradeParam {
+	q.Direct = direct
+	return q
+}
+func (q *QueryTradeParam) SetOrderType(orderType string) *QueryTradeParam {
+	q.OrderType = orderType
 	return q
 }
 

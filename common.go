@@ -6,6 +6,7 @@ import (
 
 	"github.com/Hongssd/myasterapi"
 	"github.com/Hongssd/mysunxapi"
+	"github.com/Hongssd/myxcoinapi"
 	"github.com/shopspring/decimal"
 	"golang.org/x/sync/errgroup"
 
@@ -22,6 +23,7 @@ var binance = mybinanceapi.MyBinance{}
 var okx = myokxapi.MyOkx{}
 var aster = myasterapi.MyAster{}
 var sunx = mysunxapi.MySunx{}
+var xcoin = myxcoinapi.MyXcoin{}
 
 func SetLogger(logger *logrus.Logger) {
 	log = logger
