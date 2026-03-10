@@ -27,6 +27,25 @@ func (e *XcoinTradeEngine) restBatchPreCheck(reqs []*OrderParam) error {
 	return nil
 }
 
+func (e *XcoinTradeEngine) wsOrderPreCheck() (bool, error) {
+	e.wsForOrderMu.Lock()
+	defer e.wsForOrderMu.Unlock()
+	if e.wsForOrder == nil {
+		restClient := xcoin.NewRestClient(e.apiKey, e.apiSecret)
+		newWs := xcoin.NewPrivateWsStreamClient(restClient)
+		err := newWs.OpenConn()
+		if err != nil {
+			return false, err
+		}
+		err = newWs.Auth()
+		if err != nil {
+			return false, err
+		}
+		e.wsForOrder = newWs
+	}
+	return true, nil
+}
+
 func (e *XcoinTradeEngine) apiQueryOpenOrders(req *QueryOrderParam) *myxcoinapi.PrivateRestTradeOpenOrdersAPI {
 	api := xcoin.NewRestClient(e.apiKey, e.apiSecret).PrivateRestClient().NewPrivateRestTradeOpenOrders()
 	if req.Symbol != "" {

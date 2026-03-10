@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/Hongssd/myxcoinapi"
 )
 
 type XcoinTradeEngine struct {
@@ -16,6 +18,9 @@ type XcoinTradeEngine struct {
 	broadcasterSpot            *xcoinOrderBroadcaster
 	broadcasterLinearPerpetual *xcoinOrderBroadcaster
 	broadcasterLinearFutures   *xcoinOrderBroadcaster
+
+	wsForOrder   *myxcoinapi.PrivateWsStreamClient
+	wsForOrderMu sync.Mutex
 }
 
 func (x *XcoinTradeEngine) NewOrderReq() *OrderParam {
@@ -284,7 +289,39 @@ func (x *XcoinTradeEngine) NewSubscribeOrderReq() *SubscribeOrderParam {
 }
 
 func (x *XcoinTradeEngine) SubscribeOrder(req *SubscribeOrderParam) (TradeSubscribe[Order], error) {
-	return nil, ErrorNotSupport
+	if err := x.accountTypePreCheck(req.AccountType); err != nil {
+		return nil, err
+	}
+	if ok, err := x.wsOrderPreCheck(); !ok {
+		return nil, err
+	}
+
+	b := x.getBroadcastFromAccountType(req.AccountType)
+	sub, err := x.newOrderSubscriber(b, "", "", req.AccountType, "")
+	if err != nil {
+		return nil, err
+	}
+
+	middleSub := &subscription[Order]{
+		resultChan: make(chan Order, 100),
+		errChan:    make(chan error, 10),
+		closeChan:  make(chan struct{}, 10),
+	}
+
+	go func() {
+		for {
+			select {
+			case <-sub.ch.CloseChan():
+				middleSub.closeChan <- struct{}{}
+				return
+			case err := <-sub.ch.ErrChan():
+				middleSub.errChan <- err
+			case order := <-sub.ch.ResultChan():
+				middleSub.resultChan <- order
+			}
+		}
+	}()
+	return middleSub, nil
 }
 
 func (x *XcoinTradeEngine) WsCreateOrder(req *OrderParam) (*Order, error) {
