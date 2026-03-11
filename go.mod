@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/Hongssd/myxcoinapi v0.0.5 // indirect
 	github.com/bwmarrin/snowflake v0.3.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

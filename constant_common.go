@@ -13,6 +13,7 @@ const (
 	GATE_NAME    ExchangeType = "GATE"
 	ASTER_NAME   ExchangeType = "ASTER"
 	SUNX_NAME    ExchangeType = "SUNX"
+	XCOIN_NAME   ExchangeType = "XCOIN"
 )
 
 type OrderStatus string
@@ -168,6 +169,7 @@ const (
 	ASSET_TYPE_PORTFOLIO_MARGIN AssetType = "PORTFOLIO_MARGIN" // 统一组合保证金账户
 	ASSET_TYPE_MARGIN_ISOLATED  AssetType = "MARGIN_ISOLATED"  // 逐仓保证金账户
 	ASSET_TYPE_MARGIN_CROSSED   AssetType = "MARGIN_CROSSED"   // 全仓保证金账户
+	ASSET_TYPE_SECURITIES       AssetType = "SECURITIES"       // 证券账户（XCOIN）
 )
 
 // 划转状态类型

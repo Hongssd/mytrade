@@ -53,3 +53,11 @@ func NewSunxExchange() TradeExchange {
 		},
 	}
 }
+
+func NewXcoinExchange() TradeExchange {
+	return &XcoinExchange{
+		ExchangeBase: ExchangeBase{
+			exchangeType: XCOIN_NAME,
+		},
+	}
+}
