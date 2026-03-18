@@ -103,7 +103,7 @@ func (e *XcoinExchangeInfo) GetSymbolInfo(accountType, symbol string) (TradeSymb
 			return nil, ErrorSymbolNotFound
 		}
 		baseCoin, quoteCoin = v.BaseCurrency, v.QuoteCurrency
-		isContract, isContractAmt = true, true
+		isContract, isContractAmt = true, false
 		contractSize, contractCoin = v.CtVal, v.BaseCurrency
 		minLeverage, maxLeverage, stepLeverage = "1", v.MaxLeverage, "0.01"
 		contractType = v.ContractType
@@ -113,7 +113,7 @@ func (e *XcoinExchangeInfo) GetSymbolInfo(accountType, symbol string) (TradeSymb
 			return nil, ErrorSymbolNotFound
 		}
 		baseCoin, quoteCoin = v.BaseCurrency, v.QuoteCurrency
-		isContract, isContractAmt = true, true
+		isContract, isContractAmt = true, false
 		contractSize, contractCoin = v.CtVal, v.BaseCurrency
 		minLeverage, maxLeverage, stepLeverage = "1", v.MaxLeverage, "0.01"
 		contractType = v.ContractType
