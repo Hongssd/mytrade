@@ -1,7 +1,6 @@
 package mytrade
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -128,36 +127,47 @@ func (x *XcoinTradeEngine) CancelOrder(req *OrderParam) (*Order, error) {
 	if err := x.accountTypePreCheck(req.AccountType); err != nil {
 		return nil, err
 	}
-
-	api := xcoin.NewRestClient(x.apiKey, x.apiSecret).PrivateRestClient().
-		NewPrivateRestTradeCancelOrder().
-		Symbol(req.Symbol)
-	if req.OrderId != "" {
-		api.OrderId(req.OrderId)
-	}
-	if req.ClientOrderId != "" {
-		api.ClientOrderId(req.ClientOrderId)
-	}
-
-	b := x.getBroadcastFromAccountType(req.AccountType)
-	// 创建订阅
-	sub, err := x.newOrderSubscriber(b, req.ClientOrderId, req.OrderId, req.AccountType, req.Symbol)
+	orders, err := x.CancelOrders([]*OrderParam{req})
 	if err != nil {
 		return nil, err
 	}
-	defer x.closeSubscribe(b, sub)
+	if len(orders) == 0 {
+		return nil, ErrorInvalid("cancel order failed")
+	}
+	return orders[0], nil
 
-	// 执行API
-	res, err := api.Do()
-	if err != nil {
-		return nil, err
-	}
-	// 处理API返回值
-	if res.Code != "0" {
-		return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
-	}
-	// 异步接收ws结果，1秒超时
-	return x.waitSubscribeReturn(sub, 1*time.Second)
+	// cancelOrder := &myxcoinapi.PrivateRestTradeCancelOrderReq{
+	// 	Symbol: GetPointer(req.Symbol),
+	// }
+	// if req.OrderId != "" {
+	// 	cancelOrder.OrderId = GetPointer(req.OrderId)
+	// }
+	// if req.ClientOrderId != "" {
+	// 	cancelOrder.ClientOrderId = GetPointer(req.ClientOrderId)
+	// }
+
+	// api := xcoin.NewRestClient(x.apiKey, x.apiSecret).PrivateRestClient().
+	// 	NewPrivateRestTradeBatchCancelOrder().AddOrderReq(cancelOrder)
+
+	// b := x.getBroadcastFromAccountType(req.AccountType)
+	// // 创建订阅
+	// sub, err := x.newOrderSubscriber(b, req.ClientOrderId, req.OrderId, req.AccountType, req.Symbol)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// defer x.closeSubscribe(b, sub)
+
+	// // 执行API
+	// res, err := api.Do()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// // 处理API返回值
+	// if res.Code != "0" {
+	// 	return nil, fmt.Errorf("[%s]:%s", res.Code, res.Msg)
+	// }
+	// // 异步接收ws结果，1秒超时
+	// return x.waitSubscribeReturn(sub, 1*time.Second)
 }
 
 func (x *XcoinTradeEngine) CreateOrders(reqs []*OrderParam) ([]*Order, error) {
