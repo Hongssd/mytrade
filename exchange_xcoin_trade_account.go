@@ -29,6 +29,9 @@ func (x XcoinTradeAccount) GetPositionMode(accountType, symbol string) (Position
 }
 
 func (x XcoinTradeAccount) GetLeverage(accountType, symbol string, marginMode MarginMode, positionSide PositionSide) (decimal.Decimal, error) {
+	if accountType == XCOIN_ACCOUNT_TYPE_SPOT.String() {
+		return decimal.NewFromInt(1), nil
+	}
 	res, err := xcoin.NewRestClient(x.apiKey, x.apiSecret).PrivateRestClient().
 		NewPrivateRestTradeLeverGet().BusinessType(accountType).Symbol(symbol).Do()
 	if err != nil {
