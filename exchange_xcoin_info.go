@@ -155,12 +155,6 @@ func (e *XcoinExchangeInfo) GetSymbolInfo(accountType, symbol string) (TradeSymb
 	if v.OrderParameters.MinOrderAmt != "" {
 		minNotional = v.OrderParameters.MinOrderAmt
 	}
-	if v.PriceParameters.MinLmtPriceDown != "" {
-		minPrice = v.PriceParameters.MinLmtPriceDown
-	}
-	if v.PriceParameters.MaxLmtPriceUp != "" {
-		maxPrice = v.PriceParameters.MaxLmtPriceUp
-	}
 
 	return &xcoinSymbolInfo{symbolInfo: symbolInfo{
 		symbolInfoStruct: symbolInfoStruct{
