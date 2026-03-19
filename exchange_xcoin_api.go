@@ -140,6 +140,12 @@ func (e *XcoinTradeEngine) apiOrderCreate(req *OrderParam) *myxcoinapi.PrivateRe
 	if tif := e.xcoinConverter.ToXcoinTimeInForce(req.TimeInForce); tif != "" {
 		api.TimeInForce(tif)
 	}
+
+	if req.OrderType == ORDER_TYPE_MARKET {
+		api.Price("")
+		api.TimeInForce(XCOIN_TIME_IN_FORCE_IOC)
+	}
+
 	if req.ClientOrderId != "" {
 		api.ClientOrderId(req.ClientOrderId)
 	}
