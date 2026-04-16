@@ -53,6 +53,9 @@ type Param struct {
 	GatePriceOrderType string //Price Order类型
 	GateAutoSize       string //双仓模式下用于设置平仓的方向，close_long 平多头， close_short 平空头，需要同时设置 size 为 0
 	// IsUnified          bool   //是否统一账号模式 gate下单需要设置
+
+	// Bitget
+	TradeSide string //合约交易方向, open 开仓, close 平仓 （仅双向持仓模式下有效）
 }
 
 type OrderParam Param

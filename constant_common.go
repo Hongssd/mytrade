@@ -14,6 +14,7 @@ const (
 	ASTER_NAME   ExchangeType = "ASTER"
 	SUNX_NAME    ExchangeType = "SUNX"
 	XCOIN_NAME   ExchangeType = "XCOIN"
+	BITGET_NAME  ExchangeType = "BITGET"
 )
 
 type OrderStatus string

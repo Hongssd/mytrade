@@ -11,6 +11,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/Hongssd/mybinanceapi"
+	"github.com/Hongssd/mybitgetapi"
 	"github.com/Hongssd/myokxapi"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
@@ -24,6 +25,7 @@ var okx = myokxapi.MyOkx{}
 var aster = myasterapi.MyAster{}
 var sunx = mysunxapi.MySunx{}
 var xcoin = myxcoinapi.MyXcoin{}
+var bitget = mybitgetapi.MyBitget{}
 
 func SetLogger(logger *logrus.Logger) {
 	log = logger
