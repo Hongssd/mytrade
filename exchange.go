@@ -61,3 +61,11 @@ func NewXcoinExchange() TradeExchange {
 		},
 	}
 }
+
+func NewBitgetExchange() TradeExchange {
+	return &BitgetExchange{
+		ExchangeBase: ExchangeBase{
+			exchangeType: BITGET_NAME,
+		},
+	}
+}

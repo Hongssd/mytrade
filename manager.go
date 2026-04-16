@@ -40,6 +40,7 @@ func NewExchangeManager() *ExchangeManager {
 	e.ExchangeMap.Store(ASTER_NAME.String(), NewAsterExchange())
 	e.ExchangeMap.Store(SUNX_NAME.String(), NewSunxExchange())
 	e.ExchangeMap.Store(XCOIN_NAME.String(), NewXcoinExchange())
+	e.ExchangeMap.Store(BITGET_NAME.String(), NewBitgetExchange())
 	return e
 }
 
