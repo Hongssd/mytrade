@@ -3,6 +3,7 @@ package mytrade
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	mybitgetapi "github.com/Hongssd/mybitgetapi"
 )
@@ -41,6 +42,18 @@ func isBitgetClassicMode(client *mybitgetapi.PrivateRestClient) (isClassic bool,
 	return false, fmt.Errorf("ambiguous bitget mode: utaStatus=%q classicStatus=%q", utaSt, claSt)
 }
 
+func isBitgetPosModeHedge(client *mybitgetapi.PrivateRestClient) (bool, error) {
+	res, err := client.NewPrivateRestClassicFuturesAccountSingleAccount().
+		ProductType(mybitgetapi.INST_TYPE_USDT_FUTURES.String()).
+		Symbol("BTCUSDT").
+		MarginCoin("USDT").
+		Do()
+	if err != nil {
+		return false, err
+	}
+	return strings.EqualFold(res.Data.PosMode, BITGET_POSITION_MODE_HEDGE), nil
+}
+
 func (b *BitgetExchange) NewExchangeInfo() TradeExchangeInfo {
 	return &BitgetExchangeInfo{
 		isLoaded: false,
@@ -54,6 +67,14 @@ func (b *BitgetExchange) NewMarketData() TradeMarketData {
 func (b *BitgetExchange) NewTradeEngine(apiKey, secretKey, passphrase string) TradeEngine {
 	client := mybitgetapi.NewRestClient(apiKey, secretKey, passphrase).PrivateRestClient()
 	isClassic, modeErr := isBitgetClassicMode(client)
+	posModeHedge := false
+	if isClassic {
+		var err error
+		posModeHedge, err = isBitgetPosModeHedge(client)
+		if err != nil && modeErr == nil {
+			modeErr = err
+		}
+	}
 	return &BitgetTradeEngine{
 		ExchangeBase:  b.ExchangeBase,
 		apiKey:        apiKey,
@@ -61,6 +82,7 @@ func (b *BitgetExchange) NewTradeEngine(apiKey, secretKey, passphrase string) Tr
 		passphrase:    passphrase,
 		privateClient: client,
 		isClassic:     isClassic,
+		posModeHedge:  posModeHedge,
 		modeDetectErr: modeErr,
 	}
 }

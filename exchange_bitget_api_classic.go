@@ -481,7 +481,7 @@ func (e *BitgetTradeEngine) apiClassicFuturesOrderCreate(req *OrderParam, margin
 	if req.ClientOrderId != "" {
 		api.ClientOid(req.ClientOrderId)
 	}
-	if req.TradeSide != "" {
+	if req.TradeSide != "" && e.posModeHedge {
 		api.TradeSide(req.TradeSide)
 	}
 	if req.OrderType == ORDER_TYPE_LIMIT {
@@ -549,7 +549,7 @@ func (e *BitgetTradeEngine) apiClassicFuturesBatchCreateOrders(reqs []*OrderPara
 			Force:     GetPointer(e.converter.ToBitgetTimeInForce(r.TimeInForce)),
 			ClientOid: GetPointer(r.ClientOrderId),
 		}
-		if r.TradeSide != "" {
+		if r.TradeSide != "" && e.posModeHedge {
 			item.TradeSide = GetPointer(r.TradeSide)
 		}
 		if r.OrderType == ORDER_TYPE_LIMIT {
