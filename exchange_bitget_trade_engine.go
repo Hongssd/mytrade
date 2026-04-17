@@ -17,6 +17,7 @@ type BitgetTradeEngine struct {
 
 	privateClient *mybitgetapi.PrivateRestClient
 	isClassic     bool
+	posModeHedge  bool
 	modeDetectErr error
 
 	broadcasterSpot           *bitgetOrderBroadcaster
