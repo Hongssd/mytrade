@@ -21,11 +21,11 @@ func isBitgetClassicMode(client *mybitgetapi.PrivateRestClient) (isClassic bool,
 		return false, errors.New("detect bitget account stack failed")
 	}
 	if errUta == nil && errClassic != nil {
-		log.Info("detect bitget account stack failed, uta success, classic error: ", errClassic.Error())
+		log.Debug("detect bitget account stack failed, uta success, classic error: ", errClassic.Error())
 		return false, nil
 	}
 	if errUta != nil && errClassic == nil {
-		log.Info("detect bitget account stack failed, uta error: ", errUta.Error(), ", classic success")
+		log.Debug("detect bitget account stack failed, uta error: ", errUta.Error(), ", classic success")
 		return true, nil
 	}
 
