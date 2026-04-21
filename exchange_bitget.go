@@ -1,7 +1,6 @@
 package mytrade
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -13,33 +12,17 @@ type BitgetExchange struct {
 }
 
 func isBitgetClassicMode(client *mybitgetapi.PrivateRestClient) (isClassic bool, modeDetectErr error) {
-	utaRes, errUta := client.NewPrivateRestUtaAccountSwitchStatus().Do()
-	claRes, errClassic := client.NewPrivateRestClassicSpotAccountUpgradeStatus().Do()
+	_, errUta := client.NewPrivateRestUtaAccountSwitchStatus().Do()
 
-	if errUta != nil && errClassic != nil {
-		return false, errors.New("detect bitget account stack failed")
-	}
-	if errUta == nil && errClassic != nil {
-		return false, nil
-	}
-	if errUta != nil && errClassic == nil {
-		return true, nil
+	// 经典账户调用 UTA 开关状态接口会返回 40084，属于可预期结果，直接判定为 classic。
+	if errUta != nil {
+		if strings.Contains(errUta.Error(), "40084") {
+			return true, nil
+		}
+		return false, fmt.Errorf("detect bitget account stack failed, uta error: %s", errUta.Error())
 	}
 
-	if utaRes != nil && utaRes.Data.Status == "success" {
-		return false, nil
-	}
-	if claRes != nil && claRes.Data.Status == "success" {
-		return true, nil
-	}
-	utaSt, claSt := "", ""
-	if utaRes != nil {
-		utaSt = utaRes.Data.Status
-	}
-	if claRes != nil {
-		claSt = claRes.Data.Status
-	}
-	return false, fmt.Errorf("ambiguous bitget mode: utaStatus=%q classicStatus=%q", utaSt, claSt)
+	return false, nil
 }
 
 func isBitgetPosModeHedge(client *mybitgetapi.PrivateRestClient) (bool, error) {
