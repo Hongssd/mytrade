@@ -160,23 +160,35 @@ func (o OkxTradeAccount) SetLeverage(accountType, symbol string, marginMode Marg
 }
 
 func (o OkxTradeAccount) GetFeeRate(accountType, symbol string) (*FeeRate, error) {
-	var feeRate FeeRate
 	api := okx.NewRestClient(o.apiKey, o.secretKey, o.passphrase).PrivateRestClient().
 		NewPrivateRestAccountTradeFee().InstType(accountType)
-	if OkxAccountType(accountType) == OKX_AC_SPOT {
-		api = api.InstId(symbol)
+	switch OkxAccountType(accountType) {
+	case OKX_AC_SPOT, OKX_AC_MARGIN:
+		if symbol != "" {
+			api = api.InstId(symbol)
+		}
+	case OKX_AC_SWAP, OKX_AC_FUTURES, OKX_AC_OPTION:
+		if fam := okxTradeFeeInstFamily(accountType, symbol); fam != "" {
+			api = api.InstFamily(fam)
+		}
 	}
 	res, err := api.Do()
 	if err != nil {
 		return nil, err
 	}
-	feeRate.Maker, _ = decimal.NewFromString(res.Data[0].Maker)
-	feeRate.Taker, _ = decimal.NewFromString(res.Data[0].Taker)
-
-	//okx正常费率为负数,需要乘以-1
-	feeRate.Maker = feeRate.Maker.Mul(decimal.NewFromInt(-1))
-	feeRate.Taker = feeRate.Taker.Mul(decimal.NewFromInt(-1))
-
+	if len(res.Data) == 0 {
+		return nil, ErrorInvalidParam
+	}
+	row := res.Data[0]
+	// OKX 返回扣费为负、返佣为正；乘 -1 后统一为 mytrade 标准：正数=付费，负数=返佣
+	feeRate := okxFeeRateFromTradeFeeQuote(accountType, symbol, okxAccountTradeFeeQuote{
+		Maker:     row.Maker,
+		Taker:     row.Taker,
+		MakerU:    row.MakerU,
+		TakerU:    row.TakerU,
+		MakerUSDC: row.MakerUSDC,
+		TakerUSDC: row.TakerUSDC,
+	})
 	return &feeRate, nil
 }
 
