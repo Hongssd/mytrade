@@ -10,7 +10,7 @@ type Order struct {
 	ClientOrderId string       `json:"clientOrderId"` //用户自己生成的订单ID  不填则自动生成
 	Price         string       `json:"price"`         //下单价格
 	Quantity      string       `json:"quantity"`      //下单数量
-	ExecutedQty   string       `json:"executedQty"`   //成交数量
+	ExecutedQty   string       `json:"executedQty"`   //累计成交数量
 	CumQuoteQty   string       `json:"cumQuoteQty"`   //成交金额
 	AvgPrice      string       `json:"avgPrice"`      //成交均价
 	Status        OrderStatus  `json:"status"`        //订单状态
@@ -60,7 +60,7 @@ type Trade struct {
 	OrderId       string       `json:"orderId"`       //交易所自动生成的订单ID
 	ClientOrderId string       `json:"clientOrderId"` //用户自己生成的订单ID
 	Price         string       `json:"price"`         //成交价格
-	Quantity      string       `json:"quantity"`      //成交数量
+	Quantity      string       `json:"quantity"`      //本笔成交数量
 	QuoteQty      string       `json:"quoteQty"`      //成交金额
 	Side          OrderSide    `json:"side"`          //买卖方向
 	PositionSide  PositionSide `json:"positionSide"`  //仓位方向 合约交易时存在

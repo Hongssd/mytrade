@@ -7,6 +7,15 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// okxOrderExecutedQty maps OKX accFillSz (cumulative filled size) to Order.ExecutedQty.
+// fillSz is the last fill clip and must only be used on Trade.Quantity.
+func okxOrderExecutedQty(accFillSz string) string {
+	if accFillSz == "" {
+		return "0"
+	}
+	return accFillSz
+}
+
 // 查询订单返回结果处理
 func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, res *myokxapi.OkxRestRes[myokxapi.PrivateRestTradeOrdersPendingRes]) ([]*Order, error) {
 	if res.Code != "0" {
@@ -34,7 +43,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOpenOrders(req *QueryOrderParam, r
 			IsAlgo:        req.IsAlgo,
 			Price:         r.Px,
 			Quantity:      r.Sz,
-			ExecutedQty:   r.FillSz,
+			ExecutedQty:   okxOrderExecutedQty(r.AccFillSz),
 			AvgPrice:      r.AvgPx,
 			Status:        o.okxConverter.FromOKXOrderStatus(r.State, false),
 			Type:          orderType,
@@ -86,7 +95,7 @@ func (o *OkxTradeEngine) handleOrderFromQueryOrderGet(req *QueryOrderParam, res 
 		OrderAlgoType: req.OrderAlgoType,
 		Price:         r.Px,
 		Quantity:      r.Sz,
-		ExecutedQty:   r.FillSz,
+		ExecutedQty:   okxOrderExecutedQty(r.AccFillSz),
 		AvgPrice:      r.AvgPx,
 		Status:        o.okxConverter.FromOKXOrderStatus(r.State, false),
 		Type:          orderType,
@@ -133,7 +142,7 @@ func (o *OkxTradeEngine) handleOrdersFromQueryOrderGet(req *QueryOrderParam, res
 			OrderAlgoType: req.OrderAlgoType,
 			Price:         r.Px,
 			Quantity:      r.Sz,
-			ExecutedQty:   r.FillSz,
+			ExecutedQty:   okxOrderExecutedQty(r.AccFillSz),
 			AvgPrice:      r.AvgPx,
 			Status:        o.okxConverter.FromOKXOrderStatus(r.State, false),
 			Type:          orderType,
@@ -174,7 +183,7 @@ func (o *OkxTradeEngine) handleTradesFromQueryTrades(req *QueryTradeParam, res *
 			TradeId:      r.TradeId,
 			OrderId:      r.OrdId,
 			Price:        r.FillPx,
-			Quantity:     r.FillSz,
+			Quantity:     r.FillSz, // last fill clip; Order.ExecutedQty uses accFillSz
 			QuoteQty:     quoteQty.String(),
 			Side:         o.okxConverter.FromOKXOrderSide(r.Side),
 			PositionSide: o.okxConverter.FromOKXPositionSide(r.PosSide),
@@ -356,7 +365,7 @@ func (o *OkxTradeEngine) handleOrderFromWsOrder(order myokxapi.WsOrders) *Order 
 		ClientOrderId: order.ClOrdId,
 		Price:         order.Px,
 		Quantity:      order.Sz,
-		ExecutedQty:   order.FillSz,
+		ExecutedQty:   okxOrderExecutedQty(order.AccFillSz),
 		AvgPrice:      order.AvgPx,
 		Status:        o.okxConverter.FromOKXOrderStatus(order.State, false),
 		Type:          orderType,
