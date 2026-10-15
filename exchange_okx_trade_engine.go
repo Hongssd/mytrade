@@ -19,6 +19,8 @@ type OkxTradeEngine struct {
 	broadcasterMargin *okxOrderBroadcaster
 	broadcasterSwap   *okxOrderBroadcaster
 	broadcasterFuture *okxOrderBroadcaster
+	// serializes lazy creation of the broadcasters above
+	broadcasterInitMu sync.Mutex
 
 	orderAlgoBroadcasterSpot   *okxOrderAlgoBroadcaster
 	orderAlgoBroadcasterMargin *okxOrderAlgoBroadcaster
