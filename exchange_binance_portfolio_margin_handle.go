@@ -691,7 +691,7 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromPMMarginPayload(req Subscri
 					TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(r.Type),
 					TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(r.Side, r.Type),
 				}
-				newSub.resultChan <- order
+				pushBinanceOrderSub(newSub, order)
 			}
 		}
 	}()
@@ -716,7 +716,7 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromPMContractPayload(req Subsc
 		for {
 			select {
 			case err := <-newPayload.OrderTradeUpdatePayload.ErrChan():
-				newSub.errChan <- err
+				pushBinanceOrderSubErr(newSub, err)
 			case <-newSub.closeChan:
 				newSub.CloseChan() <- struct{}{}
 				return
@@ -725,9 +725,13 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromPMContractPayload(req Subsc
 				CumQuoteQty := decimal.Zero
 				avgPrice, err := decimal.NewFromString(r.AvgPrice)
 				if err != nil {
-					newSub.ErrChan() <- err
+					pushBinanceOrderSubErr(newSub, err)
 				}
-				CumQuoteQty = avgPrice.Mul(decimal.RequireFromString(r.ExecutedQty))
+				executedQty, err := decimal.NewFromString(r.ExecutedQty)
+				if err != nil {
+					pushBinanceOrderSubErr(newSub, err)
+				}
+				CumQuoteQty = avgPrice.Mul(executedQty)
 				order := Order{
 					Exchange:      BINANCE_NAME.String(),
 					AccountType:   req.AccountType,
@@ -754,7 +758,7 @@ func (b *BinanceTradeEngine) handleSubscribeOrderFromPMContractPayload(req Subsc
 					TriggerType:          b.bnConverter.FromBNOrderTypeForTriggerType(r.Type),
 					TriggerConditionType: b.bnConverter.FromBNOrderSideForTriggerConditionType(r.Side, r.Type),
 				}
-				newSub.resultChan <- order
+				pushBinanceOrderSub(newSub, order)
 			}
 		}
 	}()
